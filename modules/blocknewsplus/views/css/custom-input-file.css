@@ -1,0 +1,89 @@
+ .someDiv
+        {
+            margin-left: 300px;
+            margin-top: 30px;
+            border: 1px solid Silver;
+            height: 300px;
+        }
+        #post_image
+        {
+            float: left;
+        	/*display:none;*/
+        }
+        .customFile
+        {
+            width: 219px;
+            margin-left: -225px;
+            cursor: default;
+            height: 21px;
+            z-index: 2;
+            filter: alpha(opacity: 0);
+            position: relative;
+            opacity: 0;
+            float: left;
+        }
+        .fakeButton
+        {
+            z-index: 1;
+            position: relative;
+            width: 85px;
+            height: 21px;
+            background: url(../img/input/button.gif) no-repeat left top;
+            float: left;
+        	/*display:none*/
+        }
+        .blocker
+        {
+            position: relative;
+            z-index: 3;
+            width: 150px;
+            height: 21px;
+            background: url(../img/input/transparent.gif);
+            float: left;
+            margin-left: -240px;
+           
+        }
+        .FileName
+        {
+            float: left;
+            height: 15px;
+            font-family: Verdana;
+            font-size: 8pt;
+            color: Gray;
+            margin-left: 5px;
+            margin-top: 2px;
+            padding-top: 1px;
+            /*padding-left: 19px;*/
+            padding-right: 7px;
+            
+        }
+        .minus
+        {
+            cursor: pointer;
+            margin-left: 5px;
+            width: 16px;
+            height: 16px;
+            background: url(../img/input/plusminus.gif) no-repeat left -16px;
+            float: left;
+            margin-top: 3px;
+        }
+        .wrapper
+        {
+            float: left;
+            width: 100%;
+            display: block;
+            margin: 0 3px 3px 3px;
+        }
+        
+        
+        
+        .pages { color:#2580C7; /*height:15px; padding:0 0 10px 10px; font-size:100%; margin-top:20px; line-height:1.2em;*/  }
+.pages span, .pages b, .pages a { font-weight:bold; }
+.pages a{color:#2580c7}
+.pages span { color:#2580C7; padding:1px 8px 2px 0; }
+.pages span.nums { padding:0 10px 0 5px; }
+.pages span.nums b, .pages span.nums a { padding:1px 6px 3px 6px; background:#ececec; text-decoration:none; margin-right:4px; }
+.pages span.nums a:hover { background:#2580c7; color:#fff; }
+.pages span.nums b { background:#6ec31c; color:#fff; }
+
+        

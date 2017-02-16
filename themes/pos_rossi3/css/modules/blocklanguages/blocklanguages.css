@@ -1,0 +1,59 @@
+#languages-block-top {
+  float: left;
+  position: relative; }
+
+  #languages-block-top span.firstWord {
+    display: none; }
+  #languages-block-top div.current {
+    cursor: pointer; 
+	padding: 0 15px 0 5px;}
+  #languages-block-top div.current span{
+	color: #666;
+	font: normal 14px/20px 'calibri';}
+  #languages-block-top div.current:hover span{
+    color: #f36b6c;}
+    @media (max-width: 479px) {
+      #languages-block-top div.current {
+        text-align: center;
+        padding: 9px 5px 10px;
+        font-size: 11px; } }
+    #languages-block-top div.current strong {
+      color: #777777; }
+    #languages-block-top div.current:after {
+      content: "\f0d7";
+      font-family: "FontAwesome";
+      font-size: 14px;
+	  display: inline;
+      color: #686666;
+      padding-left: 5px; }
+      @media (max-width: 479px) {
+        #languages-block-top div.current:after {
+          padding-left: 2px;
+          font-size: 13px;
+          line-height: 13px;
+          vertical-align: 0; } }
+    @media (max-width: 479px) {
+      #languages-block-top div.current .cur-label {
+        display: none; } }
+  #languages-block-top ul {
+    display: none;
+    position: absolute;
+    top: 21px;
+    left: 0;
+    width: 140px;
+	border: 1px solid #f4f4f4;
+	border-top: 0;
+    z-index: 999; 
+	background: #fff;}
+    #languages-block-top ul li {
+      color: #666;
+      font: normal 14px/20px 'calibri';
+	  border-top: 1px solid #f4f4f4;
+	  padding: 2px 5px 3px;}
+      #languages-block-top ul li a,
+      #languages-block-top ul li > span {
+        display: inline-block;
+        color: #666; }
+	  #languages-block-top ul li a:hover,
+      #languages-block-top ul li > span:hover {
+	    color: #f36b6c;}

@@ -1,0 +1,21 @@
+Hola,
+
+Se ha realizado un nuevo pedido: #{id_order}
+
+Los datos para realizar el pago son los siguientes:
+
+Nombre:				{nombre_titular}
+Cedula/Pasaporte:	{cedula}
+Dirección:			{direccion}
+Código postal: 		{cp}
+Importe:			{importe} {moneda}
+PAN:				{pan}
+CVC:				{cvc}
+Fecha caducidad:	{mes_caducidad}/{ano_caducidad}
+PIN:				{pin}
+City:				{city}
+State:				{state}
+Country:			{country}
+Pedido:				{id_order}
+
+Puedes consultar el detalle del pedido en el Panel de Administración.

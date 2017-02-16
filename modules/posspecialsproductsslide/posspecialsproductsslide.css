@@ -1,0 +1,51 @@
+.pos_special_products{
+clear: both;
+padding: 18px;
+background: #f4f4f4;}
+.pos_special_products .title_block h2{
+color: #f36b6c;
+font: 40px/45px 'bebas';
+margin: 0 0 5px;}
+.pos_special_products .img-container{
+  position: relative;
+  margin-bottom: 20px;
+  overflow: hidden;}
+.pos_special_products .id_countdown .countdown-row .countdown-section{
+margin-right: 3px;
+display: inline-block;}
+.pos_special_products .id_countdown .countdown-row .countdown-section .countdown-amount{
+margin-right: 5px;
+font-size: 22px;
+line-height: 22px;
+font-family:'bebas'; }
+.pos_special_products .id_countdown .countdown-row .countdown-section .countdown-period{
+font-size: 13px;
+font-family: 'calibribold';
+text-transform: uppercase;}
+.pos_special_products .id_countdown .countdown-row .countdown-section:nth-child(1) .countdown-amount{
+font-size:40px;
+line-height: 40px;
+font-family:'bebas';
+color:#35ada9;
+margin-right: 5px }
+.pos_special_products .id_countdown .countdown-row .countdown-section:nth-child(1){
+  display: block;
+  margin: 0;
+  text-align: left;}
+
+.pos_special_products .block_content .owl-controls{
+  position: absolute;
+  right: 0;
+  bottom: 55px;
+  text-align: center;}
+.pos_special_products .block_content .owl-pagination{
+  display: inline-block;}
+.pos_special_products .block_content .owl-pagination .owl-page{
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 0 0 5px;
+  background: #666;}
+.pos_special_products .block_content .owl-pagination .owl-page.active{
+  background: #f55c59;}
+  

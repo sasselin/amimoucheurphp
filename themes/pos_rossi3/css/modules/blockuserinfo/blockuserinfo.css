@@ -1,0 +1,17 @@
+#header_user{
+  float: right;}
+#header_user ul li{
+  float: left;
+  display: inline-block;
+  padding-right: 7px;
+  padding-left: 5px;
+  border-right: 1px solid #666;}
+#header_user ul li:last-child{
+  border-right: 0;
+  padding-right: 0;}
+#header_user ul li a{
+  text-transform: capitalize;
+  font: normal 14px/20px 'calibri';
+  color: #666;}
+#header_user ul li a:hover{
+  color: #f36b6c}

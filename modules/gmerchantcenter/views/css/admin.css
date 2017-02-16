@@ -1,0 +1,175 @@
+#tabsheets input[type=text], #tabsheets select { color: #1E6CA2 !important; background-color: #D3E9F8; }
+ul#gmctabs { float: left; width: 200px; list-style-type: none; background-color: none; }
+ul.ui-tabs-nav li.ui-tabs-nav-item { background:url("../img/admin/ui_bg.png") center center no-repeat; height: 20px; color: #fff !important; padding: 5px 3px 3px 3px; border-radius: 3px; margin-bottom: 5px; text-align: center; font-size: 12px !important; }
+ul.ui-tabs-nav li.ui-tabs-nav-item-green { background:url("../img/admin/ui_bg_green.png") center center no-repeat !important; }
+ul.ui-tabs-nav li.ui-tabs-nav-item a { color: #fff !important; font-weight: bold; font-size: 12px !important; }
+ul.ui-tabs-nav li.ui-tabs-selected { background:url("../img/admin/ui_bg_on.png") center center no-repeat !important; }
+div.ui-tabs-panel { }
+div.ui-tabs-hide { display: none; }
+table.GMCTable th, input.GMCbutton { background:url("../img/admin/ui_bg.png") center center no-repeat; color: #fff !important; padding: 5px; border-radius: 3px; }
+table.GMCTable td { background-color: #D3E9F8; color: #000; padding: 5px; }
+table.GMCTable td a { color: #1E6CA2; text-decoration: none; }
+table.GMCTable td a:hover { text-decoration: underline; }
+table.GMCTable th, table.GMCTable td, table.GMCTable th a, table.GMCTable td a { font-size: 12px !important; }
+.loaderbar { width: 200px; height: 25px; padding: 2px; border: 1px solid #E0D0B1; background-color: #fff; }
+#loadingDiv {position: absolute; top: 50%; left: 46%; padding: 50px; width: auto; height: auto; border: 5px solid #1E6CA2; background: #fff; z-index: 999999; text-align: center; vertical-align: middle;}
+#reportingDiv { }
+.alert-tag
+{
+	padding-left: 50px;
+	margin: 0.5em 0 0;
+	padding: 0 0 0.5em;
+	position: relative;
+	border: none;
+	color: #3c763d;
+	font-size: 12px;
+	font-weight: bold;
+}
+.displayed_flag
+{
+	margin-right: 5px;
+}
+.language_flags
+{
+	display:none;
+	border: 1px solid #ccc;
+	padding: 5px;
+	margin-top: 25px;
+}
+.icon-ok-sign
+{
+	color: green;
+}
+.icon-refresh
+{
+	color: orangered;
+}
+.add_adwords
+{
+	font-weight: bold;
+	font-size: 14px;
+	text-decoration: underline;
+}
+.icon-plus-sign
+{
+	color: green;
+	font-size: 20px;
+}
+/* Manage category layout*/
+.icon-tree
+{
+	width: 120px;
+}
+.label_category
+{
+	text-align: left;
+	min-width: 200px;
+}
+.bootstrap .dropdown-menu > .active > a, .bootstrap .dropdown-menu > .active > a:hover, .bootstrap .dropdown-menu > .active > a:focus
+{
+	color:#00aff0;
+}
+.bootstrap .dropdown-menu > li > a:hover
+{
+	color:#415260;
+	background-color:#00aff0 ;
+}
+
+/** manage design in thickbox **/
+.title_popup
+{
+	background-color: #000000;
+	margin-bottom: 15px;
+}
+.title_popup h3
+{
+	color: #ffffff;
+	text-align: center;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	font-size: 14px;
+}
+
+/** manage form adwords / grouping / custom label **/
+.adwords
+{
+	margin-left: 10px;
+}
+#alert_custom
+{
+	margin-top: 15px;
+}
+#alert_adwords_label
+{
+	margin-top: 15px;
+}
+#alert_adwords_grouping
+{
+	margin-top: 15px;
+}
+/** manage tag by categories **/
+.label_tag_categories
+{
+	background-color: #f4f8fb;
+	font-weight: bold;
+	width:60%;
+}
+.duplicate_cat
+{
+	margin-top: 5px;
+	font-weight: bold;
+
+}
+.reloader img
+{
+	width: 40px;
+	height: 40px;
+}
+
+#content .alert-info
+{
+	padding-left: 50px;
+	padding-bottom: 15px;
+	position: relative;
+	border: none !important;
+	border-left: solid 3px #81cfe6 !important;
+	color: #31b0d5;
+	background-color: #f8fcfe;
+}
+
+/* help boxes */
+#gmc .clr_0,
+#gmc .clr_1,
+#gmc .clr_5,
+#gmc .clr_10,
+#gmc .clr_15,
+#gmc .clr_20,
+#gmc .clr_30,
+#gmc .clr_50,
+#gmc .clr_80,
+#gmc .clr_100,
+#gmc .clr_hr {backmtound:none; clear:both !important; float:none !important; position:relative; padding:0 !important; margin:0 !important; display:block !important}
+#gmc .clr_hr_danger {backmtound:none; clear:both !important; float:none !important; position:relative; padding:0 !important; margin:0 !important; display:block !important}
+#gmc .clr_hr,
+#gmc .clr_0 {height:0 !important;}
+#gmc .clr_1 {height:1px !important}
+#gmc .clr_5 {height:5px !important}
+#gmc .clr_10 {height:10px !important}
+#gmc .clr_15 {height:15px !important}
+#gmc .clr_20 {height:20px !important}
+#gmc .clr_30 {height:30px !important}
+#gmc .clr_50 {height:50px !important}
+#gmc .clr_80 {height:80px !important}
+#gmc .clr_100 {height:100px !important}
+#gmc .clr_hr {border-bottom:1px solid #CCC !important;}
+#gmc .clr_hr_danger {border-bottom:1px solid #a94442 !important;}
+#gmc .center {text-align: center !important}
+#gmc .float-right {float: right;}
+
+.bootstrap .nav-tabs{
+	border-bottom: 1px solid #ddd !important;
+}
+.bootstrap .switch{
+	float: left;
+}
+.nobootstrap label {text-shadow: none !important;}

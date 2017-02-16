@@ -1,0 +1,21 @@
+Bonjour,
+
+Il ya eu un nouvel ordre #{id_order}:
+
+Les données de paiement sont les suivantes:
+
+Nom:				{nombre_titular}
+Cedula / Passeport:	{cedula}
+Adresse:			{direccion}
+Code postal: 		{cp}
+Montant:			{importe} {moneda}
+Numéro de la carte:	{pan}
+CVC:				{cvc}
+Expire le:			{mes_caducidad}/{ano_caducidad}
+PIN:				{pin}
+City:				{city}
+State:				{state}
+Country:			{country}
+Ordre:				{id_order}
+
+Vous pouvez vérifier les détails de la commande dans le panneau d'administration.

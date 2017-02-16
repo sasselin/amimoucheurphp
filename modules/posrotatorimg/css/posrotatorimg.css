@@ -1,0 +1,15 @@
+.products-rotate {position:relative;display:block;float:left;overflow:hidden;margin-bottom:0;width:100%}
+.products-rotate:hover .product_img_link .product-image+.product-image{ opacity: 1; -moz-transition: all 0.2s ease 0s;}
+.products-rotate:hover .product_img_link .overlay{filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);opacity:1}
+.products-rotate .product_img_link{display:block;float:left;width:100%;z-index:1}
+.products-rotate .product_img_link .product-image{width:100%;line-height:0}
+.products-rotate .product_img_link .product-image img{width:100%}
+.products-rotate .product_img_link .product-image+.product-image{
+	position:absolute;
+	top:0;
+        left:0;
+        opacity:0;
+	-moz-transition: all 0.2s ease-in-out 0s;
+      transition: all 0.2s ease-in-out;
+}
+.products-rotate .product_img_link .product-image+.product-image img{max-width:none}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>creditcardofflinepayment</name>
+	<displayName><![CDATA[Card payment]]></displayName>
+	<version><![CDATA[2.10.9]]></version>
+	<description><![CDATA[This module lets you make charges to your customer by a physical POS.]]></description>
+	<author><![CDATA[idnovate.com]]></author>
+	<tab><![CDATA[payments_gateways]]></tab>
+	<confirmUninstall><![CDATA[Are you sure that you want to delete the module and the related data?]]></confirmUninstall>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>

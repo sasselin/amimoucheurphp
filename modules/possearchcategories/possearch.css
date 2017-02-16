@@ -1,0 +1,61 @@
+#pos_search_top{
+  padding: 0;}
+#pos_search_top .form_search{
+  padding: 13px 0 14px;
+  position: relative;
+  float: left;
+  background: #fff;
+  border: 3px solid #dddddd;
+  margin: 30px 0 0;
+  width: 90%;}
+@media (max-width: 767px){
+	#pos_search_top .form_search{
+		width: 100%;}
+}
+#pos_search_top label{
+  display: none;}
+#pos_search_top .form-control{
+  border: 0;
+  padding: 0 45px 0 110px;
+  height: 17px;}
+#pos_search_top .submit_search{
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 14px 16px 14px;
+  line-height: 17px;
+  font-size: 14px;
+  border: 0;
+  background: #6c855b;
+  color: #fff;
+  -webkit-transition: all 500ms ease;
+  -moz-transition: all 500ms ease;
+  -ms-transition: all 500ms ease;
+  -o-transition: all 500ms ease;
+  transition: all 500ms ease;}
+#pos_search_top .submit_search:hover{
+  background: #f36b6c;}
+#pos_search_top .form-group{
+  position: absolute;
+  top: 0;
+  left: 0;}
+#pos_search_top .form-group .bootstrap-select{
+  max-width: 105px;}
+#pos_search_top .form-group .bootstrap-select .btn.selectpicker{
+  padding-top: 14px;
+  padding-bottom: 14px;
+  font-size: 14px;
+  line-height: 17px;
+  font-family: 'calibri';
+  border: 0;
+  background: #6c855b;
+  color: #fff;
+  -webkit-transition: all 500ms ease;
+  -moz-transition: all 500ms ease;
+  -ms-transition: all 500ms ease;
+  -o-transition: all 500ms ease;
+  transition: all 500ms ease;}
+#pos_search_top .form-group .bootstrap-select .btn.selectpicker:hover{
+  background: #f36b6c;}
+#pos_search_top .form-group .bootstrap-select .btn-default .caret{
+  border-top-color: #fff;}

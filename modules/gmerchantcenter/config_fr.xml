@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>gmerchantcenter</name>
+	<displayName><![CDATA[Google Merchant Center]]></displayName>
+	<version><![CDATA[4.3.8]]></version>
+	<description><![CDATA[Exportez votre catalogue produits vers Google Merchant Center]]></description>
+	<author><![CDATA[Business Tech]]></author>
+	<tab><![CDATA[seo]]></tab>
+	<confirmUninstall><![CDATA[Etes-vous sûr(e) de vouloir supprimer Google Merchant Center ?]]></confirmUninstall>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>

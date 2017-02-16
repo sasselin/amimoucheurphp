@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS `PREFIX_gmc_categories`;
+DROP TABLE IF EXISTS `PREFIX_gmc_taxonomy_categories`;
+DROP TABLE IF EXISTS `PREFIX_gmc_taxonomy`;
+DROP TABLE IF EXISTS `PREFIX_gmc_brands`;
+DROP TABLE IF EXISTS `PREFIX_gmc_tags`;
+DROP TABLE IF EXISTS `PREFIX_gmc_tags_brands`;
+DROP TABLE IF EXISTS `PREFIX_gmc_tags_cats`;
+DROP TABLE IF EXISTS `PREFIX_gmc_tags_suppliers`;
+DROP TABLE IF EXISTS `PREFIX_gmc_features_by_cat`;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_categories` (`id_category` int(11) NOT NULL, `id_shop` int(11) NOT NULL DEFAULT "1",  UNIQUE KEY `id_category` (`id_category`, `id_shop`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_taxonomy_categories` (`id_category` int(11) NOT NULL, `id_shop` int(3) NOT NULL DEFAULT "1", `txt_taxonomy` text NOT NULL, `lang` char(5) NOT NULL, KEY `id_category` (`id_category`,`lang`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_taxonomy` (`id_taxonomy` int(11) NOT NULL AUTO_INCREMENT, `value` text NOT NULL, `lang` varchar(5) NOT NULL, PRIMARY KEY (`id_taxonomy`), KEY `lang` (`lang`), FULLTEXT KEY `ft_index` (`value`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_brands` (`id_brands` int(11) NOT NULL, `id_shop` int(11) NOT NULL DEFAULT "1",  UNIQUE KEY `id_brands` (`id_brands`, `id_shop`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_tags` (`id_tag` int(11) NOT NULL AUTO_INCREMENT, `id_shop` int(11) NOT NULL DEFAULT "1", `name` char(255) NOT NULL, `type` char(255) NOT NULL, PRIMARY KEY (`id_tag`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_tags_brands` (`id_tag` int(11) NOT NULL, `id_brand` int(11) NOT NULL, UNIQUE KEY `tag_brand` (`id_tag`,`id_brand`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_tags_cats` (`id_tag` int(11) NOT NULL, `id_category` int(11) NOT NULL, UNIQUE KEY `tag_cat` (`id_tag`,`id_category`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_tags_suppliers` (`id_tag` int(11) NOT NULL, `id_supplier` int(11) NOT NULL, UNIQUE KEY `tag_supplier` (`id_tag`,`id_supplier`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `PREFIX_gmc_features_by_cat` (`id_cat` int(11) NOT NULL DEFAULT '0', `values` text NOT NULL, PRIMARY KEY (`id_cat`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;

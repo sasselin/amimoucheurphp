@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>shopymind</name>
+	<displayName><![CDATA[ShopiMind]]></displayName>
+	<version><![CDATA[2.0.0]]></version>
+	<description><![CDATA[Relancer vos paniers abandonn&eacute;s, contacter vos prospects, fid&eacute;liser vos clients. Shopimind vous permet d&#039;automatiser votre relation client et d&#039;augmenter votre chiffre d&#039;affaires.]]></description>
+	<author><![CDATA[ShopiMind]]></author>
+	<tab><![CDATA[advertising_marketing]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>

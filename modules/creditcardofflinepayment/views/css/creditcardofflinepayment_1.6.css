@@ -1,0 +1,131 @@
+/**
+* Credit card offline payment
+*
+* NOTICE OF LICENSE
+*
+* This product is licensed for one customer to use on one installation (test stores and multishop included).
+* Site developer has the right to modify this module to suit their needs, but can not redistribute the module in
+* whole or in part. Any other use of this module constitues a violation of the user agreement.
+*
+* DISCLAIMER
+*
+* NO WARRANTIES OF DATA SAFETY OR MODULE SECURITY
+* ARE EXPRESSED OR IMPLIED. USE THIS MODULE IN ACCORDANCE
+* WITH YOUR MERCHANT AGREEMENT, KNOWING THAT VIOLATIONS OF
+* PCI COMPLIANCY OR A DATA BREACH CAN COST THOUSANDS OF DOLLARS
+* IN FINES AND DAMAGE A STORES REPUTATION. USE AT YOUR OWN RISK.
+*
+*  @author    idnovate.com <info@idnovate.com>
+*  @copyright 2016 idnovate.com
+*  @license   See above
+*/
+
+/*
+#payment_form {
+    padding: 15px;
+    border: 1px solid #CCC;
+    color: black;
+    background: #F8F8F8;
+    overflow: hidden;
+}
+
+#payment_form label {
+    display: inline-block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+*/
+
+#payment_form p {
+    margin-bottom: 15px;
+}
+
+.mini-payment.box {
+    border: none;
+}
+.mini-payment #payment_form .form-group {
+    margin-bottom: 15px;
+}
+#payment_form select,
+#payment_form .form-group .form-control {
+    max-width: 271px;
+}
+#payment_form form.std .row {
+    margin-left: -5px;
+    margin-right: -5px;
+}
+#payment_form form.std .row .col-xs-4 {
+    max-width: 94px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+#payment_form form.std .row .col-xs-4 .form-control {
+    max-width: 84px;
+}
+
+#payment_form #errorDiv {
+    margin-bottom: 15px;
+}
+
+#payment_form label[for="card[cvc]"] {
+    display: block;
+}
+
+#payment_form input[name="card[cvc]"] {
+    float: left;
+    margin-right: 10px;
+}
+#payment_form .image-hint {
+    display: inline-block!important;
+}
+
+#payment_form p.cart_navigation {
+    padding: 10px 0;
+}
+
+div.ccpayment {
+  border: 1px solid #d6d4d4;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  background-color: #fbfbfb;
+  margin-bottom: 10px;
+}
+
+div.ccpayment p.payment_module {
+    margin-bottom: 0;
+}
+
+p.payment_module a.creditcard:after {
+    display: block;
+    content: "\f054";
+    position: absolute;
+    right: 15px;
+    margin-top: -11px;
+    top: 50%;
+    font-family: "FontAwesome";
+    font-size: 25px;
+    height: 22px;
+    width: 14px;
+    color: #777777;
+}
+
+p.payment_module a.creditcard {
+    background: url(../img/cards.png) 15px 15px no-repeat #fbfbfb;
+    border: none;
+}
+
+div.ccpayment #payment_form {
+    border: none;
+}
+
+#procesando {
+    text-align:center;
+    font-weight:bold;
+    display:none;
+    margin:20px 0 0 0;
+}
+
+.cart_navigation .pay-button-14 {
+    display: none;
+}

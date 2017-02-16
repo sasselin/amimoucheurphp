@@ -1,0 +1,35 @@
+.nobootstrap{min-width:inherit!important}
+
+
+/* switch languages */
+
+.displayed_flag {
+	float: left;
+	margin: 4px 0 0 4px;
+}
+
+.language_flags {
+	display: none;
+	float: left;
+	background: #FFF;
+	margin: 4px;
+	padding: 8px;
+	width: 80px;
+	border: 1px solid #555;
+}
+.pointer {
+    cursor: pointer;
+}
+
+/* switch languages */
+
+.margin-form table td, .margin-form table th{padding:5px; font-size:11px}
+
+ul.leftMenu li a {
+	text-decoration:none!important;
+}
+
+.center{text-align:center}
+
+.prestashop16-add-category div.margin-form{padding: 0pt 0pt 10px 130px!important;}
+.prestashop16-add-category label{width:120px}

@@ -1,0 +1,406 @@
+<pos_static_blocks>
+<!-- static block configuration -->
+	<block>
+		<id_posstaticblock>1</id_posstaticblock>
+		<identify>pt_menu_idcat_3</identify>
+		<hook_position>top</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>0</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>2</id_posstaticblock>
+		<identify>pt_item_menu_custom_menu</identify>
+		<hook_position>top</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>0</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>3</id_posstaticblock>
+		<identify>pt_menu_idcat_13_right</identify>
+		<hook_position>top</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>0</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>4</id_posstaticblock>
+		<identify>home-banner-top3</identify>
+		<hook_position>blockPosition2</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>1</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>5</id_posstaticblock>
+		<identify>banner-home</identify>
+		<hook_position>blockPosition1</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>1</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>6</id_posstaticblock>
+		<identify>banner-top</identify>
+		<hook_position>bannerSequence</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>1</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>7</id_posstaticblock>
+		<identify>social-right</identify>
+		<hook_position>rightColumn</hook_position>
+		<name_module>blocksocial</name_module>
+		<hook_module>displayFooter</hook_module>
+		<posorder>0</posorder>
+		<insert_module>1</insert_module>
+		<active>0</active>
+		<showhook>1</showhook>
+	</block>
+	<block>
+		<id_posstaticblock>8</id_posstaticblock>
+		<identify>banner-content</identify>
+		<hook_position>blockPosition3</hook_position>
+		<name_module></name_module>
+		<hook_module></hook_module>
+		<posorder>0</posorder>
+		<insert_module>0</insert_module>
+		<active>0</active>
+		<showhook>1</showhook>
+	</block>
+	
+	
+<!-- block lang configuration -->
+	<block_lang>
+		<id_posstaticblock>1</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Static Sub Menu Col Bottom</title>
+		<description>
+			 <![CDATA[
+			<div class="custom-menu-bottom">
+<div class="row">
+<div class="col-xs-12 col-sm-6">
+<div class="menu-bottom col"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu_bottom1.jpg" alt="" /></a></div>
+</div>
+<div class="col-xs-12 col-sm-6">
+<div class="menu-bottom col1"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu_bottom2.jpg" alt="" /></a></div>
+</div>
+</div>
+</div>
+		]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>2</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Custom Menu</title>
+		<description>
+			 <![CDATA[
+			<div class="static_block_custom_menu">
+<div class="img-custom col-sm-6 col-md-6"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu2.jpg" alt="" /></a></div>
+<div class="col-sm-6 col-md-6">
+<h4>Custom block menu</h4>
+<p>This is Photoshops version of Lorem Ipsum. Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin, lorem quis bibendum auctor, nisi elit consequat ipsum, nec sagittis sem nibh id elit. Duis sed odio sit amet nibh vulputate cursus a sit amet mauris. Morbi accumsan ipsum velit. Nam nec tellus a odio tincidunt auctor a ornare odio. Sed non mauris vitae erat consequat auctor eu in elit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris in erat justo.</p>
+</div>
+</div>
+			]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>3</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Static Sub Menu Col Right</title>
+		<description>
+			 <![CDATA[
+			<div class="sub-menu-col4"><a class="first" href="#"><img src="/pos_optima_1.6/img/cms/custom_menu1.jpg" alt="" /></a> <a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu3.jpg" alt="" /></a></div>
+			]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>4</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Home Banner Top</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-static">
+
+<div class="row">
+<div class="banner-box banner-box1 col-sm-4 col-md-4 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block1.png" alt="" /></a></div>
+<div class="banner-box banner-box2 col-sm-5 col-md-5 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block2.jpg" alt="" /></a>
+<div class="img2"><img src="/pos_optima_1.6/img/cms/block21.png" alt="" /></div>
+</div>
+<div class="banner-box banner-box3 col-sm-3 col-md-3 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block3.jpg" alt="" /></a></div>
+
+</div>
+</div>
+			]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>5</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Banner Home</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-home-content row">
+<div class="home-box home-box1 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Free Delivery</div>
+<div class="banner-content">On order over $9</div>
+</div>
+</div>
+<div class="home-box home-box2 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Order Online</div>
+<div class="banner-content">Phone: 123.456.7.89</div>
+</div>
+</div>
+<div class="home-box home-box3 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">24/7 Support</div>
+<div class="banner-content">Call Us Now</div>
+</div>
+</div>
+<div class="home-box home-box4 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Working Time</div>
+<div class="banner-content">8 AM - 10 PM</div>
+</div>
+</div>
+</div>
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>6</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Banner Top</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-top col-md-3 col-sm-3 col-xs-12"><a href="#"><img src="/pos_optima_1.6/img/cms/banner-right.jpg" alt="" /> </a></div>
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>7</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Social Right</title>
+		<description>
+			 <![CDATA[
+			
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>8</id_posstaticblock>
+		<id_lang>1</id_lang>
+		<title>Banner Content</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-content row">
+<div class="col-sm-9   col-xs-9"><img src="/pos_optima_1.6/img/cms/block4.jpg" alt="" /></div>
+<div class="col-sm-3 col-xs-3"><img src="/pos_optima_1.6/img/cms/block5.jpg" alt="" /></div>
+</div>
+		]]>
+		</description>
+	</block_lang>
+	
+	
+	
+	
+	<block_lang>
+		<id_posstaticblock>1</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Static Sub Menu Col Bottom</title>
+		<description>
+			 <![CDATA[
+			<div class="custom-menu-bottom">
+<div class="row">
+<div class="col-xs-12 col-sm-6">
+<div class="menu-bottom col"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu_bottom1.jpg" alt="" /></a></div>
+</div>
+<div class="col-xs-12 col-sm-6">
+<div class="menu-bottom col1"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu_bottom2.jpg" alt="" /></a></div>
+</div>
+</div>
+</div>
+		]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>2</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Custom Menu</title>
+		<description>
+			 <![CDATA[
+			<div class="static_block_custom_menu">
+<div class="img-custom col-sm-6 col-md-6"><a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu2.jpg" alt="" /></a></div>
+<div class="col-sm-6 col-md-6">
+<h4>Custom block menu</h4>
+<p>This is Photoshops version of Lorem Ipsum. Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin, lorem quis bibendum auctor, nisi elit consequat ipsum, nec sagittis sem nibh id elit. Duis sed odio sit amet nibh vulputate cursus a sit amet mauris. Morbi accumsan ipsum velit. Nam nec tellus a odio tincidunt auctor a ornare odio. Sed non mauris vitae erat consequat auctor eu in elit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris in erat justo.</p>
+</div>
+</div>
+			]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>3</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Static Sub Menu Col Right</title>
+		<description>
+			 <![CDATA[
+			<div class="sub-menu-col4"><a class="first" href="#"><img src="/pos_optima_1.6/img/cms/custom_menu1.jpg" alt="" /></a> <a href="#"><img src="/pos_optima_1.6/img/cms/custom_menu3.jpg" alt="" /></a></div>
+			]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>4</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Home Banner Top</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-static">
+
+<div class="row">
+<div class="banner-box banner-box1 col-sm-4 col-md-4 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block1.png" alt="" /></a></div>
+<div class="banner-box banner-box2 col-sm-5 col-md-5 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block2.jpg" alt="" /></a>
+<div class="img2"><img src="/pos_optima_1.6/img/cms/block21.png" alt="" /></div>
+</div>
+<div class="banner-box banner-box3 col-sm-3 col-md-3 col-sms-12 col-smb-12"><a href="#"><img src="/pos_optima_1.6/img/cms/block3.jpg" alt="" /></a></div>
+
+</div>
+</div>
+			]]>
+		</description>
+	</block_lang>
+	
+	<block_lang>
+		<id_posstaticblock>5</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Banner Home</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-home-content row">
+<div class="home-box home-box1 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Free Delivery</div>
+<div class="banner-content">On order over $9</div>
+</div>
+</div>
+<div class="home-box home-box2 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Order Online</div>
+<div class="banner-content">Phone: 123.456.7.89</div>
+</div>
+</div>
+<div class="home-box home-box3 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">24/7 Support</div>
+<div class="banner-content">Call Us Now</div>
+</div>
+</div>
+<div class="home-box home-box4 col-xs-12 col-md-3 col-sm-6 col-sms-6 col-smb-12">
+<div class="home-box-iner">
+<div class="banner-title">Working Time</div>
+<div class="banner-content">8 AM - 10 PM</div>
+</div>
+</div>
+</div>
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>6</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Banner Top</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-top col-md-3 col-sm-3 col-xs-12"><a href="#"><img src="/pos_optima_1.6/img/cms/banner-right.jpg" alt="" /> </a></div>
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>7</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Social Right</title>
+		<description>
+			 <![CDATA[
+			
+		]]>
+		</description>
+	</block_lang>
+	<block_lang>
+		<id_posstaticblock>8</id_posstaticblock>
+		<id_lang>2</id_lang>
+		<title>Banner Content</title>
+		<description>
+			 <![CDATA[
+			<div class="banner-content row">
+<div class="col-sm-9   col-xs-9"><img src="/pos_optima_1.6/img/cms/block4.jpg" alt="" /></div>
+<div class="col-sm-3 col-xs-3"><img src="/pos_optima_1.6/img/cms/block5.jpg" alt="" /></div>
+</div>
+		]]>
+		</description>
+	</block_lang>	
+	
+<!-- block shop configuration -->
+	
+	<block_shop>
+		<id_posstaticblock>1</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>2</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>3</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>4</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>5</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>6</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>7</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+	<block_shop>
+		<id_posstaticblock>8</id_posstaticblock>
+		<id_shop>1</id_shop>
+	</block_shop>
+
+</pos_static_blocks>

@@ -1,0 +1,55 @@
+<pos_slideshow>
+<!-- slideshow  configuration -->
+	<slideshow>
+		<id_pos_slideshow>1</id_pos_slideshow>
+		<porder>0</porder>
+		<active>1</active>
+	</slideshow>
+	<slideshow>
+		<id_pos_slideshow>2</id_pos_slideshow>
+		<porder>0</porder>
+		<active>1</active>
+	</slideshow>
+
+
+<!-- slide language configuration -->
+	<slideshow_lang>
+		<id_pos_slideshow>1</id_pos_slideshow>
+		<id_lang>1</id_lang>
+		<title>title1</title>
+		<link>#</link>
+		<description></description>
+	</slideshow_lang>
+	<slideshow_lang>
+		<id_pos_slideshow>2</id_pos_slideshow>
+		<id_lang>1</id_lang>
+		<title>title1</title>
+		<link>#</link>
+		<description></description>
+	</slideshow_lang>
+	
+	<slideshow_lang>
+		<id_pos_slideshow>1</id_pos_slideshow>
+		<id_lang>2</id_lang>
+		<title>title1</title>
+		<link>#</link>
+		<description></description>
+	</slideshow_lang>
+	<slideshow_lang>
+		<id_pos_slideshow>2</id_pos_slideshow>
+		<id_lang>2</id_lang>
+		<title>title1</title>
+		<link>#</link>
+		<description></description>
+	</slideshow_lang>
+	
+<!-- slideshop configuration -->
+	<slideshow_shop>
+		<id_pos_slideshow>1</id_pos_slideshow>
+		<id_shop>1</id_shop>
+	</slideshow_shop>
+        <slideshow_shop>
+		<id_pos_slideshow>2</id_pos_slideshow>
+		<id_shop>1</id_shop>
+	</slideshow_shop>
+</pos_slideshow>
