@@ -21,7 +21,8 @@ THE SOFTWARE.
 About
 =====
 + ShopyMind Module for PrestaShop.
-+ Version 1.1.13
++ Version 2.1.0
+Synchronisation instantanée
 
 System Requirements
 ===================
@@ -29,14 +30,14 @@ System Requirements
 + PrestaShop 1.4.x, 1.5.x, 1.6.x
 + Curl PHP Extension
 + JSON Encode
-  
+
 Configuration Instructions
 ==========================
     1. Upload files to your PrestaShop installation.
 
     2. Go to your PrestaShop administration Modules list.
     Click on Advertising & Marketing in the Categories list, find ShopyMind and click [Install]
-  
+
     3. Create account on https://client.shopymind.com/registration/speed or create it directly from module configuration on your back-office
     4. In module settings API key - set your ShopyMind API key.
     4. In module settings API password - set your ShopyMind API password.

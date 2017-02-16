@@ -81,20 +81,27 @@ class ShopymindClient_Configuration {
      * @var string
      */
     protected $_timezone;
-    
+
     /**
      * Multi-boutiques activé ?
      *
      * @var boolean
      */
     protected $_multishopEnabled;
-    
+
     /**
      * Id de la boutique (multi-boutiques)
      *
      * @var string
      */
     protected $_shopIdShop;
+
+    /**
+     * Force de la synchro produits
+     *
+     * @var string
+     */
+    protected $_forceSyncProducts;
 
     /**
      * Constructeur de l'objet config
@@ -114,7 +121,7 @@ class ShopymindClient_Configuration {
      * @param string $defaultCurrency
      * @return ShopymindClient_Configuration
      */
-    public static function factory($identifiantAPI, $passwordAPI, $defaultLang, $defaultCurrency, $contactPage = null, $phoneNumber = null, $timezone = null,$multishop_enabled = null,$shop_id_shop = null) {
+    public static function factory($identifiantAPI, $passwordAPI, $defaultLang, $defaultCurrency, $contactPage = null, $phoneNumber = null, $timezone = null,$multishop_enabled = null,$shop_id_shop = null,$forceSyncProducts = false) {
         $config = new self;
         $config->setApiIdentification($identifiantAPI)
                ->setApiPassword($passwordAPI)
@@ -124,7 +131,8 @@ class ShopymindClient_Configuration {
                ->setPhoneNumber($phoneNumber)
                ->setTimezone($timezone)
                ->setMultishopEnabled($multishop_enabled)
-        	   ->setShopIdShop($shop_id_shop);
+        	   ->setShopIdShop($shop_id_shop)
+               ->setForceSyncProducts($forceSyncProducts);
         return $config;
     }
     /**
@@ -177,13 +185,17 @@ class ShopymindClient_Configuration {
         if ($this->getTimezone() !== null) {
             $data['timezone'] = $this->getTimezone();
         }
-        
+
         if ($this->getMultishopEnabled() !== null) {
             $data['multishopEnabled'] = $this->getMultishopEnabled();
         }
-        
+
         if ($this->getShopIdShop() !== null) {
         	$data['shopIdShop'] = $this->getShopIdShop();
+        }
+
+        if ($this->getForceSyncProducts() !== null) {
+            $data['forceSyncProducts'] = $this->getForceSyncProducts();
         }
 
         require_once dirname(__FILE__) . '/../src/Client.php';
@@ -427,7 +439,7 @@ class ShopymindClient_Configuration {
         $this->_timezone = $timezone;
         return $this;
     }
-    
+
     /**
      * Permet de récupérer le statut de l'option multi-boutiques
      *
@@ -436,7 +448,7 @@ class ShopymindClient_Configuration {
     public function getMultishopEnabled() {
         return (bool) $this->_multishopEnabled;
     }
-    
+
     /**
      * Permet de modifier le statut de l'option multi-boutiques
      *
@@ -447,7 +459,7 @@ class ShopymindClient_Configuration {
         $this->_multishopEnabled = (bool) $multishopEnabled;
         return $this;
     }
-    
+
     /**
      * Permet de récupérer l'id de la boutique (multi-boutiques)
      *
@@ -456,7 +468,7 @@ class ShopymindClient_Configuration {
     public function getShopIdShop() {
     	return $this->_shopIdShop;
     }
-    
+
     /**
      * Permet de modifier l'id de la boutique (multi-boutiques)
      *
@@ -468,4 +480,23 @@ class ShopymindClient_Configuration {
     	return $this;
     }
 
+    /**
+     * Permet de savoir si on doit re-synchroniser les produits
+     *
+     * @return string
+     */
+    public function getForceSyncProducts() {
+        return $this->_forceSyncProducts;
+    }
+
+    /**
+     * Permet d'indiquer si on doit re-synchroniser les produits
+     *
+     * @param string $forceSyncProducts
+     * @return ShopymindClient_Configuration
+     */
+    public function setForceSyncProducts($forceSyncProducts) {
+        $this->_forceSyncProducts = $forceSyncProducts;
+        return $this;
+    }
 }

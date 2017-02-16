@@ -47,7 +47,7 @@ class ShopymindClient_Callback
         $return = array();
         if (_PS_VERSION_ < '1.5.4') {
             $query = '
-                SELECT a.`active`, a.`deleted`, a.`optin`, a.`newsletter`, a.`birthday`, a.`date_add`, a.`id_customer`, a.`id_gender`, a.`lastname`, a.`firstname`, a.`email`,c.`iso_code`, SUBSTRING(d.`accept_language`,1,2) AS `iso_code2`,`country`.`iso_code` as `country_code`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', a.`id_shop`' : ', "0" AS `id_shop`') . '
+                SELECT a.`active`, a.`deleted`, a.`optin`, a.`newsletter`, a.`birthday`, a.`date_add`, a.`date_upd`, a.`id_customer`, a.`id_gender`, a.`lastname`, a.`firstname`, a.`email`,c.`iso_code`, SUBSTRING(d.`accept_language`,1,2) AS `iso_code2`,`country`.`iso_code` as `country_code`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', a.`id_shop`' : ', "0" AS `id_shop`') . '
                 FROM `' . _DB_PREFIX_ . 'customer` a
                 LEFT JOIN `' . _DB_PREFIX_ . 'address` AS `address` ON (`address`.`id_customer` = `a`.`id_customer`)
                 LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
@@ -58,7 +58,7 @@ class ShopymindClient_Callback
                 GROUP BY a.`email`';
         } else {
             $query = '
-                SELECT a.`active`, a.`deleted`, a.`optin`, a.`newsletter`, a.`birthday`, a.`date_add`, a.`id_customer`, a.`id_gender`, a.`lastname`, a.`firstname`, a.`email`, b.`iso_code`, `country`.`iso_code` as `country_code` ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', a.`id_shop`' : ', "0" AS `id_shop`') . '
+                SELECT a.`active`, a.`deleted`, a.`optin`, a.`newsletter`, a.`birthday`, a.`date_add`, a.`date_upd`, a.`id_customer`, a.`id_gender`, a.`lastname`, a.`firstname`, a.`email`, b.`iso_code`, `country`.`iso_code` as `country_code` ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', a.`id_shop`' : ', "0" AS `id_shop`') . '
                 FROM `' . _DB_PREFIX_ . 'customer` a
                 LEFT JOIN `' . _DB_PREFIX_ . 'address` AS `address` ON (`address`.`id_customer` = `a`.`id_customer`)
                 LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
@@ -85,6 +85,7 @@ class ShopymindClient_Callback
                     'optin' => $row['optin'],
                     'newsletter' => $row['newsletter'],
                     'customer_since' => $row['date_add'],
+                    'customer_update' => $row['date_upd'],
                     'gender' => (isset($row['id_gender']) && ($row['id_gender'] == 1 || $row['id_gender'] == 2) ? $row['id_gender'] : 0),
                     'date_last_order' => self::getDateLastOrder($row['id_customer']),
                     'nb_order' => self::countCustomerOrder($row['id_customer']),
@@ -371,10 +372,11 @@ class ShopymindClient_Callback
      * ]
      * ]
      *
+     * @param int $nbSecondsMaxInterval Nombre de secondes maximum d'inactivité du panier
      * @param int $nbSeconds
      * @return array
      */
-    public static function getDroppedOutCart($id_shop, $nbSeconds, $justCount = false)
+    public static function getDroppedOutCart($id_shop, $nbSeconds, $nbSecondsMaxInterval, $justCount = false)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
             return call_user_func_array(array(
@@ -395,7 +397,7 @@ class ShopymindClient_Callback
                     LEFT JOIN ' . _DB_PREFIX_ . 'orders d ON (d.id_cart = c.id_cart)
                     LEFT JOIN ' . _DB_PREFIX_ . 'orders d2 ON (d2.`id_customer` = c.`id_customer` AND d2.`date_add` >= DATE_SUB("' . pSQL($date) . '",  INTERVAL 7 DAY) )
                     LEFT JOIN `' . _DB_PREFIX_ . 'currency` e ON (e.`id_currency` = c.`id_currency`)
-                    WHERE c.date_upd >= DATE_SUB("' . pSQL($date) . '", INTERVAL ' . (int) ($nbSeconds * 2) . ' SECOND)
+                    WHERE c.date_upd >= DATE_SUB("' . pSQL($date) . '", INTERVAL ' . (int) ($nbSeconds + $nbSecondsMaxInterval) . ' SECOND)
                     AND c.date_upd <= DATE_SUB("' . pSQL($date) . '", INTERVAL ' . (int) $nbSeconds . ' SECOND)
                     AND c.id_customer IS NOT NULL
                     AND c.id_customer != 0
@@ -710,8 +712,7 @@ class ShopymindClient_Callback
             LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
             LEFT JOIN `' . _DB_PREFIX_ . 'state` AS `state` ON (`address`.`id_state` = `state`.`id_state`)
             WHERE `order`.`id_order` IS NULL
-            ' . ($relaunchOlder ? ' AND `a`.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $relaunchOlder . ' MONTH)' : ' AND `a`.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbDays . ' DAY)') . '
-            AND `a`.`date_add` <= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) ($nbDays - 1) . ' DAY)
+            AND DATE_FORMAT(`a`.`date_add`, "%Y-%m-%d") = DATE_FORMAT(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbDays . ' DAY), "%Y-%m-%d")
             AND (`address`.`id_address` = (SELECT `id_address` FROM `' . _DB_PREFIX_ . 'address` `address2` WHERE `address2`.`id_customer` = a.`id_customer` ORDER BY `address2`.`date_upd` DESC LIMIT 1) OR `address`.`id_address` IS NULL)
             AND ' . $timezonesWhere . '
             ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
@@ -726,8 +727,7 @@ class ShopymindClient_Callback
             LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
             LEFT JOIN `' . _DB_PREFIX_ . 'state` AS `state` ON (`address`.`id_state` = `state`.`id_state`)
             WHERE `order`.`id_order` IS NULL
-            ' . ($relaunchOlder ? ' AND `a`.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $relaunchOlder . ' MONTH)' : '  AND `a`.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbDays . ' DAY)') . '
-            AND `a`.`date_add` <= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) ($nbDays - 1) . ' DAY)
+            AND DATE_FORMAT(`a`.`date_add`, "%Y-%m-%d") = DATE_FORMAT(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbDays . ' DAY), "%Y-%m-%d")
             AND (`address`.`id_address` = (SELECT `id_address` FROM `' . _DB_PREFIX_ . 'address` `address2` WHERE `address2`.`id_customer` = a.`id_customer` ORDER BY `address2`.`date_upd` DESC LIMIT 1) OR `address`.`id_address` IS NULL)
             AND ' . $timezonesWhere . '
             ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
@@ -837,7 +837,6 @@ class ShopymindClient_Callback
             ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
              GROUP BY a.`id_customer`';
         }
-
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
         if ($results && is_array($results) && sizeof($results)) {
             foreach ($results as $row) {
@@ -1008,6 +1007,9 @@ class ShopymindClient_Callback
             ), func_get_args());
         $return = array();
         $context = self::getContext($id_shop);
+
+		$id_customer = (!is_array($id_customer) && $id_customer > 0) ? array($id_customer) : $id_customer;
+
         $query = 'SELECT ' . ($justCount ? 'COUNT(a.`id_customer`) AS `nbCutomers`' : 'a.`id_customer`') . '
             FROM `' . _DB_PREFIX_ . 'customer` a
             WHERE ' . ($id_customer && is_array($id_customer) ? '`id_customer` IN (' . implode(',', $id_customer) . ')' : '1') . '
@@ -1039,12 +1041,14 @@ class ShopymindClient_Callback
         $return = array();
         $context = self::getContext($id_shop);
 
+		$id_product = (!is_array($id_product) && $id_product > 0) ? array($id_product) : $id_product;
+
         $query = 'SELECT ' . ($justCount ? 'COUNT(b.`id_product`) AS `total`' : 'b.`id_product`') . '
             FROM `' . _DB_PREFIX_ . 'product` b
                 ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : '') . '
             WHERE ' . ($id_product && is_array($id_product) ? 'b.`id_product` IN (' . implode(',', $id_product) . ')' : '1') . '
             ' . ($lastUpdate ? ' AND b.`date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
-           
+
             ' . ($justCount ? '' : 'ORDER BY b.`id_product`') . '
             ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
 
@@ -1069,6 +1073,8 @@ class ShopymindClient_Callback
             ), func_get_args());
         $return = array();
         $context = self::getContext($id_shop);
+
+		$id_category = (!is_array($id_category) && $id_category > 0) ? array($id_category) : $id_category;
 
         $query = '  SELECT ' . ($justCount ? 'COUNT(b.`id_category`) AS `total`' : 'b.`id_category`') . '
                     FROM `' . _DB_PREFIX_ . 'category` b
@@ -1099,11 +1105,19 @@ class ShopymindClient_Callback
             ), func_get_args());
         $return = array();
         $context = self::getContext($id_shop);
+        if($lastUpdate) {
+            $date = new DateTime($lastUpdate);
+            $date->sub(new DateInterval('P12M'));
+            $dateAddLimit = $date->format('Y-m-d H:i:s');
+        }
+
+		$id_order = (!is_array($id_order) && $id_order > 0) ? array($id_order) : $id_order;
 
         $query = '  SELECT ' . ($justCount ? 'COUNT(`id_order`) AS `total`' : '`id_order`') . '
                     FROM `' . _DB_PREFIX_ . 'orders`
                     WHERE ' . ($id_order && is_array($id_order) ? '`id_order` IN (' . implode(',', $id_order) . ')' : '1') . '
                     ' . ($lastUpdate ? ' AND `date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
+                    ' . (isset($dateAddLimit) && $dateAddLimit ? ' AND `date_add` >= "'.pSQL($dateAddLimit).'"' : '') . '
                     ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false) : '') . '
                     ' . ($justCount ? '' : 'ORDER BY `id_order`') . '
                     ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
@@ -1159,6 +1173,7 @@ class ShopymindClient_Callback
             'currency_rate' => $currency->conversion_rate,
             'currency' => $currency->iso_code,
             'date_order' => $order->date_add,
+            'date_update' => $order->date_upd,
             'voucher_used' => $voucher_used,
             'voucher_amount' => $voucher_amount,
             'products' => self::getSyncOrderProducts($order),
@@ -1186,12 +1201,15 @@ class ShopymindClient_Callback
         $returnProducts = array();
         if ($orderProducts && is_array($orderProducts) && count($orderProducts)) {
             foreach ($orderProducts as $row) {
+                $product_categories = (method_exists('Product', 'getProductCategories') ? Product::getProductCategories($row['id_product']) : Product::getIndexedCategories($row['id_product']));
+
                 $returnProducts[] = array(
                     'id_product' => $row['id_product'],
                     'id_combination' => $row['product_attribute_id'],
                     'id_manufacturer' => $row['id_manufacturer'],
                     'price' => $row['product_price'],
-                    'qty' => $row['product_quantity']
+                    'qty' => $row['product_quantity'],
+                    'id_categories' => $product_categories
                 );
             }
         }
@@ -1992,7 +2010,9 @@ class ShopymindClient_Callback
             FROM `' . _DB_PREFIX_ . 'product` b
           ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : '') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` c ON (b.`id_product` = c.`id_product` AND c.`id_lang` = ' . (int) $id_lang . '' . (self::isMultiShop($id_shop) ? Shop::addSqlRestrictionOnLang('c') : '') . ')
-            LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)
+            ' . (self::isMultiShop($id_shop) ? 'LEFT JOIN `'._DB_PREFIX_.'image_shop` d
+			ON (d.`id_product` = b.`id_product` AND d.cover=1 AND d.id_shop='.(int)$id_shop.')' :
+           'LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'image_lang` e ON (d.`id_image` = e.`id_image` AND e.`id_lang` = ' . (int) $id_lang . ')
             WHERE (c.`name` LIKE "%' . pSQL($search) . '%" OR b.`reference` LIKE "%' . pSQL($search) . '%" OR b.`reference` LIKE "%' . pSQL($search) . '%"  OR b.`ean13` LIKE "%' . pSQL($search) . '%" OR b.`id_product` LIKE "%' . pSQL($search) . '%") AND b.`active` = 1
             GROUP BY b.`id_product`
@@ -2009,8 +2029,6 @@ class ShopymindClient_Callback
                 $image_url = $link->getImageLink((int) $row2['product_link_rewrite'], $row2['id_image'], $image_size);
                 if (! preg_match('#^http#i', $image_url))
                     $image_url = _PS_BASE_URL_ . $image_url;
-                if (self::isMultiShop($id_shop))
-                    $image_url = self::getRealMultiShopUrl($image_url, $id_shop);
 
                     // Get product combinations
                 $combinaisons = self::getProductCombinations($row2['id_product'], $id_lang);
@@ -2118,35 +2136,6 @@ class ShopymindClient_Callback
         return $combinations;
     }
 
-    public static function getRealMultiShopUrl($url, $id_shop)
-    {
-        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
-            return call_user_func_array(array(
-                'ShopymindClient_CallbackOverride',
-                __FUNCTION__
-            ), func_get_args());
-        if (_PS_VERSION_ < 1.5 || (int) $id_shop === (int) Configuration::get('PS_SHOP_DEFAULT'))
-            return $url;
-        if (Configuration::get('PS_SSL_ENABLED')) {
-            $main_domain_default = Db::getInstance()->getValue('SELECT CONCAT(domain_ssl,physical_uri,virtual_uri)
-                                FROM ' . _DB_PREFIX_ . 'shop_url
-                              WHERE main=1 AND id_shop = ' . (int) Configuration::get('PS_SHOP_DEFAULT'));
-            $main_domain = Db::getInstance()->getValue('SELECT CONCAT(domain_ssl,physical_uri,virtual_uri)
-                                FROM ' . _DB_PREFIX_ . 'shop_url
-                                WHERE main=1 AND id_shop = ' . (int) $id_shop);
-        } else {
-            $main_domain_default = Db::getInstance()->getValue('SELECT CONCAT(domain,physical_uri,virtual_uri)
-                                FROM ' . _DB_PREFIX_ . 'shop_url
-                              WHERE main=1 AND id_shop = ' . (int) Configuration::get('PS_SHOP_DEFAULT'));
-            $main_domain = Db::getInstance()->getValue('SELECT CONCAT(domain,physical_uri,virtual_uri)
-                                FROM ' . _DB_PREFIX_ . 'shop_url
-                                WHERE main=1 AND id_shop = ' . (int) $id_shop);
-        }
-        if (! preg_match('#' . preg_quote($main_domain_default) . '#', $url))
-            return $url;
-        return preg_replace('#' . preg_quote($main_domain_default) . '#', $main_domain, $url);
-    }
-
     public static function getOptimumImageSize()
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
@@ -2154,10 +2143,12 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
+            $productImageSize = Configuration::get('SPM_productImageSize');
+            if($productImageSize) return $productImageSize;
         $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
     SELECT `name`
     FROM `' . _DB_PREFIX_ . 'image_type`
-    WHERE `width` > 150 AND height > 150 AND `products` = 1
+    WHERE `width` >= 200 AND height >= 200 AND `products` = 1
         ORDER BY `width` ASC');
         return isset($result['name']) ? $result['name'] : false;
     }
@@ -2236,6 +2227,7 @@ class ShopymindClient_Callback
 
             foreach ($cartProducts as $row) {
                 $id_product_attribute = (isset($row['id_product_attribute']) && $row['id_product_attribute'] !== '') ? $row['id_product_attribute'] : false;
+
                 $returnProducts[] = array_merge(self::getProduct($row['id_product'], $id_lang, $id_product_attribute), array(
                     'quantity' => $row['cart_quantity']
                 ));
@@ -2246,7 +2238,11 @@ class ShopymindClient_Callback
 
     public static function getOrderProducts($order)
     {
-        $context = self::getContext();
+        if(isset($order->id_shop) && self::isMultiShop($order->id_shop)) {
+            $context = self::getContext($order->id_shop);
+        }
+        else
+            $context = self::getContext();
         if (! defined('_PS_BASE_URL_')) {
             require_once (dirname(__FILE__) . '/../../../init.php');
         }
@@ -2255,13 +2251,16 @@ class ShopymindClient_Callback
         if ($context->cart === null || ! is_object($context->cart) || ! isset($context->cart->id) || ! $context->cart->id)
             $context->cart = new Cart($order->id_cart);
 
-        $link = $context->link;
         $image_size = self::getOptimumImageSize();
         $orderProducts = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT b.`id_product`, b.`id_manufacturer`, c.`name`, a.`product_quantity`, a.`product_attribute_id`, MAX(d.`id_image`) id_image, f.`id_image` AS `id_image2`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
                 FROM `' . _DB_PREFIX_ . 'order_detail` a
                 JOIN `' . _DB_PREFIX_ . 'product` b ON (b.`id_product` = a.`product_id`)
                 LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` c ON (b.`id_product` = c.`id_product` AND c.`id_lang` = ' . (int) $order->id_lang . ')
-                LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)
+                ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? '
+                    LEFT JOIN `' . _DB_PREFIX_ . 'image` p ON (p.`id_product` = b.`id_product`)
+                    LEFT JOIN `'._DB_PREFIX_.'image_shop` d
+            ON (d.`id_image` = p.`id_image` AND d.cover=1 AND d.id_shop='.(int)$context->shop->id.')' :
+           'LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)') . '
                 LEFT JOIN `' . _DB_PREFIX_ . 'image_lang` e ON (d.`id_image` = e.`id_image` AND e.`id_lang` = ' . (int) $order->id_lang . ')
                 LEFT JOIN `' . _DB_PREFIX_ . 'product_attribute_image` f ON (f.`id_product_attribute` = a.`product_attribute_id`)
                 WHERE a.`id_order` = ' . (int) $order->id . '
@@ -2269,41 +2268,33 @@ class ShopymindClient_Callback
         $returnProducts = array();
         if ($orderProducts && is_array($orderProducts) && sizeof($orderProducts)) {
             foreach ($orderProducts as $row) {
-                $returnProducts[] = self::getProduct($row['id_product']);
+                $returnProducts[] = self::getProduct($row['id_product'], $order->id_lang);
             }
         }
 
         return $returnProducts;
     }
 
-    public static function checkNewOrder($order, $orderState, $orderIsConfirm = false)
+    public static function checkSyncDate($type)
     {
-        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
-            return call_user_func_array(array(
-                'ShopymindClient_CallbackOverride',
-                __FUNCTION__
-            ), func_get_args());
-        self::sendOrderToSPM($order, $orderState);
+        return true;
+        $pass = true;
+        $lastCall = Configuration::get('SPM_SYNCLASTCALL_'.strtoupper($type));
+
+        if (!is_null($lastCall) && $lastCall && $lastCall != '') {
+            $datetime1 = new DateTime();
+            $datetime2 = new DateTime($lastCall);
+            $interval = ($datetime1->format('U')-$datetime2->format('U'))/60;
+            if($interval < 1) {
+                $pass = false;
+            }
+        }
+        return $pass;
     }
 
-    public static function sendOrderToSPM($order, $orderState)
+    public static function setSyncDate($type)
     {
-        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
-            return call_user_func_array(array(
-                'ShopymindClient_CallbackOverride',
-                __FUNCTION__
-            ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
-        $params = self::getOrder($order, $orderState);
-        if (isset($order->id_shop) && self::isMultiShop($order->id_shop)) {
-            $currentContext = self::getContext();
-            self::getContext($order->id_shop);
-        }
-
-        ShopymindClient_Notify::newOrder($params);
-        if (isset($currentContext)) {
-            self::getContext($currentContext->shop->id);
-        }
+        Configuration::updateValue('SPM_SYNCLASTCALL_'.strtoupper($type),date('Y-m-d H:i:s'));
     }
 
     public static function saveProduct($id_product)
@@ -2313,8 +2304,12 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
-        ShopymindClient_Notify::saveProduct($id_product);
+        $pass = self::checkSyncDate('product');
+        if($pass) {
+            include_once (dirname(__FILE__) . '/bin/Notify.php');
+            ShopymindClient_Notify::saveProduct($id_product);
+            self::setSyncDate('product');
+        }
     }
 
     public static function saveProductCategory($id_category)
@@ -2324,8 +2319,12 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
-        ShopymindClient_Notify::saveProductCategory($id_category);
+        $pass = self::checkSyncDate('productCategory');
+        if($pass) {
+            include_once (dirname(__FILE__) . '/bin/Notify.php');
+            ShopymindClient_Notify::saveProductCategory($id_category);
+            self::setSyncDate('productCategory');
+        }
     }
 
     public static function saveCustomer($id_customer)
@@ -2335,8 +2334,13 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
-        ShopymindClient_Notify::saveCustomer($id_customer);
+
+        $pass = self::checkSyncDate('customer');
+        if($pass) {
+            include_once (dirname(__FILE__) . '/bin/Notify.php');
+            ShopymindClient_Notify::saveCustomer($id_customer);
+            self::setSyncDate('customer');
+        }
     }
 
     public static function saveOrder($id_order)
@@ -2346,8 +2350,12 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
-        ShopymindClient_Notify::saveOrder($id_order);
+        $pass = self::checkSyncDate('order');
+        if($pass) {
+            include_once (dirname(__FILE__) . '/bin/Notify.php');
+            ShopymindClient_Notify::saveOrder($id_order);
+            self::setSyncDate('order');
+        }
     }
 
     public static function deleteProduct($id_product)
@@ -2460,7 +2468,7 @@ class ShopymindClient_Callback
             ), func_get_args());
 
         $context = self::getContext();
-        $resultCategory = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT a.`date_add`, a.`id_parent`, a.`id_category`, a.`active`, b.`name`, b.`description`, b.`link_rewrite`, b.`id_lang`
+        $resultCategory = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT a.`date_add`, a.`date_upd`, a.`id_parent`, a.`id_category`, a.`active`, b.`name`, b.`description`, b.`link_rewrite`, b.`id_lang`
                 FROM `' . _DB_PREFIX_ . 'category` a
               ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlAssociation('category', 'a') : '') . '
                 LEFT JOIN `' . _DB_PREFIX_ . 'category_lang` b ON (a.`id_category` = b.`id_category`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlRestrictionOnLang('b') : '') . ')
@@ -2487,6 +2495,7 @@ class ShopymindClient_Callback
                     'description' => trim(strip_tags(nl2br($row['description']))),
                     'link' => $category_url,
                     'date_creation' => $row['date_add'],
+                    'date_update' => $row['date_upd'],
                     'active' => $row['active']
                 );
             }
@@ -2506,13 +2515,17 @@ class ShopymindClient_Callback
         $image_size = self::getOptimumImageSize();
 
         $resultProduct = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-            SELECT b.`available_for_order`, b.`active`, b.`date_add`, b.`quantity`, b.`reference`, b.`id_manufacturer`,b.`id_product`, c.`id_lang`, c.`name`, c.`description_short`, c.`description`, d.`id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
+            SELECT b.`available_for_order`, b.`active`, b.`date_add`, b.`date_upd`, b.`quantity`, b.`reference`, b.`id_manufacturer`,b.`id_product`, c.`id_lang`, c.`name`, c.`description_short`, c.`description`, MAX(d.`id_image`) `id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
             FROM `' . _DB_PREFIX_ . 'product` b
             ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlAssociation('product', 'b') : '') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` c ON (b.`id_product` = c.`id_product`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlRestrictionOnLang('c') : '') . ($id_lang ? 'AND c.id_lang = ' . (int) $id_lang : '') . ')
-            LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)
+            ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? '
+            LEFT JOIN `' . _DB_PREFIX_ . 'image` p ON (p.`id_product` = b.`id_product`)
+            LEFT JOIN `'._DB_PREFIX_.'image_shop` d
+			ON (p.`id_image` = d.`id_image` AND d.cover=1 AND d.id_shop='.(int)$context->shop->id.')' :
+           'LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'image_lang` e ON (d.`id_image` = e.`id_image` AND e.`id_lang` = c.`id_lang`)
-            WHERE b.`id_product` = ' . (int) $id_product);
+            WHERE b.`id_product` = ' . (int) $id_product.($id_lang ? '' : ' GROUP BY c.`id_lang`'));
 
         $returnProduct = array();
         if ($resultProduct && is_array($resultProduct) && count($resultProduct)) {
@@ -2541,15 +2554,16 @@ class ShopymindClient_Callback
                     $image_url = _PS_BASE_URL_ . $image_url;
 
                 if (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE')) {
-                    $image_url = self::getRealMultiShopUrl($image_url, $context->shop->id);
                     // Get product URL
                     $product_url = $link->getProductLink((int) $row['id_product'], null, null, null, (int) $row['id_lang'], $context->shop->id);
+                    $image_url = self::getRealMultiShopUrl($image_url, $context->shop->id);
                 } else
                     $product_url = $link->getProductLink((int) $row['id_product'], null, null, null, (int) $row['id_lang']);
 
                 $combination = self::getAllProductCombination($row['id_product'], $row['id_lang'], $image_size, $id_product_attribute);
 
                 if (isset($id_product_attribute)) {
+
                     $returnProduct[] = array(
                         'shop_id_shop' => (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? $context->shop->id : false),
                         'id_product' => $row['id_product'],
@@ -2569,6 +2583,7 @@ class ShopymindClient_Callback
                         'price_discount' => isset($combination['price_discount']) && $combination['price_discount'] !== '' ? $combination['price_discount'] : $price_discount,
                         'quantity_remaining' => isset($combination['quantity']) && $combination['quantity'] !== '' ? $combination['quantity'] : $row['quantity'],
                         'date_creation' => $row['date_add'],
+                        'date_update' => $row['date_upd'],
                         'active' => $active
                     );
                 } else {
@@ -2590,6 +2605,7 @@ class ShopymindClient_Callback
                         'price_discount' => $price_discount,
                         'quantity_remaining' => $row['quantity'],
                         'date_creation' => $row['date_add'],
+                        'date_update' => $row['date_upd'],
                         'active' => $active
                     );
                 }
@@ -2597,6 +2613,35 @@ class ShopymindClient_Callback
         }
 
         return $id_lang ? reset($returnProduct) : $returnProduct;
+    }
+
+    public static function getRealMultiShopUrl($url, $id_shop)
+    {
+        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
+            return call_user_func_array(array(
+                'ShopymindClient_CallbackOverride',
+                __FUNCTION__
+            ), func_get_args());
+            if (_PS_VERSION_ < 1.5 || (int) $id_shop === (int) Configuration::get('PS_SHOP_DEFAULT'))
+                return $url;
+                if (Configuration::get('PS_SSL_ENABLED')) {
+                    $main_domain_default = Db::getInstance()->getValue('SELECT CONCAT(domain_ssl,physical_uri,virtual_uri)
+                                FROM ' . _DB_PREFIX_ . 'shop_url
+                              WHERE main=1 AND id_shop = ' . (int) Configuration::get('PS_SHOP_DEFAULT'));
+                    $main_domain = Db::getInstance()->getValue('SELECT CONCAT(domain_ssl,physical_uri,virtual_uri)
+                                FROM ' . _DB_PREFIX_ . 'shop_url
+                                WHERE main=1 AND id_shop = ' . (int) $id_shop);
+                } else {
+                    $main_domain_default = Db::getInstance()->getValue('SELECT CONCAT(domain,physical_uri,virtual_uri)
+                                FROM ' . _DB_PREFIX_ . 'shop_url
+                              WHERE main=1 AND id_shop = ' . (int) Configuration::get('PS_SHOP_DEFAULT'));
+                    $main_domain = Db::getInstance()->getValue('SELECT CONCAT(domain,physical_uri,virtual_uri)
+                                FROM ' . _DB_PREFIX_ . 'shop_url
+                                WHERE main=1 AND id_shop = ' . (int) $id_shop);
+                }
+                if (! preg_match('#' . preg_quote($main_domain_default) . '#', $url))
+                    return $url;
+                    return preg_replace('#' . preg_quote($main_domain_default) . '#', $main_domain, $url);
     }
 
     public static function getAllProductCombination($id_product, $id_lang = false, $image_size, $id_product_attribute = null)
@@ -2611,12 +2656,15 @@ class ShopymindClient_Callback
         $link = $context->link;
         $returnCombination = array();
         $resultProduct = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-            SELECT f.`id_product_attribute`, f.`quantity`, c.`name`, d.`id_image` AS product_img_default, pai.`id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
+            SELECT f.`id_product_attribute`, f.`default_on`, f.`quantity`, c.`name`, MAX(d.`id_image`) AS product_img_default, pai.`id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
             FROM `' . _DB_PREFIX_ . 'product_attribute` f
             ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlAssociation('product_attribute', 'f') : '') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` c ON (f.`id_product` = c.`id_product`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlRestrictionOnLang('c') : '') . ')
             LEFT JOIN `' . _DB_PREFIX_ . 'product_attribute_image` pai ON (pai.`id_product_attribute` = f.`id_product_attribute`)
-            LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = f.`id_product`)
+            ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'LEFT JOIN `' . _DB_PREFIX_ . 'image` p ON (p.`id_product` = f.`id_product`)
+                    LEFT JOIN `'._DB_PREFIX_.'image_shop` d
+            ON (d.`id_image` = p.`id_image` AND d.cover=1 AND d.id_shop='.(int)$context->shop->id.')' :
+           'LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = f.`id_product` AND d.`cover` = 1)') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'image_lang` e ON (e.`id_image` = pai.`id_image` AND e.`id_lang` = c.`id_lang`)
             WHERE f.`id_product` = ' . (int) $id_product . '
             AND c.`id_lang` = ' . (int) $id_lang . (isset($id_product_attribute) ? ' AND f.`id_product_attribute` = ' . (int) $id_product_attribute : '') . ' GROUP BY f.`id_product_attribute`');
@@ -2669,9 +2717,9 @@ class ShopymindClient_Callback
                     $image_url = _PS_BASE_URL_ . $image_url;
 
                 if (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE')) {
-                    $image_url = self::getRealMultiShopUrl($image_url, $context->shop->id);
                     // Get product URL
                     $product_url = $link->getProductLink((int) $id_product, null, null, null, (int) $id_lang, $context->shop->id);
+                    $image_url = self::getRealMultiShopUrl($image_url, $context->shop->id);
                 } else
                     $product_url = $link->getProductLink((int) $id_product, null, null, null, (int) $id_lang);
 
@@ -2684,7 +2732,8 @@ class ShopymindClient_Callback
                     'values' => $combination_values,
                     'price' => $price,
                     'price_discount' => $price_discount,
-                    'quantity_remaining' => $row['quantity']
+                    'quantity_remaining' => $row['quantity'],
+                    'default' => (int)$row['default_on']
                 );
             }
         }
@@ -2713,6 +2762,9 @@ class ShopymindClient_Callback
         $context = $module->getContext();
         if ($id_shop && isset($context->shop) && $context->shop->id && self::isMultiShop($id_shop)) {
             Shop::setContext(1, $id_shop);
+            $shop = new Shop($id_shop);
+            Context::getContext()->shop = $shop;
+            $context->shop = $shop;
         }
         return $context;
     }
