@@ -1,0 +1,84 @@
+.onboarding-intro {
+    border-bottom: solid 1px #E4E5E7;
+    height: 70px
+}
+.onboarding-intro h3 {
+    font-family: "Open Sans";
+    font-weight: 300;
+    font-size: 28px;
+    line-height: 50px
+}
+.steps-list-container {
+    float: left;
+    padding: 30px 20px 0;
+}
+.steps-list-container .steps-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: onboardingSteps
+}
+.steps-list-container .steps-list li {
+    counter-increment: onboardingSteps;
+    content: counter(onboardingSteps);
+    position: relative;
+    font-size: 18px;
+    margin-bottom: 30px;
+    padding-left: 55px
+}
+.steps-list-container .steps-list li .title {
+    display: block
+}
+.steps-list-container .steps-list li .desc {
+    display: block;
+    font-size: 13px
+}
+.steps-list-container .steps-list li:before {
+    display: block;
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: 6px;
+    top: 0;
+    border: 1px solid #97A9B0;
+    content: counter(onboardingSteps);
+    text-align: center;
+    font-size: 22px;
+    line-height: 38px;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%
+}
+.steps-list-container .steps-list li.checked .title {
+    color: #aaa
+}
+.steps-list-container .steps-list li.checked:before {
+    display: block;
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: 6px;
+    top: 0;
+    border: none;
+    color: #fff;
+    font-family: FontAwesome;
+    line-height: 40px;
+    content: "";
+    background-color: #8BC954
+}
+.steps-list-container .steps-list li.active .title {
+    font-size: 24px;
+    margin-bottom: 8px
+}
+.steps-list-container .steps-list li.inactive .title {
+    color: #ccc;
+    line-height: 40px
+}
+.steps-list-container .steps-list li.inactive:before {
+    color: #ccc;
+    border-color: #ccc
+}
+.steps-list-container .step-launch {
+    padding: 0 80px;
+    margin-top: 50px
+}

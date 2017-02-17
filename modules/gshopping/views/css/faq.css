@@ -1,0 +1,63 @@
+.faq ul.faq-items {
+	list-style-type: none;
+	width: 100%;
+}
+.faq ul.faq-items > li {
+	-moz-box-shadow: 0px 0px 10px -4px #BBBBBB;
+	-webkit-box-shadow: 0px 0px 10px -4px #BBBBBB;
+	-o-box-shadow: 0px 0px 10px -4px #BBBBBB;
+	box-shadow: 0px 0px 10px -4px #BBBBBB;
+	filter:progid:DXImageTransform.Microsoft.Shadow(color=#BBBBBB, Direction=180, Strength=10);
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 2px;
+	width: 100%;
+	margin-bottom: 20px;
+	padding: 20px;
+	cursor: pointer;
+}
+.faq ul.faq-items > li:hover {
+	-moz-box-shadow: 0px 0px 10px -4px #555555;
+	-webkit-box-shadow: 0px 0px 10px -4px #555555;
+	-o-box-shadow: 0px 0px 10px -4px #555555;
+	box-shadow: 0px 0px 10px -4px #555555;
+	filter:progid:DXImageTransform.Microsoft.Shadow(color=#555555, Direction=180, Strength=10);
+}
+
+.faq ul.faq-items > li .faq-trigger {
+	font-size: 20px;
+	color: #00aff0;
+}
+
+.faq ul.faq-items > li .faq-trigger:hover {
+	color: #00aff0;
+	text-decoration: none;
+}
+
+.faq ul.faq-items > li .faq-trigger:active {
+	color: #00aff0;
+	text-decoration: none;
+}
+
+.faq .expand {
+	font-size: 26px;
+	font-weight: 600;
+}
+
+.faq-content {
+	display: none;
+	padding-left: 15px;
+	padding-top: 20px;
+	line-height: 200%;
+}
+
+.faq-content a {
+	border-bottom: 1px dotted #555;
+	padding-bottom: -2px;
+	color: #555;
+	size: 16px;
+}
+.faq-content a:hover {
+	border-bottom: none;
+	text-decoration: none;
+}

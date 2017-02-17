@@ -1,0 +1,3 @@
+DROP TABLE PREFIXmodule_gshopping_table;
+DROP TABLE PREFIXmodule_gshopping_category;
+DROP TABLE PREFIXmodule_gshopping_attributes;
