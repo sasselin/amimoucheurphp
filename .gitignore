@@ -40,3 +40,5 @@ modules/homeslider/images/*
 *sitemap.xml
 gmerchantcenter*.xml
 google*.html
+
+/.htaccess
