@@ -109,7 +109,11 @@
                                                                                     {convertPrice price=$option.total_price_with_tax}{if $display_tax_label} {l s='(tax incl.)'}{/if}
                                                                                 {/if}
                                                                             {else}
-                                                                                {convertPrice price=$option.total_price_without_tax}
+                                                                                {if $option.total_price_with_tax == '0.01'}
+                                                                                    {l s='To communicate'}
+                                                                                {else}
+                                                                                    {convertPrice price=$option.total_price_without_tax}
+                                                                                {/if}
                                                                             {/if}
                                                                         {else}
                                                                             {l s='Free'}
@@ -187,7 +191,11 @@
                                                                                         {convertPrice price=$option.total_price_with_tax}{if $display_tax_label} {l s='(tax incl.)'}{/if}
                                                                                     {/if}
                                                                                 {else}
-                                                                                    {convertPrice price=$option.total_price_without_tax}
+                                                                                    {if $option.total_price_with_tax == '0.01'}
+                                                                                        {l s='To communicate'}
+                                                                                    {else}
+                                                                                        {convertPrice price=$option.total_price_without_tax}
+                                                                                    {/if}
                                                                                 {/if}
                                                                             {else}
                                                                                 {l s='Free'}
