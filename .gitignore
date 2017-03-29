@@ -37,6 +37,7 @@ config/xml/*
 
 # Modules files
 modules/homeslider/images/*
+modules/blockbanner/img
 
 # MISC
 *sitemap.xml
@@ -44,3 +45,4 @@ gmerchantcenter*.xml
 google*.html
 
 /.htaccess
+

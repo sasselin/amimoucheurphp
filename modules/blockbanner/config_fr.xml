@@ -2,7 +2,7 @@
 <module>
 	<name>blockbanner</name>
 	<displayName><![CDATA[Bloc banni&egrave;re]]></displayName>
-	<version><![CDATA[1.4.0]]></version>
+	<version><![CDATA[1.4.1]]></version>
 	<description><![CDATA[Permet d&#039;afficher une banni&egrave;re dans l&#039;en-t&ecirc;te du site.]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[front_office_features]]></tab>
