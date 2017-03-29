@@ -7,7 +7,7 @@ ul.product_list .product-name {
   overflow: hidden; }
 ul.product_list .availability span {
   display: inline-block;
-  color: #fff;
+  color: white;
   font-weight: bold;
   padding: 3px 8px 4px 8px;
   margin-bottom: 20px; }
@@ -89,8 +89,8 @@ ul.product_list .product-image-container {
     width: 107px;
     height: 43px;
     text-align: center;
-    -moz-box-shadow: rgba(0, 0, 0, 0.16) 0 2px 8px;
     -webkit-box-shadow: rgba(0, 0, 0, 0.16) 0 2px 8px;
+    -moz-box-shadow: rgba(0, 0, 0, 0.16) 0 2px 8px;
     box-shadow: rgba(0, 0, 0, 0.16) 0 2px 8px; }
     @media (max-width: 1199px) {
       ul.product_list .product-image-container .quick-view {
@@ -160,7 +160,7 @@ ul.product_list.grid > li {
       width: 50%;
       float: left; } }
   ul.product_list.grid > li .product-container {
-    background: #fff;
+    background: white;
     padding: 0;
     position: relative; }
     ul.product_list.grid > li .product-container .product-image-container {
@@ -181,7 +181,7 @@ ul.product_list.grid > li {
         padding: 9px 0;
         display: none; }
         ul.product_list.grid > li .product-container .product-image-container .content_price span {
-          color: #fff; }
+          color: white; }
           ul.product_list.grid > li .product-container .product-image-container .content_price span.old-price {
             color: #b1b0b0; }
     ul.product_list.grid > li .product-container h5 {
@@ -226,8 +226,8 @@ ul.product_list.grid > li {
         padding: 3px 0 4px 0; }
   @media (min-width: 1200px) {
     ul.product_list.grid > li.hovered .product-container {
-      -moz-box-shadow: rgba(0, 0, 0, 0.17) 0 0 13px;
       -webkit-box-shadow: rgba(0, 0, 0, 0.17) 0 0 13px;
+      -moz-box-shadow: rgba(0, 0, 0, 0.17) 0 0 13px;
       box-shadow: rgba(0, 0, 0, 0.17) 0 0 13px;
       position: relative;
       z-index: 10; }
@@ -281,7 +281,7 @@ ul.product_list.list > li .product-image-container {
   ul.product_list.list > li .product-image-container .content_price {
     display: none !important; }
 ul.product_list.list > li .product-flags {
-  color: #333;
+  color: #333333;
   margin: -5px 0 10px 0; }
   ul.product_list.list > li .product-flags .discount {
     color: #f13340; }
@@ -392,5 +392,3 @@ Product list(Index page) Styles
 .ie8 .quick-view {
   background: #fff;
   border: 1px solid #d6d4d4; }
-
-/*# sourceMappingURL=product_list.css.map */

@@ -34,7 +34,7 @@
     top: 0;
     padding: 30px 50px;
     cursor: pointer;
-    background: #333;
+    background: #333333;
     width: 100%;
     opacity: 0.5; }
     #homepage-slider .homeslider-description h2 {
@@ -86,13 +86,13 @@
     height: 52px;
     text-indent: -9999px;
     z-index: 9999;
-    border: 2px solid #fff;
+    border: 2px solid white;
     line-height: 18px; }
     #homepage-slider .bx-wrapper .bx-controls-direction a:before {
       height: 48px;
       width: 48px;
       display: block;
-      background: #fff;
+      background: white;
       content: ".";
       opacity: 0.14;
       text-indent: -9999px;
@@ -104,7 +104,7 @@
       display: block;
       width: 48px;
       height: 48px;
-      color: #fff;
+      color: white;
       text-indent: 0;
       text-align: center;
       font-size: 21px;
@@ -115,7 +115,7 @@
       z-index: 2;
       padding: 16px 0 0 0; }
     #homepage-slider .bx-wrapper .bx-controls-direction a:hover:before {
-      background: #333;
+      background: #333333;
       opacity: 0.83; }
   #homepage-slider .bx-wrapper .bx-prev {
     right: 60px;
@@ -126,6 +126,4 @@
     content: "\f054"; }
 
 .ie8 #homepage-slider .bx-wrapper .bx-controls-direction a:before {
-  background: #333; }
-
-/*# sourceMappingURL=homeslider.css.map */
+  background: #333333; }

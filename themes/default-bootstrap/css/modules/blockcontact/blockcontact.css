@@ -5,10 +5,10 @@
   .shop-phone i {
     font-size: 21px;
     line-height: 21px;
-    color: #fff;
+    color: white;
     padding-right: 7px; }
   .shop-phone strong {
-    color: #fff; }
+    color: white; }
 
 #contact-link {
   float: right;
@@ -18,7 +18,7 @@
       text-align: center; } }
   #contact-link a {
     display: block;
-    color: #fff;
+    color: white;
     font-weight: bold;
     padding: 8px 10px 11px 10px;
     text-shadow: 1px 1px rgba(0, 0, 0, 0.2);
@@ -46,11 +46,9 @@
   margin-bottom: 4px; }
 #contact_block p.tel {
   font: 400 17px/21px Arial, Helvetica, sans-serif;
-  color: #333;
+  color: #333333;
   margin-bottom: 6px; }
   #contact_block p.tel i {
     font-size: 25px;
     vertical-align: -2px;
     padding-right: 10px; }
-
-/*# sourceMappingURL=blockcontact.css.map */

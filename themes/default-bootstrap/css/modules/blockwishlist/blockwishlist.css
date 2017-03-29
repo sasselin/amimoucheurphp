@@ -1,8 +1,10 @@
 /* lnk on detail product page */
 #wishlist_button, #wishlist_button_nopop {
   font-weight: 700;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   background-color: transparent;
   border-color: transparent;
@@ -12,15 +14,17 @@
   #wishlist_button:before, #wishlist_button_nopop:before {
     content: "\f08a";
     font: 400 15px/31px "FontAwesome";
-    color: #fff;
+    color: white;
     background: #929292;
     width: 30px;
     text-align: center;
     display: inline-block;
     height: 30px;
     margin: 0 6px 0 0;
-    -moz-border-radius: 50px;
     -webkit-border-radius: 50px;
+    -moz-border-radius: 50px;
+    -ms-border-radius: 50px;
+    -o-border-radius: 50px;
     border-radius: 50px; }
 
 /* wishlist block */
@@ -93,7 +97,7 @@
   margin-bottom: 20px; }
   #module-blockwishlist-mywishlist .wishlistLinkTop ul.display_list a {
     display: inline-block;
-    color: #333;
+    color: #333333;
     margin: 10px 10px 10px 0px;
     font-weight: bold; }
     #module-blockwishlist-mywishlist .wishlistLinkTop ul.display_list a:hover {
@@ -178,5 +182,3 @@ ul.product_list.grid > li .product-container .functional-buttons .wishlist .popo
     .wishlist_change_button + .popover table td:hover {
       background-color: #cccccc;
       cursor: pointer; }
-
-/*# sourceMappingURL=blockwishlist.css.map */
