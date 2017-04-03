@@ -69,8 +69,8 @@
 										<li>{l s='Monday'}:  9:00 - 17:30</li>
 										<li>{l s='Tuesday'}:  9:00 - 17:30</li>
 										<li>{l s='Wednesday'}:  9:00 - 17:30</li>
-										<li>{l s='Thursday'}:  9:00 - 17:30</li>
-										<li>{l s='Friday'}:  9:00 - 17:30</li>
+										<li>{l s='Thursday'}:  9:00 - 21:00</li>
+										<li>{l s='Friday'}:  9:00 - 21:00</li>
 										<li>{l s='Saturday'}:  9:00 - 17:00</li>
 										<li>{l s='Sunday'}:  10:00 - 16:00</li>
 									</ul>
