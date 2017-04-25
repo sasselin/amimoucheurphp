@@ -61,6 +61,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 	foreach ($products AS $product)
 	{
 		$image = Image::getImages((int)($cookie->id_lang), $product['id_product']);
+		$pubDate = new DateTime($product['date_add']);
+
 		echo "\t\t<item>\n";
 		echo "\t\t\t<title><![CDATA[".$product['name']." - ".html_entity_decode(Tools::displayPrice(Product::getPriceStatic($product['id_product']), $currency), ENT_COMPAT, 'UTF-8')." ]]></title>\n";
 
@@ -76,7 +78,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 			echo "<![CDATA[";
 		echo $product['description_short']."]]></description>\n";
 
-		echo "\t\t\t<pubDate>".date_format(date_create($product['date_add']), DateTime::RSS)."</pubDate>";
+		echo "\t\t\t<pubDate>".$pubDate->format(DateTime::RSS)."</pubDate>";
 		echo "\t\t\t<link><![CDATA[".str_replace('&amp;', '&', htmlspecialchars($link->getproductLink($product['id_product'], $product['link_rewrite'], Category::getLinkRewrite((int)($product['id_category_default']), $cookie->id_lang)))).$affiliate."]]></link>\n";
 		echo "\t\t</item>\n";
 	}
