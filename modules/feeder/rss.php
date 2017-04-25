@@ -34,7 +34,7 @@ $number = ((int)(Tools::getValue('n')) ? (int)(Tools::getValue('n')) : 10);
 $orderBy = Tools::getProductsOrder('by', Tools::getValue('orderby'));
 $orderWay = Tools::getProductsOrder('way', Tools::getValue('orderway'));
 $id_category = ((int)(Tools::getValue('id_category')) ? (int)(Tools::getValue('id_category')) : Configuration::get('PS_HOME_CATEGORY'));
-$products = Product::getProducts((int)$context->language->id, 0, ($number > 10 ? 10 : $number), $orderBy, $orderWay, $id_category, true);
+$products = Product::getProducts((int)$context->language->id, 0, ($number > 25 ? 25 : $number), $orderBy, $orderWay, $id_category, true);
 $currency = new Currency((int)$context->currency->id);
 $affiliate = (Tools::getValue('ac') ? '?ac='.(int)(Tools::getValue('ac')) : '');
 $metas = Meta::getMetaByPage('index', (int)$context->language->id);
@@ -63,6 +63,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 		$image = Image::getImages((int)($cookie->id_lang), $product['id_product']);
 		echo "\t\t<item>\n";
 		echo "\t\t\t<title><![CDATA[".$product['name']." - ".html_entity_decode(Tools::displayPrice(Product::getPriceStatic($product['id_product']), $currency), ENT_COMPAT, 'UTF-8')." ]]></title>\n";
+
 		echo "\t\t\t<description>";
 		$cdata = true;
 		if (is_array($image) AND sizeof($image))
@@ -75,6 +76,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 			echo "<![CDATA[";
 		echo $product['description_short']."]]></description>\n";
 
+		echo "\t\t\t<pubDate>".date_format(date_create($product['date_add']), DateTime::RSS)."</pubDate>";
 		echo "\t\t\t<link><![CDATA[".str_replace('&amp;', '&', htmlspecialchars($link->getproductLink($product['id_product'], $product['link_rewrite'], Category::getLinkRewrite((int)($product['id_category_default']), $cookie->id_lang)))).$affiliate."]]></link>\n";
 		echo "\t\t</item>\n";
 	}
