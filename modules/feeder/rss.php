@@ -71,7 +71,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 		if (is_array($image) AND sizeof($image))
 		{
 			$imageObj = new Image($image[0]['id_image']);
-			echo "<![CDATA[<img src='".$link->getImageLink($product['link_rewrite'], $image[0]['id_image'], 'small_default')."' title='".str_replace('&', '', $product['name'])."' alt='thumb' />";
+			echo "<![CDATA[<img src='".$link->getImageLink($product['link_rewrite'], $image[0]['id_image'], 'large_default')."' title='".str_replace('&', '', $product['name'])."' alt='thumb' />";
 			$cdata = false;
 		}
 		if ($cdata)
