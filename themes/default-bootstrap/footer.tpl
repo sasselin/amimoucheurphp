@@ -55,7 +55,7 @@
 									<ul class="toggle-footer">
 			            	<li><i class="icon-map-marker"></i>7390 Rue Notre Dame O, Trois-Rivières, QC G9B 1L8</li>
 			            	<li><i class="icon-phone"></i>{l s='Call us now'}:<span> 1 800 567-8584</span></li>
-			            	<li><i class="icon-phone"></i>{l s='France'}: <span>08 00 90 36 68</span></li>
+			            	<li><i class="icon-phone"></i>{l s='France'}: <span>08 05 32 10 74</span></li>
           					<li><i class="icon-envelope-alt"></i>{l s='Email'}:
           						<span>{mailto address='info@amimoucheur.com'|escape:'html':'UTF-8' encode="hex"}</span>
           					</li>
@@ -69,8 +69,8 @@
 										<li>{l s='Monday'}:  9:00 - 17:30</li>
 										<li>{l s='Tuesday'}:  9:00 - 17:30</li>
 										<li>{l s='Wednesday'}:  9:00 - 17:30</li>
-										<li>{l s='Thursday'}:  9:00 - 21:00</li>
-										<li>{l s='Friday'}:  9:00 - 21:00</li>
+										<li>{l s='Thursday'}:  9:00 - 17:30</li>
+										<li>{l s='Friday'}:  9:00 - 17:30</li>
 										<li>{l s='Saturday'}:  9:00 - 17:00</li>
 										<li>{l s='Sunday'}:  10:00 - 16:00</li>
 									</ul>
