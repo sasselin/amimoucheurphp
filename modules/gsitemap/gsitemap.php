@@ -1,6 +1,6 @@
 <?php
 /*
- *  2007-2015 PrestaShop
+ *  2007-2016 PrestaShop
  *
  * NOTICE OF LICENSE
  * This source file is subject to the Academic Free License (AFL 3.0)
@@ -17,7 +17,7 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author PrestaShop SA <contact@prestashop.com>
- *  @copyright  2007-2015 PrestaShop SA
+ *  @copyright  2007-2016 PrestaShop SA
  *  @version  Release: $Revision: 7515 $
  *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
@@ -37,7 +37,7 @@ class Gsitemap extends Module
 	{
 		$this->name = 'gsitemap';
 		$this->tab = 'seo';
-		$this->version = '3.2.0';
+		$this->version = '3.2.1';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
