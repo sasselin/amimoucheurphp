@@ -2,8 +2,8 @@
 <module>
 	<name>gapi</name>
 	<displayName><![CDATA[API Google Analytics]]></displayName>
-	<version><![CDATA[1.2.1]]></version>
-	<description><![CDATA[]]></description>
+	<version><![CDATA[1.2.2]]></version>
+	<description><![CDATA[Connect to Google Analytics&#039; API to retrieve your data and display it on your dashboard.]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[administration]]></tab>
 	<is_configurable>1</is_configurable>

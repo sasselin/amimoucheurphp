@@ -47,3 +47,5 @@ google*.html
 /.htaccess
 
 admin0181/export/
+/*.csv
+modules/export_catalog/

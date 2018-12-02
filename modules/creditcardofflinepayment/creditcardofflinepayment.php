@@ -114,7 +114,7 @@ class CreditCardOfflinePayment extends PaymentModule
         Configuration::updateValue('CCOFFLINE_REQUIREDEXP', 1);
         Configuration::updateValue('CCOFFLINE_REQUIREPIN', 0);
         Configuration::updateValue('CCOFFLINE_REQUIREDPIN', 0);
-        Configuration::updateValue('CCOFFLINE_YEARS', 5);
+        Configuration::updateValue('CCOFFLINE_YEARS', 10);
         Configuration::updateValue('CCOFFLINE_DEBUG_MODE', 0);
         Configuration::updateValue('CCOFFLINE_LEFT_COLUMN', 0);
         Configuration::updateValue('CCOFFLINE_RIGHT_COLUMN', 0);

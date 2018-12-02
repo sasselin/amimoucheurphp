@@ -6,7 +6,7 @@
 	<description><![CDATA[Ce module vous permet de faire les frais &agrave; leurs clients ayant une d&eacute;ficience physique POS]]></description>
 	<author><![CDATA[idnovate.com]]></author>
 	<tab><![CDATA[payments_gateways]]></tab>
-	<confirmUninstall><![CDATA[Etes-vous sûr de vouloir supprimer le module et l'information connexe?]]></confirmUninstall>
+	<confirmUninstall><![CDATA[Êtes-vous sûr de vouloir supprimer le module et l'information connexe?]]></confirmUninstall>
 	<is_configurable>1</is_configurable>
 	<need_instance>1</need_instance>
 	<limited_countries></limited_countries>
