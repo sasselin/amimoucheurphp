@@ -24,7 +24,13 @@
 *}
 
 {capture name=path}{l s='Order confirmation'}{/capture}
-
+{if isset($total_paid)}
+{literal}
+<script>
+	fbq('track', 'Purchase', {value: '{/literal}{$total_paid}{literal}', currency: 'CAD'});
+</script>
+{/literal}
+{/if}
 <h1 class="page-heading">{l s='Order confirmation'}</h1>
 
 {assign var='current_step' value='payment'}

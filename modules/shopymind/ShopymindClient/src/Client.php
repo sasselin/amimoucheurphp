@@ -29,7 +29,7 @@ final class ShopymindClient_Client {
         'getMissingClients'             => 16,
         'getOrdersByStatus'             => 32,
         'getVoucherUnused'              => 64,
-    	'syncOrders'              	=> 128,
+    	'syncOrders'              	    => 128,
         'getBirthdayClientsSignUp'      => 256,
     	'getInactiveClients'      		=> 512,
     );

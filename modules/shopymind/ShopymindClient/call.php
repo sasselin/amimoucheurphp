@@ -190,6 +190,25 @@ try {
                 ), true);
             }
         }
+        elseif ($server->getTypeRequest() === 'syncNewsletters') {
+            require_once dirname(__FILE__) . '/callback.php';
+            if (method_exists('ShopymindClient_Callback', 'syncNLSubscribers')) {
+                $params = $server->retrieveParams();
+                $server->sendResponse(array(
+                    'lastUpdate' => date('Y-m-d H:i:s'),
+                    'newsletters' => ShopymindClient_Callback::syncNLSubscribers((isset($params['shopIdShop']) ? $params['shopIdShop'] : false),(isset($params['start']) ? $params['start'] : false),(isset($params['limit']) ? $params['limit'] : false),(isset($params['lastUpdate']) ? $params['lastUpdate'] : false),(isset($params['justCount']) ? $params['justCount'] : false))
+                ), true);
+            }
+        }
+        elseif ($server->getTypeRequest() === 'unsubCustomer') {
+            require_once dirname(__FILE__) . '/callback.php';
+            if (method_exists('ShopymindClient_Callback', 'unsubCustomer')) {
+                $params = $server->retrieveParams();
+                $server->sendResponse(array(
+                    'success' => ShopymindClient_Callback::unsubCustomer((isset($params['shopIdShop']) ? $params['shopIdShop'] : false),$params['id_customer'],$params['email'])
+                ), true);
+            }
+        }
         /**
          *  END SYNC REQUESTS   ----------
          */

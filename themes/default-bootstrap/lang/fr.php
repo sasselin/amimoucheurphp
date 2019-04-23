@@ -965,6 +965,7 @@ $_LANG['shopping-cart_86024cad1e83101d97359d7351051156'] = 'produits';
 $_LANG['shopping-cart_879f6b8877752685a966564d072f498f'] = 'Votre panier est vide';
 $_LANG['shopping-cart_8faf99e02e4d0ccb4dd933404f87a4ea'] = 'Total HT :';
 $_LANG['shopping-cart_96b0141273eabab320119c467cdcaf17'] = 'Total';
+$_LANG['shopping-cart_97c6ba5439847f62f68bc08185aad5a3'] = 'Veuillez prendre note que le site ne représente pas l’inventaire réel, certains produits devront peut-être, être commandés. Nous vous informerons de la disponibilité de ceux-ci et des délais, si nécessaire, le plus rapidement possible. Merci';
 $_LANG['shopping-cart_9816a5054cd05761b6765fbef0062b29'] = 'Total bons de réduction (HT)';
 $_LANG['shopping-cart_a40cab5994f36d4c48103a22ca082e8f'] = 'Votre panier';
 $_LANG['shopping-cart_a82868319826fb092b73968e661b5b38'] = 'Bons de réduction';

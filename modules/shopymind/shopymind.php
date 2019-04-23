@@ -1,7 +1,6 @@
 <?php
 if (! defined('_PS_VERSION_'))
     exit();
-
 class ShopyMind extends Module
 {
 
@@ -10,12 +9,14 @@ class ShopyMind extends Module
     protected $output = '';
 
     protected $promo_code = '';
+	
+	protected $scriptDisplayed = false;
 
     public function __construct()
     {
         $this->name = 'shopymind';
         $this->tab = 'advertising_marketing';
-        $this->version = '2.1.1';
+        $this->version = '2.1.4.4';
         $this->author = 'ShopiMind';
         $this->need_instance = 1;
         $this->module_key = '6b8340d426116d75ce10b85c707229da';
@@ -35,6 +36,9 @@ class ShopyMind extends Module
         if (_PS_VERSION_ < '1.5')
             Configuration::updateValue('SPM_voucherCumulablePromo', true);
 
+        if (_PS_VERSION_ < '1.4')
+            Configuration::updateValue('SPM_voucherHighlight', false);
+
         Db::getInstance()->Execute('DROP TABLE IF EXISTS  `' . _DB_PREFIX_ . 'spmcartoorder`');
     }
 
@@ -47,7 +51,7 @@ class ShopyMind extends Module
             if ((is_array($this->_errors) && count($this->_errors)) || ! parent::install() || ! $this->registerHook('footer') || ! $this->registerHook('header') || ! $this->registerHook('updateOrderStatus') || ! $this->registerHook('createAccount') || ! $this->registerHook('backOfficeHeader') || ! $this->registerHook('updateProduct') || ! $this->registerHook('deleteProduct') || ! $this->registerHook('addProduct') || ! $this->registerHook('categoryAddition') || ! $this->registerHook('categoryUpdate') || ! $this->registerHook('categoryDeletion') || ! $this->registerHook('updateQuantity'))
                 return false;
         } else {
-            if ((is_array($this->_errors) && count($this->_errors)) || ! parent::install() || ! $this->registerHook('displayFooter') || ! $this->registerHook('actionUpdateOrderStatus') || ! $this->registerHook('actionOrderStatusUpdate') || ! $this->registerHook('actionObjectUpdateAfter') || ! $this->registerHook('actionObjectDeleteAfter') || ! $this->registerHook('actionObjectAddAfter') || ! $this->registerHook('displayBackOfficeHeader'))
+            if ((is_array($this->_errors) && count($this->_errors)) || ! parent::install() || ! $this->registerHook('actionUpdateOrderStatus') || ! $this->registerHook('actionOrderStatusUpdate') || ! $this->registerHook('actionObjectUpdateAfter') || ! $this->registerHook('actionObjectDeleteAfter') || ! $this->registerHook('actionObjectAddAfter') || ! $this->registerHook('displayBackOfficeHeader') || ! $this->registerHook('displayHeader') || ! $this->registerHook('displayFooter'))
                 return false;
         }
         $this->connectShopToSPM();
@@ -282,50 +286,184 @@ class ShopyMind extends Module
 
         return $currentUserInfos;
     }
+	
+	private function getWithoutWait($action, $params)
+	{
+		$url = Tools::getHttpHost(true) . __PS_BASE_URI__;
+		
+		if(substr($url, -1) != '/') {
+			$url .= '/';
+		}
+		
+		$url .= str_replace(dirname(_PS_MODULE_DIR_).'/', '', _PS_MODULE_DIR_).$this->name.'/ShopymindClient/asyncCall.php?action='.$action.'&'.http_build_query($params);
+
+		exec('wget -q "'.$url.'" -O /dev/null > /dev/null 2>&1 &');
+	}
 
     public function hookDisplayFooter($params)
     {
         return $this->hookFooter($params);
     }
 
+    public function hookFooter($params)
+    {
+		if(!$this->scriptDisplayed) {
+			try {
+				$SHOPYMIND_CLIENT_CONFIGURATION = require _PS_MODULE_DIR_ . $this->name . '/ShopymindClient/src/definitions.php';
+			} catch (Exception $e) {}
+			$spm_user_infos = $this->_getCurrentUserInfos();
+			$spm_user_infos_encode = $this->__httpBuildQuery($spm_user_infos);
+			$spm_user_infos = $this->_jsonEncode($spm_user_infos);
+			$spm_client_url = htmlentities(@$SHOPYMIND_CLIENT_CONFIGURATION['api']['public_url'], ENT_COMPAT, 'UTF-8');
+
+			$tpl = "<script type=\"text/javascript\">
+		var _spmq = $spm_user_infos;
+		var _spm_id_combination = function() { return (typeof(document.getElementById('idCombination')) != 'undefined' && document.getElementById('idCombination') != null ? document.getElementById('idCombination').value:'');};
+		(function() {
+		  var spm = document.createElement('script');
+		  spm.type = 'text/javascript';
+		  spm.async = true;
+		  spm.src = '$spm_client_url/remote/shopimindV2.js?$spm_user_infos_encode&id_combination='+_spm_id_combination()+'';
+		  var s_spm = document.getElementsByTagName('script')[0];
+		  s_spm.parentNode.insertBefore(spm, s_spm);
+		})();
+	</script>";
+			
+			if(!is_null(Tools::getValue('shpmid_cart_id')) && !is_null(Tools::getValue('shpmid_cart_secret'))) {
+				// On récupère le panier en fonction de l'ID passé en paramètre
+				$cart = new Cart(Tools::getValue('shpmid_cart_id'));
+				
+				$token = md5($cart->id_customer.'-'.$cart->id.'-'.$cart->date_add);
+				if ($token === Tools::getValue('shpmid_cart_secret')) {
+					// Le token est bon, on identifie l'utilisateur, et on le redirige vers son panier
+					$customer = new Customer($cart->id_customer);
+					
+					if(isset($this->context->cookie->id_compare)) {
+						$id_compare = $this->context->cookie->id_compare;
+					}
+					elseif(class_exists('CompareProduct')) {
+						$id_compare = CompareProduct::getIdCompareByIdCustomer($customer->id);
+					}
+					else {
+						$id_compare = null;
+					}
+					
+					$this->context->cookie->id_compare = $id_compare;
+					$this->context->cookie->id_customer = (int)($customer->id);
+					$this->context->cookie->customer_lastname = $customer->lastname;
+					$this->context->cookie->customer_firstname = $customer->firstname;
+					$this->context->cookie->logged = 1;
+					$customer->logged = 1;
+					$this->context->cookie->is_guest = $customer->isGuest();
+					$this->context->cookie->passwd = $customer->passwd;
+					$this->context->cookie->email = $customer->email;
+					$this->context->customer = $customer;
+					
+					$this->context->cart = new Cart($cart->id);
+					$this->context->cart->id_customer = (int)$customer->id;
+					$this->context->cart->secure_key = $customer->secure_key;
+					$this->context->cart->save();
+					$this->context->cookie->id_cart = (int)$this->context->cart->id;
+					$this->context->cookie->write();
+				}
+			}
+			
+			$this->scriptDisplayed = true;
+			return $tpl;
+		}
+    }	
+
+    public function hookDisplayHeader($params)
+    {
+        return $this->hookHeader($params);
+    }
+
     public function hookHeader($params)
     {
+		
         if ($this->_isLogged() && (Tools::isSubmit('submitIdentity') || Tools::isSubmit('submitAddress'))) {
 
             if (file_exists(_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php')) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
                 try {
-                    ShopymindClient_Callback::saveCustomer($this->context->customer->id);
-                } catch (Exception $e) {}
+					if(Configuration::get('SPM_realtimeSync') == 2) {
+						if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+							$this->getWithoutWait('saveCustomer', array('id' => $this->context->customer->id));
+						}
+						else {
+							include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+							ShopymindClient_Callback::saveCustomer($this->context->customer->id);
+						}
+					}
+		        } catch (Exception $e) {}
             }
         }
-    }
+		
+		if(!$this->scriptDisplayed) {
+			try {
+				$SHOPYMIND_CLIENT_CONFIGURATION = require _PS_MODULE_DIR_ . $this->name . '/ShopymindClient/src/definitions.php';
+			} catch (Exception $e) {}
+			
+			$spm_user_infos = $this->_getCurrentUserInfos();
+			$spm_user_infos_encode = $this->__httpBuildQuery($spm_user_infos);
+			$spm_user_infos = $this->_jsonEncode($spm_user_infos);
+			$spm_client_url = htmlentities(@$SHOPYMIND_CLIENT_CONFIGURATION['api']['public_url'], ENT_COMPAT, 'UTF-8');
 
-    public function hookFooter($params)
-    {
-        try {
-            $SHOPYMIND_CLIENT_CONFIGURATION = require _PS_MODULE_DIR_ . $this->name . '/ShopymindClient/src/definitions.php';
-        } catch (Exception $e) {}
-        $spm_user_infos = $this->_getCurrentUserInfos();
-        $spm_user_infos_encode = $this->__httpBuildQuery($spm_user_infos);
-        $spm_user_infos = $this->_jsonEncode($spm_user_infos);
-        $spm_client_url = htmlentities(@$SHOPYMIND_CLIENT_CONFIGURATION['api']['public_url'], ENT_COMPAT, 'UTF-8');
-
-        $tpl = "<script type=\"text/javascript\">
-  var _spmq = $spm_user_infos;
-  var _spm_id_combination = function() { return ($('#idCombination').length ? $('#idCombination').val():'');};
-  $(function() {
-    (function() {
-      var spm = document.createElement('script');
-      spm.type = 'text/javascript';
-      spm.async = true;
-      spm.src = '$spm_client_url/remote/shopimindV2.js?$spm_user_infos_encode&id_combination='+_spm_id_combination()+'';
-      var s_spm = document.getElementsByTagName('script')[0];
-      s_spm.parentNode.insertBefore(spm, s_spm);
-    })();
-  });
+			$tpl = "<script type=\"text/javascript\">
+	var _spmq = $spm_user_infos;
+	var _spm_id_combination = function() { return (typeof(document.getElementById('idCombination')) != 'undefined' && document.getElementById('idCombination') != null ? document.getElementById('idCombination').value:'');};
+	(function() {
+	  var spm = document.createElement('script');
+	  spm.type = 'text/javascript';
+	  spm.async = true;
+	  spm.src = '$spm_client_url/remote/shopimindV2.js?$spm_user_infos_encode&id_combination='+_spm_id_combination()+'';
+	  var s_spm = document.getElementsByTagName('script')[0];
+	  s_spm.parentNode.insertBefore(spm, s_spm);
+	})();
 </script>";
-            return $tpl;
+			
+			if(!is_null(Tools::getValue('shpmid_cart_id')) && !is_null(Tools::getValue('shpmid_cart_secret'))) {
+				// On récupère le panier en fonction de l'ID passé en paramètre
+				$cart = new Cart(Tools::getValue('shpmid_cart_id'));
+				
+				$token = md5($cart->id_customer.'-'.$cart->id.'-'.$cart->date_add);
+				if ($token === Tools::getValue('shpmid_cart_secret')) {
+					// Le token est bon, on identifie l'utilisateur, et on le redirige vers son panier
+					$customer = new Customer($cart->id_customer);
+					
+					if(isset($this->context->cookie->id_compare)) {
+						$id_compare = $this->context->cookie->id_compare;
+					}
+					elseif(class_exists('CompareProduct')) {
+						$id_compare = CompareProduct::getIdCompareByIdCustomer($customer->id);
+					}
+					else {
+						$id_compare = null;
+					}
+					
+					$this->context->cookie->id_compare = $id_compare;
+					$this->context->cookie->id_customer = (int)($customer->id);
+					$this->context->cookie->customer_lastname = $customer->lastname;
+					$this->context->cookie->customer_firstname = $customer->firstname;
+					$this->context->cookie->logged = 1;
+					$customer->logged = 1;
+					$this->context->cookie->is_guest = $customer->isGuest();
+					$this->context->cookie->passwd = $customer->passwd;
+					$this->context->cookie->email = $customer->email;
+					$this->context->customer = $customer;
+					
+					$this->context->cart = new Cart($cart->id);
+					$this->context->cart->id_customer = (int)$customer->id;
+					$this->context->cart->secure_key = $customer->secure_key;
+					$this->context->cart->save();
+					$this->context->cookie->id_cart = (int)$this->context->cart->id;
+					$this->context->cookie->write();
+				}
+			}
+			
+			$this->scriptDisplayed = true;
+			
+			return $tpl;
+		}
     }
 
     public function hookCreateAccount($params)
@@ -333,8 +471,15 @@ class ShopyMind extends Module
         try {
         if ($params['newCustomer'] instanceof Customer) {
             if (isset($params['newCustomer']->id) && $params['newCustomer']->id) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveCustomer($params['newCustomer']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('saveCustomer', array('id' => $params['newCustomer']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::saveCustomer($params['newCustomer']->id);
+					}
+				}
             }
         }
         } catch (Exception $e) {}
@@ -347,25 +492,46 @@ class ShopyMind extends Module
          * Add/update Customer From Backoffice
          */
         if (Tools::getValue('tab') == 'AdminCustomers' && Tools::getValue('id_customer') && ! Tools::getIsset('deletecustomer')) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::saveCustomer(Tools::getValue('id_customer'));
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('saveCustomer', array('id' => Tools::getValue('id_customer')));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::saveCustomer(Tools::getValue('id_customer'));
+				}
+			}
         }
 
         /**
          * Delete Customer From Backoffice
          */
         if (Tools::getIsset('deletecustomer') && Tools::getIsset('deleteMode') && Tools::getValue('id_customer')) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::deleteCustomer(Tools::getValue('id_customer'));
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('deleteCustomer', array('id' => Tools::getValue('id_customer')));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::deleteCustomer(Tools::getValue('id_customer'));
+				}
+			}
         }
 
         /**
          * Add/update Customer Address From Backoffice
          */
         if (Tools::getValue('tab') == 'AdminAddresses' && Tools::getValue('id_address') && ! Tools::getIsset('deleteaddress')) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            $address = new Address(Tools::getValue('id_address'));
-            ShopymindClient_Callback::saveCustomer($address->id_customer);
+			$address = new Address(Tools::getValue('id_address'));
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('saveCustomer', array('id' => $address->id_customer));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::saveCustomer($address->id_customer);
+				}
+			}
         }
 
     /**
@@ -383,24 +549,52 @@ class ShopyMind extends Module
     public function hookActionObjectAddAfter(Array $params)
     {
         try {
-        if (isset($params['object'])) {
-            if ($params['object'] instanceof Product) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveProduct($params['object']->id);
-            } elseif ($params['object'] instanceof Customer) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveCustomer($params['object']->id);
-            }            // Fonctionne pas. Voir PK ?
-            elseif ($params['object'] instanceof Address) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                if (isset($params['object']->id_customer) && $params['object']->id_customer) {
-                    ShopymindClient_Callback::saveCustomer($params['object']->id_customer);
+            if (isset($params['object'])) {
+                if ($params['object'] instanceof Product) {
+                    if(Configuration::get('SPM_realtimeSync') == 2) {
+						if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+							$this->getWithoutWait('saveProduct', array('id' => $params['object']->id));
+						}
+						else {
+							include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+							ShopymindClient_Callback::saveProduct($params['object']->id);
+						}
+					}
+                } elseif ($params['object'] instanceof Customer) {
+                    if(Configuration::get('SPM_realtimeSync') == 2) {
+						if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+							$this->getWithoutWait('saveCustomer', array('id' => $params['object']->id));
+						}
+						else {
+							include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+							ShopymindClient_Callback::saveCustomer($params['object']->id);
+						}
+					}
+                }            // Fonctionne pas. Voir PK ?
+                elseif ($params['object'] instanceof Address) {
+                    if (isset($params['object']->id_customer) && $params['object']->id_customer) {
+                        if(Configuration::get('SPM_realtimeSync') == 2) {
+							if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+								$this->getWithoutWait('saveCustomer', array('id' => $params['object']->id));
+							}
+							else {
+								include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+								ShopymindClient_Callback::saveCustomer($params['object']->id_customer);
+							}
+						}
+                    }
+                } elseif ($params['object'] instanceof Category) {
+                    if(Configuration::get('SPM_realtimeSync') == 2) {
+						if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+							$this->getWithoutWait('saveProductCategory', array('id' => $params['object']->id));
+						}
+						else {
+							include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+							ShopymindClient_Callback::saveProductCategory($params['object']->id);
+						}
+					}
                 }
-            } elseif ($params['object'] instanceof Category) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveProductCategory($params['object']->id);
             }
-        }
         } catch (Exception $e) {}
     }
 
@@ -409,14 +603,35 @@ class ShopyMind extends Module
         try {
         if (isset($params['object'])) {
             if ($params['object'] instanceof Product) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveProduct($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('saveProduct', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::saveProduct($params['object']->id);
+					}
+				}
             } elseif ($params['object'] instanceof Customer) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveCustomer($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('saveCustomer', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::saveCustomer($params['object']->id);
+					}
+				}
             } elseif ($params['object'] instanceof Category) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::saveProductCategory($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('saveProductCategory', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::saveProductCategory($params['object']->id);
+					}
+				}
             }
         }
         } catch (Exception $e) {}
@@ -427,14 +642,35 @@ class ShopyMind extends Module
         try {
         if (isset($params['object'])) {
             if ($params['object'] instanceof Product) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::deleteProduct($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('deleteProduct', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::deleteProduct($params['object']->id);
+					}
+				}
             } elseif ($params['object'] instanceof Customer) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::deleteCustomer($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('deleteCustomer', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::deleteCustomer($params['object']->id);
+					}
+				}
             } elseif ($params['object'] instanceof Category) {
-                include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-                ShopymindClient_Callback::deleteProductCategory($params['object']->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('deleteProductCategory', array('id' => $params['object']->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::deleteProductCategory($params['object']->id);
+					}
+				}
             }
         }
         } catch (Exception $e) {}
@@ -457,11 +693,18 @@ class ShopyMind extends Module
         if($date->format('Y-m-d H:i:s') > $order->date_add)
             return;
         try {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
             $date = new DateTime();
             $date->sub(new DateInterval('P3M'));
             if($date->format('Y-m-d H:i:s') < $order->date_add) {
-                ShopymindClient_Callback::saveOrder($order->id);
+				if(Configuration::get('SPM_realtimeSync') == 2) {
+					if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+						$this->getWithoutWait('saveOrder', array('id' => $order->id));
+					}
+					else {
+						include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+						ShopymindClient_Callback::saveOrder($order->id);
+					}
+				}
             }
         } catch (Exception $e) {}
     }
@@ -470,8 +713,15 @@ class ShopyMind extends Module
     {
         try {
         if ($params['product'] instanceof Product) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::saveProduct($params['product']->id);
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('saveProduct', array('id' => $params['product']->id));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::saveProduct($params['product']->id);
+				}
+			}
         }
         } catch (Exception $e) {}
     }
@@ -485,8 +735,15 @@ class ShopyMind extends Module
     {
         try {
         if ($params['product'] instanceof Product) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::deleteProduct($params['product']->id);
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('deleteProduct', array('id' => $params['product']->id));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::deleteProduct($params['product']->id);
+				}
+			}
         }
         } catch (Exception $e) {}
     }
@@ -495,8 +752,15 @@ class ShopyMind extends Module
     {
         try {
         if ($params['category'] instanceof Category) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::saveProductCategory($params['category']->id);
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('saveProductCategory', array('id' => $params['category']->id));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::saveProductCategory($params['category']->id);
+				}
+			}
         }
         } catch (Exception $e) {}
     }
@@ -510,14 +774,22 @@ class ShopyMind extends Module
     {
         try {
         if ($params['category'] instanceof Category) {
-            include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
-            ShopymindClient_Callback::deleteProductCategory($params['category']->id);
+			if(Configuration::get('SPM_realtimeSync') == 2) {
+				if(is_callable('exec') && !in_array('exec', explode(',', ini_get('disable_functions')))) {
+					$this->getWithoutWait('deleteProductCategory', array('id' => $params['category']->id));
+				}
+				else {
+					include_once (_PS_MODULE_DIR_ . $this->name . '/ShopymindClient/callback.php');
+					ShopymindClient_Callback::deleteProductCategory($params['category']->id);
+				}
+			}
         }
         } catch (Exception $e) {}
     }
 
     public function getContent()
     {
+
         if (! function_exists('curl_init'))
             return '<div class="error">' . $this->l('ShopiMind nécessite l\'extension PHP Curl, veuillez demander à votre fournisseur d\'hébergement d\'activer cette extension avant d\'utiliser ce module.') . '</div>';
 
@@ -743,31 +1015,54 @@ class ShopyMind extends Module
             ' . (! $SPM_apiIdentification ? '<p style="text-align:right;"><a href="javascript:void(0);" onclick="$(\'#SPM_registerForm\').slideDown(\'medium\');$(\'#SPM_ApiForm\').slideUp(\'medium\');" style="color:#DC2A0C;font-size:16px;"><b>' . $this->l('Si vous n\'avez pas encore de compte ShopiMind, cliquez ici >>>') . '</b></a></p>
                 <br />	' : '') . '
           <form method="post" action="" name="shopymindForm">
-               <label for="apiIdentification">' . $this->l('Identifiant de l\'API') . ' <span style="color:#cc0000;">*</span> :</label>
-                   <div class="margin-form">
-                    <input type="text" value="' . htmlentities(Configuration::get('SPM_apiIdentification'), ENT_COMPAT, 'UTF-8') . '" name="apiIdentification" autocomplete="off" /><br /><br />
-                   </div>
-                   <label for="apiPassword">' . $this->l('Mot de passe API') . ' <span style="color:#cc0000;">*</span> :</label>
-                  <div class="margin-form">
-                      <input type="password" value="' . htmlentities(Configuration::get('SPM_apiPassword'), ENT_COMPAT, 'UTF-8') . '" name="apiPassword" autocomplete="off" /><br /><br />
-                    </div>
-                  <label>' . $this->l('Générer des codes de réduction nominatifs') . '</label>
-        <div class="margin-form">
-          <input type="radio" name="voucherNominative" id="voucherNominative_on" value="1" ' . (Tools::getValue('voucherNominative', Configuration::get('SPM_voucherNominative')) ? 'checked="checked" ' : '') . '/>
-          <label class="t" for="voucherNominative_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
-          <input type="radio" name="voucherNominative" id="voucherNominative_off" value="0" ' . (! Tools::getValue('voucherNominative', Configuration::get('SPM_voucherNominative')) ? 'checked="checked" ' : '') . '/>
-          <label class="t" for="voucherNominative_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
-          <p class="clear">' . $this->l('Les codes de réduction générés par ShopiMind doivent-ils être associés aux comptes de vos clients (cela implique que votre client doit être connecté pour l\'utiliser)') . '</p>
-        </div>';
+            <label for="apiIdentification">' . $this->l('Identifiant de l\'API') . ' <span style="color:#cc0000;">*</span> :</label>
+               <div class="margin-form">
+                <input type="text" value="' . htmlentities(Configuration::get('SPM_apiIdentification'), ENT_COMPAT, 'UTF-8') . '" name="apiIdentification" autocomplete="off" /><br /><br />
+               </div>
+               <label for="apiPassword">' . $this->l('Mot de passe API') . ' <span style="color:#cc0000;">*</span> :</label>
+              <div class="margin-form">
+                  <input type="password" value="' . htmlentities(Configuration::get('SPM_apiPassword'), ENT_COMPAT, 'UTF-8') . '" name="apiPassword" autocomplete="off" /><br /><br />
+                </div>';
+				
+			$this->output .= '<label>' . $this->l('Utiliser la synchronisation en temps réel') . '</label>
+			<div class="margin-form">
+			  <input type="radio" name="realtimeSync" id="realtimeSync_on" value="2" ' . (Tools::getValue('realtimeSync', Configuration::get('SPM_realtimeSync')) == 2 ? 'checked="checked" ' : '') . '/>
+			  <label class="t" for="realtimeSync_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
+			  <input type="radio" name="realtimeSync" id="realtimeSync_off" value="1" ' . (Configuration::get('SPM_realtimeSync') == 0 || Tools::getValue('realtimeSync', Configuration::get('SPM_realtimeSync')) == 1 ? 'checked="checked" ' : '') . '/>
+			  <label class="t" for="realtimeSync_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
+					<p class="clear">' . $this->l('La synchronisation de vos données doit-elle se faire en temps réel ?') . '</p>
+			  </div>';
+        
+            $this->output .= '<label>' . $this->l('Générer des codes de réduction nominatifs') . '</label>
+            <div class="margin-form">
+              <input type="radio" name="voucherNominative" id="voucherNominative_on" value="1" ' . (Tools::getValue('voucherNominative', Configuration::get('SPM_voucherNominative')) ? 'checked="checked" ' : '') . '/>
+              <label class="t" for="voucherNominative_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
+              <input type="radio" name="voucherNominative" id="voucherNominative_off" value="0" ' . (! Tools::getValue('voucherNominative', Configuration::get('SPM_voucherNominative')) ? 'checked="checked" ' : '') . '/>
+              <label class="t" for="voucherNominative_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
+              <p class="clear">' . $this->l('Les codes de réduction générés par ShopiMind doivent-ils être associés aux comptes de vos clients (cela implique que votre client doit être connecté pour l\'utiliser)') . '</p>
+            </div>';
+
+        if (_PS_VERSION_ >= '1.4') {
+            $this->output .= '
+            <label class="voucherHighlight_display">' . $this->l('Afficher le bon de réduction dans le panier ') . '</label>
+            <div class="margin-form voucherHighlight_display">
+              <input type="radio" name="voucherHighlight" id="voucherHighlight_on" value="1" ' . (Tools::getValue('voucherHighlight', Configuration::get('SPM_voucherHighlight')) ? 'checked="checked" ' : '') . '/>
+              <label class="t" for="voucherHighlight_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
+              <input type="radio" name="voucherHighlight" id="voucherHighlight_off" value="0" ' . (! Tools::getValue('voucherHighlight', Configuration::get('SPM_voucherHighlight')) ? 'checked="checked" ' : '') . '/>
+              <label class="t" for="voucherHighlight_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
+              <p class="clear">' . $this->l("Si le bon d'achat n'a pas encore été ajouté au panier, il sera affiché sous le panier dans le récapitulatif de la commande.") . '</p>
+            </div>';
+        }
+
         if (_PS_VERSION_ < '1.5') {
             $this->output .= '<label>' . $this->l('Codes de réduction cumulables avec vos promotions ?') . '</label>
         <div class="margin-form">
-          <input type="radio" name="voucherCumulablePromo" id="voucherCumulablePromo_on" value="1" ' . (Tools::getValue('voucherCumulablePromo', Configuration::get('SPM_voucherCumulablePromo')) ? 'checked="checked" ' : '') . '/>
-          <label class="t" for="voucherCumulablePromo_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
-          <input type="radio" name="voucherCumulablePromo" id="voucherCumulablePromo_off" value="0" ' . (! Tools::getValue('voucherCumulablePromo', Configuration::get('SPM_voucherCumulablePromo')) ? 'checked="checked" ' : '') . '/>
-          <label class="t" for="voucherCumulablePromo_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
-        <p class="clear">' . $this->l('Les codes de réduction générés par ShopiMind doivent-ils être cumulables avec vos promotions en cours ?') . '</p>
-          </div>';
+            <input type="radio" name="voucherCumulablePromo" id="voucherCumulablePromo_on" value="1" ' . (Tools::getValue('voucherCumulablePromo', Configuration::get('SPM_voucherCumulablePromo')) ? 'checked="checked" ' : '') . '/>
+            <label class="t" for="voucherCumulablePromo_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
+            <input type="radio" name="voucherCumulablePromo" id="voucherCumulablePromo_off" value="0" ' . (! Tools::getValue('voucherCumulablePromo', Configuration::get('SPM_voucherCumulablePromo')) ? 'checked="checked" ' : '') . '/>
+            <label class="t" for="voucherCumulablePromo_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
+            <p class="clear">' . $this->l('Les codes de réduction générés par ShopiMind doivent-ils être cumulables avec vos promotions en cours ?') . '</p>
+        </div>';
         }
         $this->output .= '<label>' . $this->l('Codes de réduction cumulables avec d\'autres codes ?') . '</label>
         <div class="margin-form">
@@ -787,6 +1082,51 @@ class ShopyMind extends Module
           $this->output .= '</select>
                 <p class="clear">' . $this->l('Il s\'agit du format d\'image qui sera utilisé dans vos rappels et recommandations de produits.') . '</p>
           </div>';
+
+
+        /**
+         * Permet de synchroniser les abonnés newsletter de la boutique vers une liste dans Shopimind
+         */
+        $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SHOW TABLES LIKE "' . _DB_PREFIX_ . '%"');
+        $tables = array();
+        if ($results && is_array($results) && sizeof($results)) {
+            foreach ($results as $row) {
+                // Return
+				$keys = array_keys($row);
+                $tables[] = $row[$keys[0]];
+            }
+        }
+
+        $this->output .= '<label>' . $this->l('Synchroniser vos abonnés newsletter ?') . '</label>
+        <div class="margin-form">
+            <input type="radio" name="syncNL" id="syncNL_on" value="1" ' . (Tools::getValue('syncNL', Configuration::get('SPM_syncNL')) ? 'checked="checked" ' : '') . '/>
+            <label class="t" for="syncNL_on"> <img src="../img/admin/enabled.gif" alt="' . $this->l('Activer') . '" title="' . $this->l('Activer') . '" /></label>
+            <input type="radio" name="syncNL" id="syncNL_off" value="0" ' . (! Tools::getValue('syncNL', Configuration::get('SPM_syncNL')) ? 'checked="checked" ' : '') . '/>
+            <label class="t" for="syncNL_off"> <img src="../img/admin/disabled.gif" alt="' . $this->l('Désactiver') . '" title="' . $this->l('Désactiver') . '" /></label>
+            <p class="clear">' . $this->l('Si vous disposez d\'un formulaire d\'inscription à votre newsletter sur votre boutique, nous pouvons récupérer les e-mails dans une liste d\'envoi dédiée.') . '</p>
+        </div>
+        <div id="syncNL_config">
+            <label>' . $this->l('Table à synchroniser') . '</label>
+            <div class="margin-form">
+                <select name="syncNL_table" id="syncNL_table">
+                    <option value="">'.$this->l('Choisissez votre table').'</option>
+                    ';
+        foreach($tables as $table) {
+            $this->output .= '<option value="'.$table.'" ' . (Tools::getValue('syncNL_table', Configuration::get('SPM_syncNL_table')) == $table ? 'selected="selected" ' : '') . '>'.$table.'</option>';
+        }
+
+        $this->output .= '</select>
+                <p class="clear">' . $this->l('Il s\'agit de la table de votre base de données dans laquelle sont récoltés les e-mails de votre module de newsletter.') . '</p>
+          </div>
+          <div id="syncNL_fields">
+            <label>' . $this->l('Assignation des champs') . '</label>
+            <div class="margin-form">
+            </div>
+            <p class="clear"></p>
+          </div>
+        </div>';
+
+
         $this->output .= '<label>' . $this->l('URL Alternative webservice ShopiMind') . '</label>
         <div class="margin-form">
                       <input type="text" value="' . htmlentities(Configuration::get('SPM_apiClientUrl'), ENT_COMPAT, 'UTF-8') . '" name="apiClientUrl" autocomplete="off" /><br />
@@ -797,6 +1137,93 @@ class ShopyMind extends Module
                     <center><input type="submit" class="button" name="submitShopymind" value="' . $this->l('Valider') . '" /></center>
                 </form>
          </fieldset>';
+
+        $url = Tools::getHttpHost(true) . __PS_BASE_URI__;
+        if(substr($url, -1) != '/') {
+            $url .= '/';
+        }
+        $url .= str_replace(dirname(_PS_MODULE_DIR_).'/', '', _PS_MODULE_DIR_).$this->name.'/ShopymindClient/asyncCall.php';
+
+        $fields = explode('|', Configuration::get('SPM_syncNL_table_fields'));
+
+        $this->output .= "
+                        <script type='text/javascript'>
+                            var currentFields;
+                            $(document).ready(function(){
+                                currentFields = ['".implode("','", $fields)."'];
+                                
+                                toggleVoucherHighlight();
+                                toggleSyncNL();
+                                toggleSyncNLFields();
+                                
+                               $('input[name=voucherNominative]').on('change',function(){
+                                    toggleVoucherHighlight();
+                               });
+                                
+                               $('input[name=syncNL]').on('change',function(){
+                                    toggleSyncNL();
+                               });
+                                
+                               $('select[name=syncNL_table]').on('change',function(){
+                                    toggleSyncNLFields();
+                               });
+                                                              
+                            });
+
+                            function toggleVoucherHighlight(){
+                                if($('.voucherHighlight_display').length){
+                                    if($('input[name=voucherNominative]:checked').val() == 1){
+                                         $('.voucherHighlight_display').show();
+                                    }else{
+                                        $('.voucherHighlight_display').hide();
+                                        $('input#voucherHighlight_off').attr('checked','checked');
+                                    }
+                                }
+                            }
+
+                            function toggleSyncNL(){
+                                if($('#syncNL_config').length){
+                                    if($('input[name=syncNL]:checked').val() == 1){
+                                         $('#syncNL_config').show();
+                                    }else{
+                                        $('#syncNL_config').hide();
+                                        $('input#syncNL_off').attr('checked','checked');
+                                    }
+                                }
+                            }
+
+                            function toggleSyncNLFields(){
+                                if($('#syncNL_fields').length){
+                                    if($('select[name=syncNL_table]').val() != ''){
+                                        $('#syncNL_fields').show();
+                                        $('#syncNL_fields .margin-form').html('".$this->l('Récupération des champs de la table...')."');
+                                         
+                                        $.ajax({
+                                            type: 'GET',
+                                            dataType: 'json',
+                                            url: '".$url."',
+                                            data: {action: 'getTableFields', table : $('select[name=syncNL_table]').val()},
+                                            success: function(response){
+                                                $('#syncNL_fields .margin-form').html('');
+                                                if(response.success && response.fields.length > 0) {
+                                                    for(var i in response.fields) {
+                                                        var emailRegex = /email/;
+                                                        var div = $('<div style=\"float: left;padding: 5px 10px;background: #FFFFFF;border-radius: 3px;border: solid 1px lightgrey;top: 0;vertical-align: top;margin-right: 5px;margin-bottom: 5px;\"></div>').html(
+                                                            '<div style=\"margin-bottom: 5px; font-size: 12px; text-align: center; display: block;\">' + response.fields[i] + '</div>' +
+                                                            '<div style=\"margin-top: 3px; text-align: center;\"><select name=\"syncNL_fields[]\" style=\"width: 100%;\"><option value=\"\" ' + (currentFields.indexOf(response.fields[i]) == -1 ? 'selected=\"selected\"' : '') + '>".$this->l('Exclure')."</option><option value=\"' + response.fields[i] + '-id_shop\" ' + (currentFields.indexOf(response.fields[i] + '-id_shop') >= 0 ? 'selected=\"selected\"' : '') + '>ID Shop</option><option value=\"' + response.fields[i] + '-last_name\" ' + (currentFields.indexOf(response.fields[i] + '-last_name') >= 0 ? 'selected=\"selected\"' : '') + '>".$this->l('Nom')."</option><option value=\"' + response.fields[i] + '-first_name\" ' + (currentFields.indexOf(response.fields[i] + '-first_name') >= 0 ? 'selected=\"selected\"' : '') + '>".$this->l('Prénom')."</option><option value=\"' + response.fields[i] + '-email\" ' + (currentFields.indexOf(response.fields[i] + '-email') >= 0 || emailRegex.test(response.fields[i]) ? 'selected=\"selected\"' : '') + '>".$this->l('E-mail')."</option><option value=\"' + response.fields[i] + '-zipcode\" ' + (currentFields.indexOf(response.fields[i] + '-zipcode') >= 0 ? 'selected=\"selected\"' : '') + '>".$this->l('Code postal')."</option><option value=\"' + response.fields[i] + '-last_update\" ' + (currentFields.indexOf(response.fields[i] + '-last_update') >= 0 ? 'selected=\"selected\"' : '') + '>".$this->l('Date')."</option><option value=\"' + response.fields[i] + '-status\" ' + (currentFields.indexOf(response.fields[i] + '-status') >= 0 ? 'selected=\"selected\"' : '') + '>".$this->l('Statut')."</option></select></div>'
+                                                        );
+                                                        
+                                                        $('#syncNL_fields .margin-form').append(div);
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }else{
+                                        $('#syncNL_fields').hide();
+                                    }
+                                }
+                            }
+                          </script>";
     }
 
     protected function _process()
@@ -805,8 +1232,23 @@ class ShopyMind extends Module
             $apiIdentification = Tools::getValue('apiIdentification');
             $apiPassword = Tools::getValue('apiPassword');
             $voucherNominative = (int) Tools::getValue('voucherNominative');
+            $voucherHighlight = (int) Tools::getValue('voucherHighlight');
             $apiClientUrl = Tools::getValue('apiClientUrl');
+            $realtimeSync = (int) Tools::getValue('realtimeSync');
+            $syncNL = (int) Tools::getValue('syncNL');
+            $syncNLTable = Tools::getValue('syncNL_table');
+            $syncNLFields = Tools::getValue('syncNL_fields');
 
+            $fields = array();
+            if(is_array($syncNLFields) && count($syncNLFields) > 0) {
+				foreach($syncNLFields as $syncField) {
+					if($syncField != '' && $syncField) {
+						array_push($fields, $syncField);
+					}
+				}
+			}
+
+            $fields = implode('|', $fields);
 
             if (_PS_VERSION_ < '1.5')
                 $voucherCumulablePromo = (int) Tools::getValue('voucherCumulablePromo');
@@ -814,9 +1256,19 @@ class ShopyMind extends Module
             Configuration::updateValue('SPM_apiIdentification', html_entity_decode($apiIdentification, ENT_COMPAT, 'UTF-8'));
             Configuration::updateValue('SPM_apiPassword', html_entity_decode($apiPassword, ENT_COMPAT, 'UTF-8'));
             Configuration::updateValue('SPM_voucherNominative', $voucherNominative);
+
+            if(_PS_VERSION_ >= '1.4')
+                Configuration::updateValue('SPM_voucherHighlight', $voucherHighlight);
+
             if (_PS_VERSION_ < '1.5')
                 Configuration::updateValue('SPM_voucherCumulablePromo', $voucherCumulablePromo);
+
             Configuration::updateValue('SPM_voucherCumulableVoucher', $voucherCumulableVoucher);
+            Configuration::updateValue('SPM_realtimeSync', $realtimeSync);
+            Configuration::updateValue('SPM_syncNL', $syncNL);
+            Configuration::updateValue('SPM_syncNL_table', $syncNLTable);
+            Configuration::updateValue('SPM_syncNL_table_fields', $fields);
+
             if (trim($apiClientUrl))
                 Configuration::updateValue('SPM_apiClientUrl', $apiClientUrl);
             else

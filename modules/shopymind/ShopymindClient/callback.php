@@ -18,7 +18,6 @@ if (file_exists(dirname(__FILE__) . '/callback_override.php'))
 
 class ShopymindClient_Callback
 {
-
     /**
      * Permet de récupérer les informations utilisateur(s)
      * en fonction de son identifiant
@@ -72,7 +71,7 @@ class ShopymindClient_Callback
         if ($results && is_array($results) && count($results)) {
             foreach ($results as $row) {
                 // Mlle = Mme
-                if ($row['id_gender'] === 3)
+                if ((int) $row['id_gender'] == 3)
                     $row['id_gender'] = 2;
                 $return[] = array(
                     'id_customer' => $row['id_customer'],
@@ -414,6 +413,11 @@ class ShopymindClient_Callback
                 $cart = new Cart($row['id_cart']);
                 $returnProducts = self::getCartProducts($id_shop, $cart, $id_lang);
                 if ($returnProducts && is_array($returnProducts) && sizeof($returnProducts)) {
+					
+					$cartInfosLogin = array(
+						'shpmid_cart_id'		=> $row['id_cart'],
+						'shpmid_cart_secret'	=> md5($row['id_customer'].'-'.$row['id_cart'].'-'.$row['date_add'])
+					);
 
                     // Lien vers panier
                     if (self::isMultiShop($id_shop))
@@ -422,6 +426,13 @@ class ShopymindClient_Callback
                         $link_cart = self::getPageLink($link, 'order', true, $id_lang, null, false, $row['id_shop']);
                     else
                         $link_cart = (_PS_VERSION_ < 1.5 ? (_PS_VERSION_ < '1.4.0.2' ? _PS_BASE_URL_ . __PS_BASE_URI__ . 'order.php' : $link->getPageLink('order.php', true, $id_lang)) : $link->getPageLink('order', true, $id_lang));
+					
+					if(preg_match('/\?/', $link_cart)) {
+						$link_cart = $link_cart.'&'.http_build_query($cartInfosLogin);
+					}
+					else {
+						$link_cart = $link_cart.'?'.http_build_query($cartInfosLogin);
+					}
 
                     $return[] = array(
                         'sum_cart' => $cart->getOrderTotal(),
@@ -637,20 +648,18 @@ class ShopymindClient_Callback
         if (! $timezonesWhere)
             return false;
 
-        $query = 'SELECT lastorder.`id_order`, COUNT(a.`id_order`) `total`, a.`id_customer`
-        FROM `' . _DB_PREFIX_ . 'orders` a
-        LEFT JOIN `' . _DB_PREFIX_ . 'orders` lastorder ON (lastorder.`id_customer` = a.`id_customer` AND lastorder.`valid` = 1 AND lastorder.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) ($nbMonthsLastOrder) . ' MONTH))
-        ' . ($relaunchOlder ? 'LEFT JOIN `' . _DB_PREFIX_ . 'orders` lastorder2 ON (lastorder2.`id_customer` = a.`id_customer` AND lastorder2.`valid` = 1 AND DATE_FORMAT(lastorder2.`date_add`, "%Y-%m-%d") >= DATE_FORMAT(DATE_SUB(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbMonthsLastOrder . ' MONTH), INTERVAL ' . (int) $relaunchOlder . ' MONTH), "%Y-%m-%d"))' : 'LEFT JOIN `' . _DB_PREFIX_ . 'orders` lastorder2 ON (lastorder2.`id_customer` = a.`id_customer` AND lastorder2.`valid` = 1 AND DATE_FORMAT(lastorder2.`date_add`, "%Y-%m-%d") = DATE_FORMAT(DATE_SUB(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbMonthsLastOrder . ' MONTH), INTERVAL 1 DAY), "%Y-%m-%d"))') . '
-        LEFT JOIN `' . _DB_PREFIX_ . 'address` AS `address` ON (`address`.`id_address` = `a`.`id_address_invoice`)
-        LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
-        LEFT JOIN `' . _DB_PREFIX_ . 'state` AS `state` ON (`address`.`id_state` = `state`.`id_state`)
-        WHERE a.valid = 1
-        AND lastorder.`id_order` IS NULL
-        AND lastorder2.`id_order` IS NOT NULL
-        AND ' . $timezonesWhere . '
-        ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
-        GROUP BY a.`id_customer`
-    HAVING `total` > 0';
+        $query = 'SELECT lastorder.`id_order`, a.`id_customer`
+		FROM `' . _DB_PREFIX_ . 'orders` a
+		LEFT JOIN `' . _DB_PREFIX_ . 'orders` lastorder ON (lastorder.`id_customer` = a.`id_customer` AND lastorder.`valid` = 1 AND lastorder.`date_add` >= DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) ($nbMonthsLastOrder) . ' MONTH))
+		LEFT JOIN `' . _DB_PREFIX_ . 'address` AS `address` ON (`address`.`id_address` = `a`.`id_address_invoice`)
+		LEFT JOIN `' . _DB_PREFIX_ . 'country` AS `country` ON (`address`.`id_country` = `country`.`id_country`)
+		LEFT JOIN `' . _DB_PREFIX_ . 'state` AS `state` ON (`address`.`id_state` = `state`.`id_state`)
+		WHERE a.valid = 1
+		AND '.($relaunchOlder ? 'DATE_FORMAT(a.`date_add`, "%Y-%m-%d") >= DATE_FORMAT(DATE_SUB(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbMonthsLastOrder . ' MONTH), INTERVAL ' . (int) $relaunchOlder . ' MONTH), "%Y-%m-%d")' : 'DATE_FORMAT(a.`date_add`, "%Y-%m-%d") = DATE_FORMAT(DATE_SUB(DATE_SUB("' . pSQL($dateReference) . '", INTERVAL ' . (int) $nbMonthsLastOrder . ' MONTH), INTERVAL 1 DAY), "%Y-%m-%d")').'
+		AND lastorder.`id_order` IS NULL
+		AND ' . $timezonesWhere . '
+		' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
+		GROUP BY a.`id_customer`';
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
 
         if ($results && is_array($results) && sizeof($results)) {
@@ -916,7 +925,6 @@ class ShopymindClient_Callback
             AND e.id_customer IS NOT NULL
            AND e.id_customer != 0
             AND ' . $timezonesWhere . '
-             AND e.`name` NOT LIKE "SPM-%"
             ' . ($startBy ? ' AND e.`name` LIKE "' . pSQL($startBy) . '%"' : '') . '
             GROUP BY e.`id_discount`';
         } else {
@@ -932,7 +940,6 @@ class ShopymindClient_Callback
                 AND e.id_customer IS NOT NULL
              AND e.id_customer != 0
                 AND ' . $timezonesWhere . '
-                AND e.`code` NOT LIKE "SPM-%"
                 ' . ($startBy ? ' AND e.`code` LIKE "' . pSQL($startBy) . '%"' : '') . '
                 AND (
           e.shop_restriction = 0
@@ -1015,7 +1022,7 @@ class ShopymindClient_Callback
             WHERE ' . ($id_customer && is_array($id_customer) ? '`id_customer` IN (' . implode(',', $id_customer) . ')' : '1') . '
             ' . ($lastUpdate ? ' AND a.`date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
             ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
-            ' . ($justCount ? '' : 'ORDER BY `id_customer`') . '
+            ' . ($justCount ? '' : 'ORDER BY `date_upd`') . '
             ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
 
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
@@ -1031,6 +1038,80 @@ class ShopymindClient_Callback
         return $return;
     }
 
+    /**
+     * Permet de récupérer la liste des contacts abonnés NL présents dans la base
+     * Cette méthode est utilisée pour la fonctionnalité de campagne SMS et Email
+     */
+    public static function syncNLSubscribers($id_shop, $start, $limit, $lastUpdate, $justCount = false)
+    {
+        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
+            return call_user_func_array(array(
+                'ShopymindClient_CallbackOverride',
+                __FUNCTION__
+            ), func_get_args());
+
+        $return = array();
+        $context = self::getContext($id_shop);
+
+        // Si la fonctionnalité est désactivée, on renvoie un tableau vide
+        $isEnabled = Configuration::get('SPM_syncNL');
+        if(!$isEnabled) {
+            return $return;
+        }
+
+        // Récupération de la configuration
+        $table = Configuration::get('SPM_syncNL_table');
+        $fields = explode('|', Configuration::get('SPM_syncNL_table_fields'));
+
+        $tableFields = $finalFields = array();
+        if(is_array($fields) && count($fields) > 0) {
+            foreach($fields as $field) {
+                $field = explode('-', $field);
+                $tableFields[$field[1]] = $field[0];
+                array_push($finalFields, $field[1]);
+            }
+        }
+        else {
+            // Si l'utilisateur n'a choisi aucun champ, on renvoie un tableau vide
+            return $return;
+        }
+
+        $query = 'SELECT ' . ($justCount ? 'COUNT(*) AS `nbSubscribers`' : '`'.implode('`, `', $tableFields).'`') . '
+            FROM `'.$table.'` a
+            WHERE 1
+            ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
+            ' . ($lastUpdate && array_key_exists('last_update', $tableFields) ? ' AND a.`'.$tableFields['last_update'].'` >= "' . pSQL($lastUpdate) . '"' : '') . '
+            ' . ($justCount ? '' : (array_key_exists('last_update', $tableFields) ? 'ORDER BY a.`'.$tableFields['last_update'].'`' : '')) . '
+            ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
+
+        $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+        if ($justCount)
+            return array(
+                'count' => $results[0]['nbSubscribers']
+            );
+
+        if ($results && is_array($results) && sizeof($results)) {
+            foreach ($results as $row) {
+                // On teste s'il s'agit bien d'une adresse e-mail dans le champ rattaché à l'email
+                if(array_key_exists($tableFields['email'], $row) && !filter_var($row[$tableFields['email']], FILTER_VALIDATE_EMAIL)) {
+                    continue;
+                }
+
+                array_push($return, array(
+                    'id_shop'       => array_key_exists($tableFields['id_shop'], $row) ? $row[$tableFields['id_shop']] : null,
+                    'last_name'     => array_key_exists($tableFields['last_name'], $row) ? $row[$tableFields['last_name']] : null,
+                    'first_name'    => array_key_exists($tableFields['first_name'], $row) ? $row[$tableFields['first_name']] : null,
+                    'email'         => array_key_exists($tableFields['email'], $row) ? $row[$tableFields['email']] : null,
+                    'zipcode'       => array_key_exists($tableFields['zipcode'], $row) ? $row[$tableFields['zipcode']] : null,
+                    'last_update'   => array_key_exists($tableFields['last_update'], $row) ? $row[$tableFields['last_update']] : null,
+                    'newsletter'   => array_key_exists($tableFields['status'], $row) && $row[$tableFields['status']] == 1 ? $row[$tableFields['status']] : 0,
+                ));
+            }
+        }
+
+        return $return;
+    }
+
     public static function syncProducts($id_shop, $start, $limit, $lastUpdate, $id_product = false, $justCount = false)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
@@ -1043,13 +1124,13 @@ class ShopymindClient_Callback
 
 		$id_product = (!is_array($id_product) && $id_product > 0) ? array($id_product) : $id_product;
 
-        $query = 'SELECT ' . ($justCount ? 'COUNT(b.`id_product`) AS `total`' : 'b.`id_product`') . '
+        $query = 'SELECT ' . ($justCount ? 'COUNT(b.`id_product`) AS `total`' : 'b.`id_product`'.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', product_shop.id_shop' : ', NULL AS id_shop')) . '
             FROM `' . _DB_PREFIX_ . 'product` b
-                ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : '') . '
-            WHERE ' . ($id_product && is_array($id_product) ? 'b.`id_product` IN (' . implode(',', $id_product) . ')' : '1') . '
+                ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : _PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'INNER JOIN `' . _DB_PREFIX_ . 'product_shop` product_shop ON (product_shop.id_product = b.id_product)' : '') . '
+            WHERE '.($id_product && is_array($id_product) ? 'b.`id_product` IN (' . implode(',', $id_product) . ')' : '1') . '
             ' . ($lastUpdate ? ' AND b.`date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
-
-            ' . ($justCount ? '' : 'ORDER BY b.`id_product`') . '
+			' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false) : '') . '
+            ' . ($justCount ? '' : 'ORDER BY b.`date_upd`') . '
             ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
 
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
@@ -1060,7 +1141,17 @@ class ShopymindClient_Callback
             );
         if ($results && is_array($results) && count($results))
             foreach ($results as $row)
-                $return = array_merge($return, self::getProduct($row['id_product']));
+                $return = array_merge($return, self::getProduct($row['id_product'], false, null, $row['id_shop']));
+				
+		if(is_array($return) && count($return) > 0) {
+			$actives = array();
+			foreach ($return as $p) {
+				$actives[] = (int)$p['active'];
+			}
+			
+			array_multisort($actives, SORT_ASC, $return);
+		}
+		
         return $return;
     }
 
@@ -1076,13 +1167,13 @@ class ShopymindClient_Callback
 
 		$id_category = (!is_array($id_category) && $id_category > 0) ? array($id_category) : $id_category;
 
-        $query = '  SELECT ' . ($justCount ? 'COUNT(b.`id_category`) AS `total`' : 'b.`id_category`') . '
+        $query = '  SELECT ' . ($justCount ? 'COUNT(b.`id_category`) AS `total`' : 'b.`id_category`'.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', category_shop.id_shop AS id_shop' : (_PS_VERSION_ >= 1.5 ? ', b.id_shop_default AS id_shop' : ', 0 AS id_shop'))) . '
                     FROM `' . _DB_PREFIX_ . 'category` b
-                        ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('category', 'b') : '') . '
+					' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('category', 'b') : _PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'INNER JOIN `' . _DB_PREFIX_ . 'category_shop` category_shop ON (category_shop.id_category = b.id_category)' : '') . '
                     WHERE ' . ($id_category && is_array($id_category) ? 'b.`id_category` IN (' . implode(',', $id_category) . ')' : '1') . '
                     ' . ($lastUpdate ? ' AND b.`date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
                     ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false) : '') . '
-                    ' . ($justCount ? '' : 'ORDER BY b.`id_category`') . '
+                    ' . ($justCount ? '' : 'ORDER BY b.`date_upd`') . '
                     ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
 
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
@@ -1092,7 +1183,7 @@ class ShopymindClient_Callback
             );
         if ($results && is_array($results) && sizeof($results))
             foreach ($results as $row)
-                $return = array_merge($return, self::getProductCategory($row['id_category']));
+                $return = array_merge($return, self::getProductCategory($row['id_category'], $row['id_shop']));
         return $return;
     }
 
@@ -1119,7 +1210,7 @@ class ShopymindClient_Callback
                     ' . ($lastUpdate ? ' AND `date_upd` >= "' . pSQL($lastUpdate) . '"' : '') . '
                     ' . (isset($dateAddLimit) && $dateAddLimit ? ' AND `date_add` >= "'.pSQL($dateAddLimit).'"' : '') . '
                     ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false) : '') . '
-                    ' . ($justCount ? '' : 'ORDER BY `id_order`') . '
+                    ' . ($justCount ? '' : 'ORDER BY `date_upd`') . '
                     ' . ($limit && ! $justCount ? ' LIMIT ' . (int) $start . ', ' . (int) $limit : '');
 
         $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
@@ -1534,6 +1625,7 @@ class ShopymindClient_Callback
                     // Forces group and customer restriction to none.
                 $cartRule2->id_group = 0;
                 $cartRule2->id_customer = 0;
+
             } else {
                 $cartRule2->code = $coupon_code;
                 foreach ($cartRule2->name as $k => $v)
@@ -1550,6 +1642,17 @@ class ShopymindClient_Callback
                 $cartRule2->id_customer = 0;
             }
 
+			if ((int) Configuration::get('SPM_voucherNominative')) {
+                $id_customer = self::getIdCustomersByEmail($email);
+                if ($id_customer)
+                    $cartRule2->id_customer = (int) $id_customer;
+            }
+
+            if (_PS_VERSION_  >= 1.4) {
+                $voucher_highlight = (int) Configuration::get('SPM_voucherHighlight');
+                if ($voucher_highlight)
+                    $cartRule2->highlight = $voucher_highlight;
+            }
             $cartRule2->date_to = $voucher_date_limit;
             $cartRule2->date_from = $date;
             $cartRule2->quantity = 1;
@@ -1675,11 +1778,21 @@ class ShopymindClient_Callback
                 $cartRule->cart_rule_restriction = ((bool) Configuration::get('SPM_voucherCumulableVoucher') === false ? 1 : 0);
             }
 
+
             if ((int) Configuration::get('SPM_voucherNominative')) {
                 $id_customer = self::getIdCustomersByEmail($email);
                 if ($id_customer)
                     $cartRule->id_customer = (int) $id_customer;
             }
+
+            $voucher_highlight = (int) Configuration::get('SPM_voucherHighlight');
+            if ($voucher_highlight) {
+                if (_PS_VERSION_ >= 1.5)
+                    $cartRule->highlight = $voucher_highlight;
+                elseif (_PS_VERSION_ >= 1.4)
+                    $cartRule->cart_display = $voucher_highlight;
+            }
+
             $cartRule->date_to = $voucher_date_limit;
             $cartRule->date_from = $date;
             $cartRule->quantity = 1;
@@ -1967,22 +2080,22 @@ class ShopymindClient_Callback
         $resultProducts = array();
         if ($products) {
             $resultProducts = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-                SELECT b.`id_product`
+                SELECT b.`id_product` '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', product_shop.id_shop' : ', b.id_shop').'
                 FROM `' . _DB_PREFIX_ . 'product` b
-              ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : '') . '
-                WHERE b.`id_product` IN (' . implode(',', array_map('pSQL', (array) $products)) . ') AND b.`active` = 1');
+              ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : _PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'INNER JOIN `' . _DB_PREFIX_ . 'product_shop` product_shop ON (product_shop.id_product = b.id_product)' : '') . '
+                WHERE b.`id_product` IN (' . implode(',', array_map('pSQL', (array) $products)) . ') AND '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'product_shop.`active` = 1' : 'b.`active` = 1'));
         } elseif ($random) {
             $resultProducts = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-                SELECT b.`id_product`
+                SELECT b.`id_product` '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? ', product_shop.id_shop' : ', b.id_shop').'
                 FROM `' . _DB_PREFIX_ . 'product` b
-              ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : '') . '
-                WHERE b.`active` = 1
+              ' . (self::isMultiShop($id_shop) ? Shop::addSqlAssociation('product', 'b') : _PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'INNER JOIN `' . _DB_PREFIX_ . 'product_shop` product_shop ON (product_shop.id_product = b.id_product)' : '') . '
+                WHERE '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'product_shop.`active` = 1' : 'b.`active` = 1').'
                 ORDER BY RAND()
                 LIMIT ' . ($maxProducts ? (int) $maxProducts : 3));
         }
         if ($resultProducts && is_array($resultProducts) && sizeof($resultProducts)) {
             foreach ($resultProducts as $row2) {
-                $return[] = self::getProduct($row2['id_product'], $id_lang);
+                $return[] = self::getProduct($row2['id_product'], $id_lang, false, $row2['id_shop']);
             }
         }
         return $return;
@@ -2024,7 +2137,7 @@ class ShopymindClient_Callback
 
                 $row2['id_image'] = Product::defineProductImage($row2, $id_lang);
                 // Get price
-                $price = Product::getPriceStatic($row2['id_product'], ! Tax::excludeTaxeOption(), false, 2, NULL, false, true, 1, true);
+                $price = Product::getPriceStatic($row2['id_product'], ! (bool) Group::getDefaultPriceDisplayMethod(), false, 2, NULL, false, true, 1, true);
                 // Get image URL
                 $image_url = $link->getImageLink((int) $row2['product_link_rewrite'], $row2['id_image'], $image_size);
                 if (! preg_match('#^http#i', $image_url))
@@ -2224,11 +2337,10 @@ class ShopymindClient_Callback
 
         $returnProducts = array();
         if ($cartProducts && is_array($cartProducts) && sizeof($cartProducts)) {
-
             foreach ($cartProducts as $row) {
                 $id_product_attribute = (isset($row['id_product_attribute']) && $row['id_product_attribute'] !== '') ? $row['id_product_attribute'] : false;
 
-                $returnProducts[] = array_merge(self::getProduct($row['id_product'], $id_lang, $id_product_attribute), array(
+                $returnProducts[] = array_merge(self::getProduct($row['id_product'], $id_lang, $id_product_attribute, $row['id_shop']), array(
                     'quantity' => $row['cart_quantity']
                 ));
             }
@@ -2297,6 +2409,44 @@ class ShopymindClient_Callback
         Configuration::updateValue('SPM_SYNCLASTCALL_'.strtoupper($type),date('Y-m-d H:i:s'));
     }
 
+    /**
+     * Récupère la liste des ID shops liés à l'objet passé en paramètre
+     * @param $objectType
+     * @param $objectId
+     * @return array
+     */
+    public static function getShopsForObject($objectType, $objectId)
+    {
+        $shops = array();
+
+        switch ($objectType) {
+            case 'product' :
+                $query = 'SELECT DISTINCT p.`id_shop` FROM `' . _DB_PREFIX_ . 'product_shop` p WHERE p.`id_product` = '.(int) $objectId.' ORDER BY p.`id_shop`';
+                break;
+
+            case 'productCategory' :
+                $query = 'SELECT DISTINCT p.`id_shop` FROM `' . _DB_PREFIX_ . 'category_shop` p WHERE p.`id_category` = '.(int) $objectId.' ORDER BY p.`id_shop`';
+                break;
+
+            case 'customer' :
+                $query = 'SELECT DISTINCT p.`id_shop` FROM `' . _DB_PREFIX_ . 'customer` p WHERE p.`id_customer` = '.(int) $objectId.' ORDER BY p.`id_shop`';
+                break;
+
+            case 'order' :
+                $query = 'SELECT DISTINCT p.`id_shop` FROM `' . _DB_PREFIX_ . 'orders` p WHERE p.`id_order` = '.(int) $objectId.' ORDER BY p.`id_shop`';
+                break;
+        }
+        $qShops = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+
+        if ($qShops && is_array($qShops) && count($qShops) > 0) {
+            foreach ($qShops as $shop) {
+                array_push($shops, $shop['id_shop']);
+            }
+        }
+
+        return $shops;
+    }
+
     public static function saveProduct($id_product)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
@@ -2305,9 +2455,31 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
         $pass = self::checkSyncDate('product');
-        if($pass) {
-            include_once (dirname(__FILE__) . '/bin/Notify.php');
-            ShopymindClient_Notify::saveProduct($id_product);
+        if ($pass) {
+            include_once(dirname(__FILE__) . '/bin/Notify.php');
+
+            if (!self::isMultishopContext(self::getContext())) {
+                ShopymindClient_Notify::saveProduct($id_product);
+            } else {
+                // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+                $currentContext = clone self::getContext();
+                $shops = self::getShopsForObject('product', $id_product);
+
+                $keysDone = array();
+                foreach ($shops as $shop) {
+                    // Changement de contexte
+                    self::getContext($shop);
+
+                    if (!is_null(self::getApiIdentification()) && self::getApiIdentification() != '' && !in_array(self::getApiIdentification(), $keysDone)) {
+                        // Synchronisation
+                        ShopymindClient_Notify::saveProduct($id_product);
+                        array_push($keysDone, self::getApiIdentification());
+                    }
+                }
+                // On remet le contexte initial
+                self::getContext($currentContext->shop->id);
+            }
+
             self::setSyncDate('product');
         }
     }
@@ -2320,9 +2492,32 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
         $pass = self::checkSyncDate('productCategory');
-        if($pass) {
-            include_once (dirname(__FILE__) . '/bin/Notify.php');
-            ShopymindClient_Notify::saveProductCategory($id_category);
+        if ($pass) {
+            include_once(dirname(__FILE__) . '/bin/Notify.php');
+
+            if (!self::isMultishopContext(self::getContext())) {
+                ShopymindClient_Notify::saveProductCategory($id_category);
+            } else {
+                // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+                $currentContext =  clone self::getContext();
+
+                $shops = self::getShopsForObject('productCategory', $id_category);
+                $keysDone = array();
+                foreach ($shops as $shop) {
+                    // Changement de contexte
+                    self::getContext($shop);
+
+                    if (!in_array(self::getApiIdentification(), $keysDone)) {
+                        // Synchronisation
+                        ShopymindClient_Notify::saveProductCategory($id_category);
+                        array_push($keysDone, self::getApiIdentification());
+                    }
+                }
+
+                // On remet le contexte initial
+                self::getContext($currentContext->shop->id);
+            }
+
             self::setSyncDate('productCategory');
         }
     }
@@ -2336,9 +2531,33 @@ class ShopymindClient_Callback
             ), func_get_args());
 
         $pass = self::checkSyncDate('customer');
-        if($pass) {
-            include_once (dirname(__FILE__) . '/bin/Notify.php');
-            ShopymindClient_Notify::saveCustomer($id_customer);
+        if ($pass) {
+            include_once(dirname(__FILE__) . '/bin/Notify.php');
+
+            if (!self::isMultishopContext(self::getContext())) {
+                ShopymindClient_Notify::saveCustomer($id_customer);
+            } else {
+                // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+                $currentContext = clone self::getContext();
+
+                $shops = self::getShopsForObject('customer', $id_customer);
+
+                $keysDone = array();
+                foreach ($shops as $shop) {
+                    // Changement de contexte
+                    self::getContext($shop);
+
+                    if (!in_array(self::getApiIdentification(), $keysDone)) {
+                        // Synchronisation
+                        ShopymindClient_Notify::saveCustomer($id_customer);
+                        array_push($keysDone, self::getApiIdentification());
+                    }
+                }
+
+                // On remet le contexte initial
+                self::getContext($currentContext->shop->id);
+            }
+
             self::setSyncDate('customer');
         }
     }
@@ -2351,9 +2570,32 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
         $pass = self::checkSyncDate('order');
-        if($pass) {
-            include_once (dirname(__FILE__) . '/bin/Notify.php');
-            ShopymindClient_Notify::saveOrder($id_order);
+        if ($pass) {
+            include_once(dirname(__FILE__) . '/bin/Notify.php');
+
+            if (!self::isMultishopContext(self::getContext())) {
+                ShopymindClient_Notify::saveOrder($id_order);
+            } else {
+                // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+                $currentContext = clone self::getContext();
+
+                $shops = self::getShopsForObject('order', $id_order);
+                $keysDone = array();
+                foreach ($shops as $shop) {
+                    // Changement de contexte
+                    self::getContext($shop);
+
+                    if (!in_array(self::getApiIdentification(), $keysDone)) {
+                        // Synchronisation
+                        ShopymindClient_Notify::saveOrder($id_order);
+                        array_push($keysDone, self::getApiIdentification());
+                    }
+                }
+
+                // On remet le contexte initial
+                self::getContext($currentContext->shop->id);
+            }
+
             self::setSyncDate('order');
         }
     }
@@ -2365,13 +2607,35 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
+        include_once(dirname(__FILE__) . '/bin/Notify.php');
         $params = array(
             'id_product' => $id_product
         );
-        if (! count($params))
+        if (!count($params))
             return false;
-        ShopymindClient_Notify::deleteProduct($params);
+
+        if (!self::isMultishopContext(self::getContext())) {
+            ShopymindClient_Notify::deleteProduct($params);
+        } else {
+            // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+            $currentContext = clone self::getContext();
+
+            $shops = self::getShopsForObject('product', $id_product);
+            $keysDone = array();
+            foreach ($shops as $shop) {
+                // Changement de contexte
+                self::getContext($shop);
+
+                if (!in_array(self::getApiIdentification(), $keysDone)) {
+                    // Synchronisation
+                    ShopymindClient_Notify::deleteProduct($params);
+                    array_push($keysDone, self::getApiIdentification());
+                }
+            }
+
+            // On remet le contexte initial
+            self::getContext($currentContext->shop->id);
+        }
     }
 
     public static function deleteProductCategory($id_category)
@@ -2381,13 +2645,35 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
+        include_once(dirname(__FILE__) . '/bin/Notify.php');
         $params = array(
             'id_category' => $id_category
         );
-        if (! count($params))
+        if (!count($params))
             return false;
-        ShopymindClient_Notify::deleteProductCategory($params);
+
+        if (!self::isMultishopContext(self::getContext())) {
+            ShopymindClient_Notify::deleteProductCategory($params);
+        } else {
+            // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+            $currentContext = clone self::getContext();
+
+            $shops = self::getShopsForObject('productCategory', $id_category);
+            $keysDone = array();
+            foreach ($shops as $shop) {
+                // Changement de contexte
+                self::getContext($shop);
+
+                if (!in_array(self::getApiIdentification(), $keysDone)) {
+                    // Synchronisation
+                    ShopymindClient_Notify::deleteProductCategory($params);
+                    array_push($keysDone, self::getApiIdentification());
+                }
+            }
+
+            // On remet le contexte initial
+            self::getContext($currentContext->shop->id);
+        }
     }
 
     public static function deleteCustomer($id_customer)
@@ -2397,13 +2683,35 @@ class ShopymindClient_Callback
                 'ShopymindClient_CallbackOverride',
                 __FUNCTION__
             ), func_get_args());
-        include_once (dirname(__FILE__) . '/bin/Notify.php');
+        include_once(dirname(__FILE__) . '/bin/Notify.php');
         $params = array(
             'id_customer' => $id_customer
         );
-        if (! count($params))
+        if (!count($params))
             return false;
-        ShopymindClient_Notify::deleteCustomer($params);
+
+        if (!self::isMultishopContext(self::getContext())) {
+            ShopymindClient_Notify::deleteCustomer($params);
+        } else {
+            // Dans le cas d'un multishop, on va boucler sur les shops concernés par la mise à jour
+            $currentContext = clone self::getContext();
+
+            $shops = self::getShopsForObject('customer', $id_customer);
+            $keysDone = array();
+            foreach ($shops as $shop) {
+                // Changement de contexte
+                self::getContext($shop);
+
+                if (!in_array(self::getApiIdentification(), $keysDone)) {
+                    // Synchronisation
+                    ShopymindClient_Notify::deleteCustomer($params);
+                    array_push($keysDone, self::getApiIdentification());
+                }
+            }
+
+            // On remet le contexte initial
+            self::getContext($currentContext->shop->id);
+        }
     }
 
     /**
@@ -2459,7 +2767,7 @@ class ShopymindClient_Callback
         return $res;
     }
 
-    public static function getProductCategory($id_category)
+    public static function getProductCategory($id_category, $idShop = false)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
             return call_user_func_array(array(
@@ -2467,12 +2775,12 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
 
-        $context = self::getContext();
+        $context = self::getContext($idShop);
         $resultCategory = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT a.`date_add`, a.`date_upd`, a.`id_parent`, a.`id_category`, a.`active`, b.`name`, b.`description`, b.`link_rewrite`, b.`id_lang`
                 FROM `' . _DB_PREFIX_ . 'category` a
               ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlAssociation('category', 'a') : '') . '
                 LEFT JOIN `' . _DB_PREFIX_ . 'category_lang` b ON (a.`id_category` = b.`id_category`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlRestrictionOnLang('b') : '') . ')
-                WHERE a.`id_category` = ' . (int) $id_category . '');
+                WHERE a.`id_category` = ' . (int) $id_category . ' ORDER BY a.active');
         $return = array();
         if ($resultCategory && is_array($resultCategory) && sizeof($resultCategory)) {
             $link = $context->link;
@@ -2503,7 +2811,7 @@ class ShopymindClient_Callback
         return $return;
     }
 
-    public static function getProduct($id_product, $id_lang = false, $id_product_attribute = null)
+    public static function getProduct($id_product, $id_lang = false, $id_product_attribute = null, $id_shop = false)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
             return call_user_func_array(array(
@@ -2511,11 +2819,11 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
 
-        $context = self::getContext();
+        $context = self::getContext($id_shop);
         $image_size = self::getOptimumImageSize();
 
         $resultProduct = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-            SELECT b.`available_for_order`, b.`active`, b.`date_add`, b.`date_upd`, b.`quantity`, b.`reference`, b.`id_manufacturer`,b.`id_product`, c.`id_lang`, c.`name`, c.`description_short`, c.`description`, MAX(d.`id_image`) `id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
+            SELECT b.`available_for_order`, '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'product_shop.`active`' : 'b.`active`').', b.`date_add`, b.`date_upd`, b.`quantity`, b.`reference`, b.`id_manufacturer`,b.`id_product`, c.`id_lang`, c.`name`, c.`description_short`, c.`description`, MAX(d.`id_image`) `id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
             FROM `' . _DB_PREFIX_ . 'product` b
             ' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlAssociation('product', 'b') : '') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` c ON (b.`id_product` = c.`id_product`' . (_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? Shop::addSqlRestrictionOnLang('c') : '') . ($id_lang ? 'AND c.id_lang = ' . (int) $id_lang : '') . ')
@@ -2525,7 +2833,7 @@ class ShopymindClient_Callback
 			ON (p.`id_image` = d.`id_image` AND d.cover=1 AND d.id_shop='.(int)$context->shop->id.')' :
            'LEFT JOIN `' . _DB_PREFIX_ . 'image` d ON (d.`id_product` = b.`id_product` AND d.`cover` = 1)') . '
             LEFT JOIN `' . _DB_PREFIX_ . 'image_lang` e ON (d.`id_image` = e.`id_image` AND e.`id_lang` = c.`id_lang`)
-            WHERE b.`id_product` = ' . (int) $id_product.($id_lang ? '' : ' GROUP BY c.`id_lang`'));
+            WHERE b.`id_product` = ' . (int) $id_product.($id_lang ? '' : ' GROUP BY c.`id_lang` ORDER BY '.(_PS_VERSION_ >= 1.5 && Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') ? 'product_shop.active' : 'b.active')));
 
         $returnProduct = array();
         if ($resultProduct && is_array($resultProduct) && count($resultProduct)) {
@@ -2543,12 +2851,12 @@ class ShopymindClient_Callback
 
                 $row['id_image'] = Product::defineProductImage($row, $row['id_lang']);
                 // Get price
-                $price = Product::getPriceStatic($row['id_product'], ! Tax::excludeTaxeOption(), false, 6, null, false, false);
+                $price = Product::getPriceStatic($row['id_product'], ! (bool) Group::getDefaultPriceDisplayMethod(), false, 6, null, false, false);
                 // Get price discount
-                $price_discount = Product::getPriceStatic($row['id_product'], ! Tax::excludeTaxeOption(), false, 6, null, false, true);
+                $price_discount = Product::getPriceStatic($row['id_product'], ! (bool) Group::getDefaultPriceDisplayMethod(), false, 6, null, false, true);
 
                 // Get image URL
-                $image_url = $link->getImageLink((int) $row['product_link_rewrite'], $row['id_image'], $image_size);
+                $image_url = $link->getImageLink($row['product_link_rewrite'], $row['id_image'], $image_size);
 
                 if (! preg_match('#^http#i', $image_url))
                     $image_url = _PS_BASE_URL_ . $image_url;
@@ -2560,7 +2868,7 @@ class ShopymindClient_Callback
                 } else
                     $product_url = $link->getProductLink((int) $row['id_product'], null, null, null, (int) $row['id_lang']);
 
-                $combination = self::getAllProductCombination($row['id_product'], $row['id_lang'], $image_size, $id_product_attribute);
+                $combination = self::getAllProductCombination($row['id_product'], $row['id_lang'], $image_size, $id_product_attribute, $context->shop->id);
 
                 if (isset($id_product_attribute)) {
 
@@ -2584,7 +2892,7 @@ class ShopymindClient_Callback
                         'quantity_remaining' => isset($combination['quantity']) && $combination['quantity'] !== '' ? $combination['quantity'] : $row['quantity'],
                         'date_creation' => $row['date_add'],
                         'date_update' => $row['date_upd'],
-                        'active' => $active
+                        'active' => (int)$active
                     );
                 } else {
                     $returnProduct[] = array(
@@ -2606,7 +2914,7 @@ class ShopymindClient_Callback
                         'quantity_remaining' => $row['quantity'],
                         'date_creation' => $row['date_add'],
                         'date_update' => $row['date_upd'],
-                        'active' => $active
+                        'active' => (int)$active
                     );
                 }
             }
@@ -2644,7 +2952,7 @@ class ShopymindClient_Callback
                     return preg_replace('#' . preg_quote($main_domain_default) . '#', $main_domain, $url);
     }
 
-    public static function getAllProductCombination($id_product, $id_lang = false, $image_size, $id_product_attribute = null)
+    public static function getAllProductCombination($id_product, $id_lang = false, $image_size, $id_product_attribute = null, $id_shop = false)
     {
         if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
             return call_user_func_array(array(
@@ -2652,9 +2960,10 @@ class ShopymindClient_Callback
                 __FUNCTION__
             ), func_get_args());
 
-        $context = self::getContext();
+        $context = self::getContext($id_shop);
         $link = $context->link;
         $returnCombination = array();
+		
         $resultProduct = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
             SELECT f.`id_product_attribute`, f.`default_on`, f.`quantity`, c.`name`, MAX(d.`id_image`) AS product_img_default, pai.`id_image`, e.`legend`, c.`link_rewrite` AS product_link_rewrite
             FROM `' . _DB_PREFIX_ . 'product_attribute` f
@@ -2707,9 +3016,9 @@ class ShopymindClient_Callback
                 if ($combinationImage && count($combinationImage))
                     $row['id_image'] = Product::defineProductImage($combinationImage, $id_lang);
                     // Get price
-                $price = Product::getPriceStatic($id_product, ! Tax::excludeTaxeOption(), $row['id_product_attribute'], 6, null, false, false);
+                $price = Product::getPriceStatic($id_product, ! (bool) Group::getDefaultPriceDisplayMethod(), $row['id_product_attribute'], 6, null, false, false);
                 // Get price discount
-                $price_discount = Product::getPriceStatic($id_product, ! Tax::excludeTaxeOption(), $row['id_product_attribute'], 6, null, false, true);
+                $price_discount = Product::getPriceStatic($id_product, ! (bool) Group::getDefaultPriceDisplayMethod(), $row['id_product_attribute'], 6, null, false, true);
 
                 // Get image URL
                 $image_url = $link->getImageLink((int) $row['product_link_rewrite'], $row['id_image'], $image_size);
@@ -2741,6 +3050,56 @@ class ShopymindClient_Callback
         return isset($id_product_attribute) ? reset($returnCombination) : $returnCombination;
     }
 
+    /**
+     * Désinscription d'un customer de la newsletter
+     * @param $id_shop
+     * @param $id_customer
+     * @param $email
+     * @return bool|mixed
+     */
+    public static function unsubCustomer($id_shop, $id_customer, $email)
+    {
+        if (class_exists('ShopymindClient_CallbackOverride', false) && method_exists('ShopymindClient_CallbackOverride', __FUNCTION__))
+            return call_user_func_array(array(
+                'ShopymindClient_CallbackOverride',
+                __FUNCTION__
+            ), func_get_args());
+
+        $context = self::getContext($id_shop);
+        $query = 'UPDATE `' . _DB_PREFIX_ . 'customer` a
+                  SET a.`optin` = 0, a.`newsletter` = 0
+                  WHERE a.`id_customer` = "' . pSQL($id_customer).'"
+                  ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false) : '');
+        Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+
+        // Si la synchro des listes newsletter est activée, on désinscrit de la newsletter
+        $isEnabled = Configuration::get('SPM_syncNL');
+        if($isEnabled) {
+            // Récupération de la configuration
+            $table = Configuration::get('SPM_syncNL_table');
+            $fields = explode('|', Configuration::get('SPM_syncNL_table_fields'));
+
+            $tableFields = $finalFields = array();
+            if (is_array($fields) && count($fields) > 0) {
+                foreach ($fields as $field) {
+                    $field = explode('-', $field);
+                    $tableFields[$field[1]] = $field[0];
+                    array_push($finalFields, $field[1]);
+                }
+
+                if(count($finalFields) > 0 && array_key_exists('email', $tableFields) && array_key_exists('status', $tableFields)) {
+                    $query = 'UPDATE `'.$table.'` a
+                    SET `'.$tableFields['status'].'` = 0 WHERE 1
+                    ' . (self::isMultiShop($id_shop) ? Shop::addSqlRestriction(false, 'a') : '') . '
+                    AND `'.$tableFields['email'].'` = "'.pSQL($email).'"';
+                    Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static function getApiIdentification()
     {
         return Configuration::get('SPM_apiIdentification');
@@ -2761,6 +3120,7 @@ class ShopymindClient_Callback
         $module = new ShopyMind();
         $context = $module->getContext();
         if ($id_shop && isset($context->shop) && $context->shop->id && self::isMultiShop($id_shop)) {
+
             Shop::setContext(1, $id_shop);
             $shop = new Shop($id_shop);
             Context::getContext()->shop = $shop;
@@ -2779,5 +3139,22 @@ class ShopymindClient_Callback
         if (isset($context->shop) && isset($context->shop->id) && self::isMultiShop($context->shop->id))
             return true;
         return false;
+    }
+
+    public static function getTableFields($tableName)
+    {
+        if(!isset($tableName) || is_null($tableName) || $tableName == '') return false;
+
+        $query = 'SHOW COLUMNS FROM `'.$tableName.'`';
+        $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+
+        $fields = array();
+        if ($result && is_array($result) && count($result)) {
+            foreach ($result as $row) {
+                array_push($fields, $row['Field']);
+            }
+        }
+
+        return json_encode(array('success' => true, 'fields' => $fields));
     }
 }

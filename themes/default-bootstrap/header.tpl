@@ -88,7 +88,8 @@
 		document,'script','https://connect.facebook.net/en_US/fbevents.js');
 
 		fbq('init', '256657621391516');
-		fbq('track', "PageView");{/literal}</script>
+		fbq('track', "PageView");
+       {/literal}</script>
 		<noscript><img height="1" width="1" style="display:none"
 		src="https://www.facebook.com/tr?id=256657621391516&ev=PageView&noscript=1"
 		/></noscript>

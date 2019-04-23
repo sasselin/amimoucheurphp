@@ -14,7 +14,7 @@ return array(
         'type-request' => 'type-request',
     ),
 
-    'version' => '2.1.1',
+    'version' => '2.1.4',
 
     'api' => array(
         'salt' => 'zPz<j.[EaX,]$s3gzkCW;^N.2',

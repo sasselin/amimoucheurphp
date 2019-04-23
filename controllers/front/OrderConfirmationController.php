@@ -99,6 +99,15 @@ class OrderConfirmationControllerCore extends FrontController
             $this->context->customer->mylogout();
         }
 
+		$order = new Order($this->id_order);
+
+		if (Validate::isLoadedObject($order)) {
+			
+			$this->context->smarty->assign(array(
+                'total_paid' => $order->getOrdersTotalPaid()
+            ));
+		}
+		
         $this->setTemplate(_PS_THEME_DIR_.'order-confirmation.tpl');
     }
 
