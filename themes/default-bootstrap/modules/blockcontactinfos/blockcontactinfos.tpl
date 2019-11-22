@@ -27,7 +27,7 @@
 <!-- MODULE Block contact infos -->
 <section id="block_contact_infos" class="footer-block col-xs-12 col-sm-4">
 	<div>
-        <h4>{l s='Store Information' mod='blockcontactinfos'}</h4>
+        <span class="h4">{l s='Store Information' mod='blockcontactinfos'}</span>
         <ul class="toggle-footer">
             {if $blockcontactinfos_company != ''}
             	<li>

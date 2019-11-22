@@ -13,3 +13,17 @@
   text-decoration: none; }
   #productscategory_list .exclusive span:focus, #productscategory_list .exclusive span:active {
     text-decoration: none; }
+.h3.page-product-heading {
+    color: #555454;
+    text-transform: uppercase;
+    font-family: "Open Sans",sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 20px;
+    padding: 14px 20px 17px;
+    margin: 0 0 20px;
+    position: relative;
+    border: 1px solid #d6d4d4;
+    border-bottom: none;
+    background: #fbfbfb
+}

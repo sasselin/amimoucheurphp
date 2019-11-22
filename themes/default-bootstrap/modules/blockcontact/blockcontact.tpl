@@ -24,9 +24,9 @@
 *}
 
 <div id="contact_block" class="block">
-	<h4 class="title_block">
+	<span class="h4 title_block">
 		{l s='Contact Us' mod='blockcontact'}
-	</h4>
+	</span>
 	<div class="block_content clearfix">
 		<p>
 			{l s='Our support hotline is available 24/7.' mod='blockcontact'}

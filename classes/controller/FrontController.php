@@ -706,6 +706,23 @@ class FrontControllerCore extends Controller
             'display_header' => $this->display_header,
             'display_footer' => $this->display_footer,
         ));
+		
+		if (!empty($this->page_name))
+			$page_name = $this->page_name;
+		elseif (!empty($this->php_self))
+			$page_name = $this->php_self;
+		elseif (Tools::getValue('fc') == 'module' && $module_name !=  "" && (Module::getInstanceByName($module_name) instanceof PaymentModule))
+			$page_name = 'module-payment-submit';
+			// @retrocompatibility Are we in a module ?
+		elseif (preg_match('#^'.preg_quote($this->context->shop->physical_uri, '#').'modules/([a-zA-Z0-9_-]+?)/(.*)$#', $_SERVER['REQUEST_URI'], $m))
+			$page_name = 'module-'.$m[1].'-'.str_replace(array('.php', '/'), array( "", '-'), $m[2]);
+		else
+		{
+			$page_name = Dispatcher::getInstance()->getController();
+			$page_name = (preg_match('/^[0-9]/', $page_name) ? 'page_'.$page_name : $page_name);
+		}
+
+		$this->context->smarty->assign(Meta::getMetaTags($this->context->language->id, $page_name));
 
         $layout = $this->getLayout();
         if ($layout) {

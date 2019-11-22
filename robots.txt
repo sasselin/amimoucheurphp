@@ -61,7 +61,6 @@ Disallow: */classes/
 Disallow: */config/
 Disallow: */download/
 Disallow: */mails/
-Disallow: */modules/
 Disallow: */translations/
 Disallow: */tools/
 # Files
@@ -69,7 +68,6 @@ Disallow: /*en/password-recovery
 Disallow: /*en/address
 Disallow: /*en/addresses
 Disallow: /*en/login
-Disallow: /*en/cart
 Disallow: /*en/rabais
 Disallow: /*en/order-history
 Disallow: /*en/identity
@@ -85,7 +83,6 @@ Disallow: /*fr/mot-de-passe-oublie
 Disallow: /*fr/Adresse
 Disallow: /*fr/adresses
 Disallow: /*fr/connexion
-Disallow: /*fr/panier
 Disallow: /*fr/discount
 Disallow: /*fr/historique-des-commandes
 Disallow: /*fr/mes-informations-personnelles
@@ -97,5 +94,24 @@ Disallow: /*fr/recherche
 Disallow: /*fr/commande-rapide
 Disallow: /*fr/guest-tracking
 Disallow: /*fr/confirmation-commande
+
+# Desindexer les parametres d'URL - Juin 2019
+Noindex: /*action
+Noindex: /*manufacturers_id
+Noindex: /*sid
+Noindex: /*categories_id
+Noindex: /*language
+Noindex: /*cPath
+Noindex: /*manufacturer_list
+Noindex: /*articles_id
+Noindex: /*sort
+
+# Desindexer URL panier - Juillet 2019 - Remettre en Nofollow quand desindexees
+# Files
+Noindex: /*fr/panier
+Noindex: /*en/cart
+# Directories
+Noindex: */modules/
+
 # Sitemap
 Sitemap: https://www.amimoucheur.com/1_index_sitemap.xml

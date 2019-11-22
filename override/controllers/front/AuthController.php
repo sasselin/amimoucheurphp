@@ -68,4 +68,26 @@ class AuthController extends AuthControllerCore
         }
         parent::postProcess();
     }
+	
+	protected function sendConfirmationMail(Customer $customer)
+    {
+        if (!Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
+            return true;
+        }
+
+        return Mail::Send(
+            $this->context->language->id,
+            'account',
+            Mail::l('Welcome!'),
+            array(
+                '{firstname}' => $customer->firstname,
+                '{lastname}' => $customer->lastname,
+                '{email}' => $customer->email,
+                '{passwd}' => Tools::getValue('passwd')),
+            $customer->email,
+            $customer->firstname.' '.$customer->lastname,
+			null, null, null, null,
+			_PS_MAIL_DIR_, false, null, null, null, true
+        );
+    }
 }

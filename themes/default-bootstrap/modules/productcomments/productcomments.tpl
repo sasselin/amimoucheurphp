@@ -111,9 +111,9 @@
 <div style="display: none;">
 	<div id="new_comment_form">
 		<form id="id_new_comment_form" action="#">
-			<h2 class="page-subheading">
+			<div class="page-subheading h2">
 				{l s='Write a review' mod='productcomments'}
-			</h2>
+			</div>
 			<div class="row">
 				{if isset($product) && $product}
 					<div class="product clearfix  col-xs-12 col-sm-6">

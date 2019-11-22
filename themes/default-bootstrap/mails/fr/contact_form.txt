@@ -1,4 +1,3 @@
-
 [{shop_url}] 
 
 Votre message à l'attention du service client de {shop_name} 

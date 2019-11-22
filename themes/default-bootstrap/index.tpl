@@ -25,6 +25,11 @@
 {if isset($HOOK_HOME) && $HOOK_HOME|trim}
   <div class="clearfix">{$HOOK_HOME}</div>
 {/if}
+<div class="clearfix">
+	<h1>{l s='LA BOUTIQUE DE PÊCHE À LA MOUCHE AU QUÉBEC'}</h1>
+	<h2>{l s='Vos articles de pêche et accessoires en ligne et au meilleur prix'}</h2>
+	<p>{l s='Retrouvez sur notre boutique tous les articles de pêche à la mouche dont vous avez besoin : mouches, waders, soies, bobines, moulinets et bien d\'autres accessoires essentiels.'} <b>{l s='La livraison est gratuite au Québec dès 100$'}</b> {l s='et vous pouvez essayer notre produit en magasin!'}</p>
+</div>
 {if isset($HOOK_HOME_TAB_CONTENT) && $HOOK_HOME_TAB_CONTENT|trim}
     {if isset($HOOK_HOME_TAB) && $HOOK_HOME_TAB|trim}
         <ul id="home-page-tabs" class="nav nav-tabs clearfix">

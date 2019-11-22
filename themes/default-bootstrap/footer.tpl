@@ -37,9 +37,9 @@
 						<div class="row">
 							{$HOOK_FOOTER}
 							<section class="footer-block col-xs-12 col-sm-2">
-								<h4>
+								<span class="h4">
 									<a href="{$link->getPageLink('my-account', true)|escape:'html':'UTF-8'}" title="{l s='Manage my customer account'}" rel="nofollow">{l s='My account'}</a>
-								</h4>
+								</span>
 								<div class="block_content toggle-footer">
 									<ul class="bullet">
 										<li><a href="{$link->getPageLink('history', true)|escape:'html':'UTF-8'}" title="{l s='My orders'}" rel="nofollow">{l s='My orders'}</a></li>
@@ -51,7 +51,7 @@
 							</section>
 							<section id="block_contact_infos" class="footer-block col-xs-12 col-sm-4">
 								<div>
-        					<h4>L'Ami du Moucheur Inc.</h4>
+        					<span class="h4">L'Ami du Moucheur Inc.</span>
 									<ul class="toggle-footer">
 			            	<li><i class="icon-map-marker"></i>7390 Rue Notre Dame O, Trois-Rivières, QC G9B 1L8</li>
 			            	<li><i class="icon-phone"></i>{l s='Call us now'}:<span> 1 800 567-8584</span></li>
@@ -64,7 +64,7 @@
 							</section>
 							<section id="block_store_hours" class="footer-block col-xs-12 col-sm-4">
 								<div>
-									<h4>{l s='Store hours'}</h4>
+									<span class="h4">{l s='Store hours'}</span>
 									<ul class="toggle-footer bullet">
 										<li>{l s='Monday'}:  9:00 - 17:30</li>
 										<li>{l s='Tuesday'}:  9:00 - 17:30</li>

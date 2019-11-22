@@ -25,6 +25,8 @@
 {include file="$tpl_dir./errors.tpl"}
 {if isset($category)}
 	{if $category->id AND $category->active}
+		<div class="clearfix"></div>
+		<h1 class="page-heading{if (isset($subcategories) && !$products) || (isset($subcategories) && $products) || !isset($subcategories) && $products} product-listing{/if}"><span class="cat-name">{if !empty($newH1)}{$newH1}{else}{$category->name|escape:'html':'UTF-8'}{/if}{if isset($categoryNameComplement)}&nbsp;{$categoryNameComplement|escape:'html':'UTF-8'}{/if}{if isset($smarty.get.p)}{l s=' - Page'} {$smarty.get.p}{/if}</span></h1><div id="phcount">{include file="$tpl_dir./category-count.tpl"}</div>
     	{if $scenes || $category->description || $category->id_image}
 			<div class="content_scene_cat">
             	 {if $scenes}
@@ -42,14 +44,13 @@
                     <div class="content_scene_cat_bg"{if $category->id_image} style="background:url({$link->getCatImageLink($category->link_rewrite, $category->id_image, 'category_default')|escape:'html':'UTF-8'}) right center no-repeat; background-size:cover; min-height:{$categorySize.height}px;"{/if}>
                         {if $category->description}
                             <div class="cat_desc">
-                                <div class="rte">{$category->description}</div>
+                                <div class="rte"><h2>{$category->description}</h2></div>
                             </div>
                         {/if}
                      </div>
                   {/if}
             </div>
 		{/if}
-		<h1 class="page-heading{if (isset($subcategories) && !$products) || (isset($subcategories) && $products) || !isset($subcategories) && $products} product-listing{/if}"><span class="cat-name">{$category->name|escape:'html':'UTF-8'}{if isset($categoryNameComplement)}&nbsp;{$categoryNameComplement|escape:'html':'UTF-8'}{/if}</span>{include file="$tpl_dir./category-count.tpl"}</h1>
 		{if isset($subcategories)}
         {if (isset($display_subcategories) && $display_subcategories eq 1) || !isset($display_subcategories) }
 		<!-- Subcategories -->
