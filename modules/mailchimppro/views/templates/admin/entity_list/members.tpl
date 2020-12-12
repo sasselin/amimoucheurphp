@@ -34,15 +34,15 @@
         {foreach $members as $member}
             <tr>
 
-                <td>{$member.id}</td>
-                <td>{$member.email_address}</td>
-                <td>{$member.email_type}</td>
-                <td>{$member.status}</td>
-                <td>{$member.ip_signup}</td>
-                <td>{$member.timestamp_signup}</td>
-                <td>{$member.ip_opt}</td>
-                <td>{$member.language}</td>
-                <td>{$member.vip}</td>
+                <td>{$member.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.email_address|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.email_type|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.status|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.ip_signup|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.timestamp_signup|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.ip_opt|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.language|escape:'htmlall':'UTF-8'}</td>
+                <td>{$member.vip|escape:'htmlall':'UTF-8'}</td>
             </tr>
         {/foreach}
         </tbody>

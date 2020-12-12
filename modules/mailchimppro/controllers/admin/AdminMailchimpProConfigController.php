@@ -71,6 +71,24 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $this->confirmations[] = $this->l('Configuration updated');
     }
 
+    public function processDeleteEcommerceData()
+    {
+        try {
+            $shops = array_column(Shop::getShops(true), 'id_shop');
+            $command = new \PrestaChamps\MailchimpPro\Commands\StoreSyncCommand(
+                $this->context,
+                $this->module->getApiClient(),
+                $shops
+            );
+            $command->setMethod($command::SYNC_METHOD_DELETE);
+            $command->setSyncMode($command::SYNC_MODE_REGULAR);
+            $command->execute();
+            $this->confirmations[] = $this->l('E-commerce data has been deleted');
+        } catch (Exception $exception) {
+            $this->errors[] = "Error during deleting e-commerce data";
+        }
+    }
+
     /**
      * @return string
      * @throws PrestaShopDatabaseException
@@ -82,72 +100,72 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $fields_form = array(
             'form' => array(
                 'legend' => array('title' => $this->l('Order state mapping'), 'icon' => 'icon-envelope'),
-                'input' => array(
+                'input'  => array(
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => true,
-                        'label' => $this->l('Status for pending'),
-                        'name' => MailchimpProConfig::STATUSES_FOR_PENDING,
-                        'size' => count($orderStates),
-                        'options' => array(
+                        'label'    => $this->l('Status for pending'),
+                        'name'     => MailchimpProConfig::STATUSES_FOR_PENDING,
+                        'size'     => count($orderStates),
+                        'options'  => array(
                             'query' => $orderStates,
-                            'id' => 'id_order_state',
-                            'name' => 'name',
+                            'id'    => 'id_order_state',
+                            'name'  => 'name',
                         ),
                     ),
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => true,
-                        'label' => $this->l('Status for refunded'),
-                        'name' => MailchimpProConfig::STATUSES_FOR_REFUNDED,
-                        'size' => count($orderStates),
-                        'options' => array(
+                        'label'    => $this->l('Status for refunded'),
+                        'name'     => MailchimpProConfig::STATUSES_FOR_REFUNDED,
+                        'size'     => count($orderStates),
+                        'options'  => array(
                             'query' => $orderStates,
-                            'id' => 'id_order_state',
-                            'name' => 'name',
+                            'id'    => 'id_order_state',
+                            'name'  => 'name',
                         ),
                     ),
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => true,
-                        'label' => $this->l('Status for cancelled'),
-                        'name' => MailchimpProConfig::STATUSES_FOR_CANCELLED,
-                        'size' => count($orderStates),
-                        'options' => array(
+                        'label'    => $this->l('Status for cancelled'),
+                        'name'     => MailchimpProConfig::STATUSES_FOR_CANCELLED,
+                        'size'     => count($orderStates),
+                        'options'  => array(
                             'query' => $orderStates,
-                            'id' => 'id_order_state',
-                            'name' => 'name',
+                            'id'    => 'id_order_state',
+                            'name'  => 'name',
                         ),
                     ),
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => true,
-                        'label' => $this->l('Status for shipped'),
-                        'name' => MailchimpProConfig::STATUSES_FOR_SHIPPED,
-                        'size' => count($orderStates),
-                        'options' => array(
+                        'label'    => $this->l('Status for shipped'),
+                        'name'     => MailchimpProConfig::STATUSES_FOR_SHIPPED,
+                        'size'     => count($orderStates),
+                        'options'  => array(
                             'query' => $orderStates,
-                            'id' => 'id_order_state',
-                            'name' => 'name',
+                            'id'    => 'id_order_state',
+                            'name'  => 'name',
                         ),
                     ),
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => true,
-                        'label' => $this->l('Status for paid'),
-                        'name' => MailchimpProConfig::STATUSES_FOR_PAID,
-                        'size' => count($orderStates),
-                        'options' => array(
+                        'label'    => $this->l('Status for paid'),
+                        'name'     => MailchimpProConfig::STATUSES_FOR_PAID,
+                        'size'     => count($orderStates),
+                        'options'  => array(
                             'query' => $orderStates,
-                            'id' => 'id_order_state',
-                            'name' => 'name',
+                            'id'    => 'id_order_state',
+                            'name'  => 'name',
                         ),
                     ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Save'),
                     'class' => 'btn btn-primary btn-mc pull-right',
-                    'id' => 'state-save-btn'
+                    'id'    => 'state-save-btn'
                 ),
             ),
         );
@@ -163,8 +181,8 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $helper->token = Tools::getAdminTokenLite($this->controller_name);
         $helper->tpl_vars = array(
             'fields_value' => MailchimpProConfig::getConfigurationValues(),
-            'languages' => $this->context->controller->getLanguages(),
-            'id_language' => $this->context->language->id,
+            'languages'    => $this->context->controller->getLanguages(),
+            'id_language'  => $this->context->language->id,
         );
 
         return $helper->generateForm(array($fields_form));
@@ -188,39 +206,39 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $fields_form = array(
             'form' => array(
                 'legend' => array('title' => $this->l('General settings'), 'icon' => 'icon-envelope'),
-                'input' => array(
+                'input'  => array(
                     array(
-                        'type' => 'select',
+                        'type'     => 'select',
                         'multiple' => false,
-                        'label' => $this->l('Product image size'),
-                        'name' => MailchimpProConfig::PRODUCT_IMAGE_SIZE,
-                        'desc' => $this->module->l('Remember to resync products if you change this'),
-                        'options' => array(
+                        'label'    => $this->l('Product image size'),
+                        'name'     => MailchimpProConfig::PRODUCT_IMAGE_SIZE,
+                        'desc'     => $this->module->l('Remember to resync products if you change this'),
+                        'options'  => array(
                             'query' => $this->getImageSizes(),
-                            'id' => 'name',
-                            'name' => 'name',
+                            'id'    => 'name',
+                            'name'  => 'name',
                         ),
                     ),
                     array(
-                        'type' => 'select',
-                        'label' => $this->l('List ID'),
-                        'name' => MailchimpProConfig::MAILCHIMP_LIST_ID,
-                        'lang' => false,
+                        'type'     => 'select',
+                        'label'    => $this->l('List ID'),
+                        'name'     => MailchimpProConfig::MAILCHIMP_LIST_ID,
+                        'lang'     => false,
                         'required' => true,
-                        'options' => array(
-                            'query' => $lists['lists'],
-                            'id' => 'id',
-                            'name' => 'name',
+                        'options'  => array(
+                            'query' => isset($lists['lists']) ? $lists['lists'] : array(),
+                            'id'    => 'id',
+                            'name'  => 'name',
                         ),
                     ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('API Key'),
-                        'name' => MailchimpProConfig::MAILCHIMP_API_KEY,
-                        'lang' => false,
-                        'required' => true,
-                        'hint' => $this->l('API Key'),
-                    ),
+                    //                    [
+                    //                        'type'     => 'text',
+                    //                        'label'    => $this->l('API Key'),
+                    //                        'name'     => MailchimpProConfig::MAILCHIMP_API_KEY,
+                    //                        'lang'     => false,
+                    //                        'required' => true,
+                    //                        'hint'     => $this->l('API Key'),
+                    //                    ],
                 ),
                 'submit' => array(
                     'title' => $this->l('Save'),
@@ -240,8 +258,8 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $helper->token = Tools::getAdminTokenLite($this->controller_name);
         $helper->tpl_vars = array(
             'fields_value' => MailchimpProConfig::getConfigurationValues(),
-            'languages' => $this->context->controller->getLanguages(),
-            'id_language' => $this->context->language->id,
+            'languages'    => $this->context->controller->getLanguages(),
+            'id_language'  => $this->context->language->id,
         );
 
         return $helper->generateForm(array($fields_form));
@@ -262,6 +280,7 @@ class AdminMailchimpProConfigController extends ModuleAdminController
         $this->content .= $this->renderAccountInfo();
         $this->content .= $this->renderForm();
         $this->content .= $this->renderStateMappingForm();
+        $this->content .= $this->renderDeleteEcommerceData();
         parent::initContent();
     }
 
@@ -280,6 +299,27 @@ class AdminMailchimpProConfigController extends ModuleAdminController
             ));
             return $this->context->smarty->fetch(
                 $this->module->getLocalPath() . 'views/templates/admin/config/account-info.tpl'
+            );
+        } catch (Exception $exception) {
+            return '';
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function renderDeleteEcommerceData()
+    {
+        try {
+            $info = $this->module->getApiClient()->get('');
+            if (!$this->module->getApiClient()->success()) {
+                return '';
+            }
+            $this->context->smarty->assign(array(
+                'info' => $info,
+            ));
+            return $this->context->smarty->fetch(
+                $this->module->getLocalPath() . 'views/templates/admin/config/delete-ecommerce-data.tpl'
             );
         } catch (Exception $exception) {
             return '';

@@ -167,6 +167,7 @@ $_LANG['discount_f4a0d7cb0cd45214c8ca5912c970de13'] = 'TTC';
 $_LANG['errors_0557fa923dcee4d0f86b1409f5c2167f'] = 'Précédent';
 $_LANG['errors_5fbddd8d4e0d8c7a868272f2f171df09'] = 'Il y a %d erreur';
 $_LANG['errors_9ead913c5b7c87efda39ca9640c46ae4'] = 'Il y a %d erreurs';
+$_LANG['footer_110ccf2f5d2ff4eda1fd1a494293467d'] = 'FERMÉ';
 $_LANG['footer_19cbd9ece49e253f8ded2b723a7e2811'] = 'Appelez-nous au';
 $_LANG['footer_5792315f09a5d54fb7e3d066672b507f'] = 'Mardi';
 $_LANG['footer_63b1ba91576576e6cf2da6fab7617e58'] = 'Mes informations';

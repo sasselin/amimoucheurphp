@@ -33,23 +33,23 @@
         <tbody>
         {foreach $promo_rules as $promo_rule}
             <tr>
-                <td>{$promo_rule.id}</td>
-                <td>{$promo_rule.title}</td>
-                <td>{$promo_rule.starts_at}</td>
-                <td>{$promo_rule.ends_at}</td>
-                <td>{$promo_rule.amount}</td>
-                <td>{$promo_rule.type}</td>
-                <td>{$promo_rule.target}</td>
-                <td>{$promo_rule.enabled}</td>
+                <td>{$promo_rule.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.title|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.starts_at|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.ends_at|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.amount|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.type|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.target|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_rule.enabled|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     <div class="btn-group  btn-group-xs" role="group" aria-label="...">
                         <a class="btn btn-default"
-                           href="{LinkHelper::getAdminLink('AdminMailchimpProPromoCodes', true, [], ['action' => 'entitydelete', 'entity_id' => $promo_rule.id])}">
+                           href="{LinkHelper::getAdminLink('AdminMailchimpProPromoCodes', true, [], ['action' => 'entitydelete', 'entity_id' => $promo_rule.id])|escape:'htmlall':'UTF-8'}">
                             Delete
                         </a>
 
                         <a class="btn btn-default"
-                           href="{LinkHelper::getAdminLink('AdminMailchimpProPromoCodes', true, [], ['rule_id' => $promo_rule.id])}">
+                           href="{LinkHelper::getAdminLink('AdminMailchimpProPromoCodes', true, [], ['rule_id' => $promo_rule.id])|escape:'htmlall':'UTF-8'}">
                             {l s='Promo codes' mod='mailchimppro'}
                         </a>
                     </div>

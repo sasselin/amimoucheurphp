@@ -4,11 +4,11 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit06037d6caae7aadfe60af231028dcfcd
+class ComposerStaticInita7caca3c41dca1f6d0b93047052b77df
 {
     public static $files = array (
-        '95089e1053ae17ea4339fdd3c47d4152' => __DIR__ . '/../..' . '/src/LinkHelper.php',
-        'cd21c07add94ed0a8ed2efd3e7005909' => __DIR__ . '/../..' . '/src/MailchimpProConfig.php',
+        'd4b3877d06f9b76941adbfe5d3cb2fbf' => __DIR__ . '/../..' . '/src/LinkHelper.php',
+        'b230e1fbf7ff4907477dbbf4766a9d49' => __DIR__ . '/../..' . '/src/MailchimpProConfig.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -42,10 +42,10 @@ class ComposerStaticInit06037d6caae7aadfe60af231028dcfcd
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit06037d6caae7aadfe60af231028dcfcd::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit06037d6caae7aadfe60af231028dcfcd::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit06037d6caae7aadfe60af231028dcfcd::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit06037d6caae7aadfe60af231028dcfcd::$prefixesPsr0;
+            $loader->prefixLengthsPsr4 = ComposerStaticInita7caca3c41dca1f6d0b93047052b77df::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInita7caca3c41dca1f6d0b93047052b77df::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInita7caca3c41dca1f6d0b93047052b77df::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInita7caca3c41dca1f6d0b93047052b77df::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }

@@ -31,6 +31,20 @@
  *
  * @var {Array} productIds
  */
+
+var receiveMessage = function (event) {
+    if (event.origin !== middlewareUrl) {
+        return false;
+    }
+    if (event.data.hasOwnProperty('token') && event.data.hasOwnProperty('user')) {
+        $("#api-key").val(event.data.token + "-" + event.data.user.dc);
+        $("#logged-in-as-container").removeClass("hidden").find("b").text(event.data.user.login.login_name);
+        $("#oauth2-start").addClass("hidden");
+        toastr.success("Authentication was successful");
+    }
+};
+window.addEventListener("message", receiveMessage, true);
+
 $(document).ready(function () {
     var wizard = $('#setup-wizard');
     var apiKeyInput = $('#api-key');
@@ -40,12 +54,24 @@ $(document).ready(function () {
     var stateCancelledSelect = $('#module-mailchimpproconfig-statuses-for-cancelled');
     var stateShippedSelect = $('#module-mailchimpproconfig-statuses-for-shipped');
     var statePaidSelect = $('#module-mailchimpproconfig-statuses-for-paid');
-
+    apiKeyInput.val('');
     wizard.smartWizard({
         useURLhash: false,
         showStepURLhash: false,
         backButtonSupport: false
     });
+
+    $('#oauth2-start').click(function (event) {
+        event.preventDefault();
+        var windowObjectReference;
+        var strWindowFeatures = "height=500,width=500,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes";
+        windowObjectReference = window.open(
+            middlewareUrl,
+            "McAuthMiddleware",
+            strWindowFeatures
+        );
+    });
+
 
     wizard.on("leaveStep", function (e, anchorObject, stepNumber, stepDirection) {
         var success = false;
@@ -75,7 +101,10 @@ $(document).ready(function () {
 
                 return stuff;
             }
-
+            if (apiKeyInput.val().length < 3) {
+                toastr.warning("Please authenticate first");
+                return false;
+            }
             return storeApiKey();
         }
         if (stepNumber === 1) {
@@ -303,6 +332,10 @@ $(document).ready(function () {
     function syncPromoCodes() {
         $("#step-7 .progress .progress-bar").css("width", "0%");
         var promoCodeBatch = promoCodeIds.chunk(itemsPerRequest);
+        if (promoCodeBatch.length < 1) {
+            $("#promo-code-sync-in-progress").hide();
+            $("#promo-code-sync-completed").removeClass('hidden');
+        }
         for (var i = 0; i < promoCodeBatch.length; i++) {
             let current = i;
             $.ajaxq("promoCodesSync", {
@@ -324,7 +357,7 @@ $(document).ready(function () {
                 success = false;
             }).done(function () {
                 $("#step-7 .progress .progress-bar").css("width", (((current + 1) * parseInt(itemsPerRequest) * 100) / promoCodeIds.length) + "%");
-                if ($.ajaxq.isRunning("promoCodesSync")) {
+                if (!$.ajaxq.isRunning("promoCodesSync")) {
                     $("#promo-code-sync-in-progress").hide();
                     $("#promo-code-sync-completed").removeClass('hidden');
                 }
@@ -356,7 +389,7 @@ $(document).ready(function () {
                 success = false;
             }).done(function () {
                 $("#step-6 .progress .progress-bar").css("width", (((current + 1) * parseInt(itemsPerRequest) * 100) / customerIds.length) + "%");
-                if ($.ajaxq.isRunning("customerSync")) {
+                if (!$.ajaxq.isRunning("customerSync")) {
                     $("#customer-sync-in-progress").hide();
                     $("#customer-sync-completed").removeClass('hidden');
                 }

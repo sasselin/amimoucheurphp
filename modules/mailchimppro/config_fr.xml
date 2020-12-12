@@ -2,7 +2,7 @@
 <module>
 	<name>mailchimppro</name>
 	<displayName><![CDATA[Mailchimp]]></displayName>
-	<version><![CDATA[2.0.1]]></version>
+	<version><![CDATA[2.0.4]]></version>
 	<description><![CDATA[Official Mailchimp integration for PrestaShop]]></description>
 	<author><![CDATA[Mailchimp]]></author>
 	<tab><![CDATA[administration]]></tab>

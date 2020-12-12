@@ -19,9 +19,14 @@
 
 namespace PrestaChamps\MailchimpPro\Commands;
 
+use Context;
+use Customer;
+use CustomerCore;
 use DrewM\MailChimp\MailChimp;
 use PrestaChamps\MailchimpPro\Formatters\CustomerFormatter;
 use PrestaChamps\MailchimpPro\Formatters\ListMemberFormatter;
+use PrestaShopDatabaseException;
+use Tools;
 
 /**
  * Class CustomerSyncCommand
@@ -34,17 +39,17 @@ class CustomerSyncCommand extends BaseApiCommand
     protected $customerIds;
     protected $mailchimp;
     protected $batch;
-    protected $batchPrefix        = '';
-    protected $triggerDoubleOptIn = false;
+    protected $batchPrefix = '';
+    protected $triggerDoubleOptIn = true;
 
     /**
      * ProductSyncService constructor.
      *
-     * @param \Context  $context
+     * @param Context $context
      * @param MailChimp $mailchimp
-     * @param array     $customerIds
+     * @param array $customerIds
      */
-    public function __construct(\Context $context, MailChimp $mailchimp, $customerIds = array())
+    public function __construct(Context $context, MailChimp $mailchimp, $customerIds = array())
     {
         $this->context = $context;
         $this->mailchimp = $mailchimp;
@@ -65,7 +70,7 @@ class CustomerSyncCommand extends BaseApiCommand
 
     /**
      * @return array
-     * @throws \PrestaShopDatabaseException
+     * @throws PrestaShopDatabaseException
      */
     public function execute()
     {
@@ -74,32 +79,31 @@ class CustomerSyncCommand extends BaseApiCommand
             $listId = $this->getListIdFromStore();
             $listRequiresDoi = $this->getListRequiresDOI($listId);
             foreach ($this->customerIds as $customerId) {
-                $customer = new \Customer($customerId);
+                $customer = new Customer($customerId);
                 $formatted = new CustomerFormatter($customer, $this->context);
                 if ($this->method === self::SYNC_METHOD_POST) {
                     $data = $formatted->format();
-                    if ($this->triggerDoubleOptIn) {
-                        $listMemberFormatter = new ListMemberFormatter(
-                            $customer,
-                            $this->context,
-                            $listRequiresDoi
-                                ?
-                                ListMemberFormatter::STATUS_PENDING
-                                :
-                                ListMemberFormatter::STATUS_SUBSCRIBED,
-                            ListMemberFormatter::EMAIL_TYPE_HTML
-                        );
-                        $this->mailchimp->post("/lists/{$listId}/members/", $listMemberFormatter->format());
-                        $data['opt_in_status'] = false;
-                    }
-                    $this->mailchimp->post(
-                        "/ecommerce/stores/{$this->context->shop->id}/customers",
+                    /**
+                     * @var $customer CustomerCore
+                     */
+                    $listMemberFormatter = new ListMemberFormatter(
+                        $customer,
+                        $this->context,
+                        $this->getMemberNewsletterStatus($customer, $listRequiresDoi),
+                        ListMemberFormatter::EMAIL_TYPE_HTML
+                    );
+                    
+                    $data['opt_in_status'] = ($customer->newsletter == '1') ? true : false;
+                    $this->mailchimp->put(
+                        "/ecommerce/stores/{$this->context->shop->id}/customers/{$customerId}",
                         $data
                     );
+                    $hash = md5(Tools::strtolower($customer->email));
+                    $this->mailchimp->put("/lists/{$listId}/members/{$hash}", $listMemberFormatter->format());
                 }
                 if ($this->method === self::SYNC_METHOD_PATCH) {
                     $data = $formatted->format();
-                    $this->mailchimp->patch(
+                    $this->mailchimp->put(
                         "/ecommerce/stores/{$this->context->shop->id}/customers/{$customerId}",
                         $data
                     );
@@ -116,17 +120,17 @@ class CustomerSyncCommand extends BaseApiCommand
         if ((int)$this->syncMode === self::SYNC_MODE_BATCH) {
             $batch = $this->mailchimp->new_batch();
             foreach ($this->customerIds as $customerId) {
-                $formatted = new CustomerFormatter(new \Customer($customerId), $this->context);
+                $formatted = new CustomerFormatter(new Customer($customerId), $this->context);
                 if ($this->method === 'POST') {
-                    $batch->post(
+                    $batch->put(
                         "{$this->batchPrefix}_{$customerId}",
-                        "/ecommerce/stores/{$this->context->shop->id}/customers",
+                        "/ecommerce/stores/{$this->context->shop->id}/customers/{$customerId}",
                         $formatted->format()
                     );
                 }
                 if ($this->method === 'PATCH') {
                     $data = $formatted->format();
-                    $batch->patch(
+                    $batch->put(
                         "{$this->batchPrefix}_{$customerId}",
                         "/ecommerce/stores/{$this->context->shop->id}/customers/{$customerId}",
                         $data
@@ -144,5 +148,26 @@ class CustomerSyncCommand extends BaseApiCommand
         }
 
         return $this->responses;
+    }
+
+    /**
+     * @param Customer $customer
+     * @param bool $listRequiresDoi
+     * @return string
+     */
+    public function getMemberNewsletterStatus(Customer $customer, $listRequiresDoi)
+    {
+        if (!$customer->newsletter) {
+            return ListMemberFormatter::STATUS_TRANSACTIONAL;
+        }
+        if ($listRequiresDoi && $customer->newsletter) {
+            return ListMemberFormatter::STATUS_PENDING;
+        }
+
+        if (!$listRequiresDoi && $customer->newsletter) {
+            return ListMemberFormatter::STATUS_SUBSCRIBED;
+        }
+
+        return ListMemberFormatter::STATUS_TRANSACTIONAL;
     }
 }

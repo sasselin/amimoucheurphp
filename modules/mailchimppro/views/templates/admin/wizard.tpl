@@ -18,7 +18,7 @@
 <div id="setup-wizard">
     <ul>
         <li>
-            <a href="#step-1">{l s='Set up API key' mod='mailchimppro'}</a>
+            <a href="#step-1">{l s='Log-in to Mailchimp' mod='mailchimppro'}</a>
         </li>
         <li>
             <a href="#step-2">{l s='Select list' mod='mailchimppro'}</a>

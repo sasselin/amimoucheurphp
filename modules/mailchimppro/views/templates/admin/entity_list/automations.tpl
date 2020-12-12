@@ -43,43 +43,48 @@
         {foreach $automations as $automation}
             <tr>
                 <td>
-                    {$automation.id}
+                    {$automation.id|escape:'htmlall':'UTF-8'}
                 </td>
                 <td>
-                    {$automation.create_time}
+                    {$automation.create_time|escape:'htmlall':'UTF-8'}
                 </td>
                 <td>
-                    {$automation.start_time}
+                    {$automation.start_time|escape:'htmlall':'UTF-8'}
                 </td>
                 <td>
-                    {$automation.status}
+                    {$automation.status|escape:'htmlall':'UTF-8'}
                 </td>
                 <td>
-                    {$automation.emails_sent}
+                    {$automation.emails_sent|escape:'htmlall':'UTF-8'}
                 </td>
                 <td>
                     <div class="well">
+                        {* HTML code, no need for escape *}
                         <pre>{json_encode($automation.recipients, $JSON_PRETTY_PRINT)}</pre>
                     </div>
                 </td>
                 <td>
                     <div class="well">
+                        {* HTML code, no need for escape *}
                         <pre>{json_encode($automation.settings, $JSON_PRETTY_PRINT)}</pre>
                     </div>
                 </td>
                 <td>
                     <div class="well">
+                        {* HTML code, no need for escape *}
                         <pre>{json_encode($automation.tracking, $JSON_PRETTY_PRINT)}</pre>
                     </div>
                 </td>
                 <td>
                     <div class="well">
+                        {* HTML code, no need for escape *}
                         <pre>{json_encode($automation.trigger_settings, $JSON_PRETTY_PRINT)}</pre>
                     </div>
                 </td>
                 <td>
                     <div class="well">
                         {if isset($automation.report_summary)}
+                            {* HTML code, no need for escape *}
                             <pre>{json_encode($automation.report_summary, $JSON_PRETTY_PRINT)}</pre>
                         {/if}
                     </div>

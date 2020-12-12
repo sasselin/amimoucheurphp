@@ -30,11 +30,11 @@
         <tbody>
         {foreach $promo_codes as $promo_code}
             <tr>
-                <td>{$promo_code.id}</td>
-                <td>{$promo_code.code}</td>
-                <td>{$promo_code.redemption_url}</td>
-                <td>{$promo_code.usage_count}</td>
-                <td>{$promo_code.enabled}</td>
+                <td>{$promo_code.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_code.code|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_code.redemption_url|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_code.usage_count|escape:'htmlall':'UTF-8'}</td>
+                <td>{$promo_code.enabled|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     #
                 </td>

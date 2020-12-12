@@ -16,7 +16,11 @@
  * @license   commercial
  *}
 <div class="form-group">
-    <label for="api-key">{l s='API key' mod='mailchimppro'}</label>
-    <input type="text" class="form-control" name="api-key" id="api-key"
+    <label for="api-key" class="hidden">{l s='API key' mod='mailchimppro'}</label>
+    <p id="logged-in-as-container" class="hidden">{l s='Logged in as:' mod='mailchimppro'} <b id="logged-in-as"></b></p>
+    <input type="hidden" class="form-control" name="api-key" id="api-key"
            placeholder="{l s='API key' mod='mailchimppro'}" required="" value="{$apiKey}">
+    <a class="btn btn-default" id="oauth2-start">
+        Log in to Mailchimp
+    </a>
 </div>

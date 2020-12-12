@@ -31,16 +31,16 @@
         <tbody>
         {foreach $carts as $cart}
             <tr>
-                <td>{$cart.id}</td>
-                <td>{$cart.customer.email_address}</td>
-                <td>{$cart.order_total} {$cart.currency_code}</td>
+                <td>{$cart.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$cart.customer.email_address|escape:'htmlall':'UTF-8'}</td>
+                <td>{$cart.order_total|escape:'htmlall':'UTF-8'} {$cart.currency_code|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     {include file='./cart/line.tpl' lines=$cart.lines currency_code=$cart.currency_code}
                 </td>
-                <td>{$cart.created_at}</td>
-                <td>{$cart.updated_at}</td>
+                <td>{$cart.created_at|escape:'htmlall':'UTF-8'}</td>
+                <td>{$cart.updated_at|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProCarts', true, [], ['action' => 'entitydelete', 'entity_id' => $cart.id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProCarts', true, [], ['action' => 'entitydelete', 'entity_id' => $cart.id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

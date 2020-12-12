@@ -29,18 +29,18 @@
         {foreach $lists as $list}
             <tr>
 
-                <td>{$list.id}</td>
-                <td>{$list.web_id}</td>
-                <td>{$list.name}</td>
+                <td>{$list.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$list.web_id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$list.name|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     <div class="btn-group  btn-group-xs" role="group" aria-label="...">
                         <a class="btn btn-default"
-                           href="{LinkHelper::getAdminLink('AdminMailchimpProLists', true, [], ['action' => 'entitydelete', 'entity_id' => $list.id])}">
+                           href="{LinkHelper::getAdminLink('AdminMailchimpProLists', true, [], ['action' => 'entitydelete', 'entity_id' => $list.id])|escape:'htmlall':'UTF-8'}">
                             Delete
                         </a>
 
                         <a class="btn btn-default"
-                           href="{LinkHelper::getAdminLink('AdminMailchimpProListMembers', true, [], ['list_id' => $list.id])}">
+                           href="{LinkHelper::getAdminLink('AdminMailchimpProListMembers', true, [], ['list_id' => $list.id])|escape:'htmlall':'UTF-8'}">
                             {l s='Members' mod='mailchimppro'}
                         </a>
                     </div>
@@ -58,7 +58,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <form class="form-horizontal" role="form"
-                  action="{LinkHelper::getAdminLink ('AdminMailchimpProLists', false, [], ['action' => 'new'])}"
+                  action="{LinkHelper::getAdminLink ('AdminMailchimpProLists', false, [], ['action' => 'new'])|escape:'htmlall':'UTF-8'}"
                   method="post">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">

@@ -23,6 +23,7 @@
             <th>{l s='Email' mod='mailchimppro'}</th>
             <th>{l s='Name' mod='mailchimppro'}</th>
             <th>{l s='Orders' mod='mailchimppro'}</th>
+            <th>{l s='Opt in status' mod='mailchimppro'}</th>
             <th>{l s='Total orders' mod='mailchimppro'}</th>
             <th>#</th>
         </tr>
@@ -30,13 +31,14 @@
         <tbody>
         {foreach $customers as $customer}
             <tr>
-                <td>{$customer.id}</td>
-                <td>{$customer.email_address}</td>
-                <td>{$customer.first_name} {$customer.last_name}</td>
-                <td>{$customer.orders_count}</td>
-                <td>{$customer.total_spent}</td>
+                <td>{$customer.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$customer.email_address|escape:'htmlall':'UTF-8'}</td>
+                <td>{$customer.first_name|escape:'htmlall':'UTF-8'} {$customer.last_name|escape:'htmlall':'UTF-8'}</td>
+                <td>{$customer.orders_count|escape:'htmlall':'UTF-8'}</td>
+                <td>{$customer.opt_in_status|var_export:true|escape:'htmlall':'UTF-8'}</td>
+                <td>{$customer.total_spent|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProCustomers', true, [], ['action' => 'entitydelete', 'entity_id' => $customer.id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProCustomers', true, [], ['action' => 'entitydelete', 'entity_id' => $customer.id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

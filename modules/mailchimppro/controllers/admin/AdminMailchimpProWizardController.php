@@ -61,6 +61,7 @@ class AdminMailchimpProWizardController extends ModuleAdminController
                 'promoCodeIds' => $this->getCartRules(),
                 'customerIds' => array_column(Customer::getCustomers(true), 'id_customer'),
                 'syncUrl' => $this->context->link->getAdminLink($this->controller_name),
+                'middlewareUrl' => Mailchimppro::MC_MIDDLEWARE,
                 'itemsPerRequest' => 50,
             ));
             $this->context->smarty->assign(array(
@@ -295,9 +296,7 @@ class AdminMailchimpProWizardController extends ModuleAdminController
                 $customerIds
             );
             $command->setSyncMode($command::SYNC_MODE_REGULAR);
-            $command->setMethod($command::SYNC_METHOD_POST);
-            $results[] = $command->execute();
-            $command->setMethod($command::SYNC_METHOD_PATCH);
+            $command->setMethod($command::SYNC_METHOD_PUT);
             $results[] = $command->execute();
             $this->ajaxDie(array(
                 'hasError' => false,

@@ -51,8 +51,14 @@ abstract class BaseApiCommand
     const SYNC_METHOD_POST   = 'POST';
     const SYNC_METHOD_PATCH  = 'PATCH';
     const SYNC_METHOD_DELETE = 'DELETE';
+    const SYNC_METHOD_PUT    = 'PUT';
 
-    const SUPPORTED_METHODS = array(self::SYNC_METHOD_POST, self::SYNC_METHOD_PATCH, self::SYNC_METHOD_DELETE);
+    const SUPPORTED_METHODS = array(
+        self::SYNC_METHOD_POST,
+        self::SYNC_METHOD_PATCH,
+        self::SYNC_METHOD_DELETE,
+        self::SYNC_METHOD_PUT
+    );
 
     protected $responses = array();
 

@@ -32,23 +32,23 @@
         <tbody>
         {foreach $products as $product}
             <tr>
-                <td>{$product.id}</td>
+                <td>{$product.id|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <img src="{$product.image_url}" class="img-responsive" style="max-width: 75px">
+                    <img src="{$product.image_url|escape:'htmlall':'UTF-8'}" class="img-responsive" style="max-width: 75px">
                 </td>
                 <td>
-                    <a href="{$product.url}">
-                        {$product.title}
+                    <a href="{$product.url|escape:'htmlall':'UTF-8'}">
+                        {$product.title|escape:'htmlall':'UTF-8'}
                     </a>
                 </td>
-                <td>{$product.description}</td>
-                <td>{$product.type}</td>
-                <td>{$product.vendor}</td>
+                <td>{$product.description|escape:'htmlall':'UTF-8'}</td>
+                <td>{$product.type|escape:'htmlall':'UTF-8'}</td>
+                <td>{$product.vendor|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     {include file='./product/variants.tpl' variants=$product.variants}
                 </td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProProducts', true, [], ['action' => 'entitydelete', 'entity_id' => $product.id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProProducts', true, [], ['action' => 'entitydelete', 'entity_id' => $product.id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

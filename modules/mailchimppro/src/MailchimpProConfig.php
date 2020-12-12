@@ -22,16 +22,16 @@
  */
 class MailchimpProConfig
 {
-    const MAILCHIMP_API_KEY         = 'module-mailchimpproconfig-mailchimp-api-key';
+    const MAILCHIMP_API_KEY = 'module-mailchimpproconfig-mailchimp-api-key';
     const MAILCHIMP_SCRIPT_VERIFIED = 'module-mailchimpproconfig-script-verified';
-    const MAILCHIMP_LIST_ID         = 'module-mailchimpproconfig-list-id';
-    const MAILCHIMP_LIST_NAME       = 'module-mailchimpproconfig-list-id';
+    const MAILCHIMP_LIST_ID = 'module-mailchimpproconfig-list-id';
+    const MAILCHIMP_LIST_NAME = 'module-mailchimpproconfig-list-id';
 
-    const STATUSES_FOR_PAID      = 'module-mailchimpproconfig-statuses-for-paid';
-    const STATUSES_FOR_PENDING   = 'module-mailchimpproconfig-statuses-for-pending';
-    const STATUSES_FOR_REFUNDED  = 'module-mailchimpproconfig-statuses-for-refunded';
+    const STATUSES_FOR_PAID = 'module-mailchimpproconfig-statuses-for-paid';
+    const STATUSES_FOR_PENDING = 'module-mailchimpproconfig-statuses-for-pending';
+    const STATUSES_FOR_REFUNDED = 'module-mailchimpproconfig-statuses-for-refunded';
     const STATUSES_FOR_CANCELLED = 'module-mailchimpproconfig-statuses-for-cancelled';
-    const STATUSES_FOR_SHIPPED   = 'module-mailchimpproconfig-statuses-for-shipped';
+    const STATUSES_FOR_SHIPPED = 'module-mailchimpproconfig-statuses-for-shipped';
 
     const PRODUCT_IMAGE_SIZE = 'module-mailchimpproconfig-product-image-size';
 
@@ -121,5 +121,10 @@ class MailchimpProConfig
         $query->where("name = '" . pSQL($configKey) . "'");
 
         return (int)Db::getInstance()->executeS($query) > 0;
+    }
+
+    public static function isApiKeySet()
+    {
+        return false;
     }
 }

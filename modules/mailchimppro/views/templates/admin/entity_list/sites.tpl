@@ -30,13 +30,13 @@
         <tbody>
         {foreach $sites as $site}
             <tr>
-                <td>{$site.foreign_id}</td>
-                <td>{$site.store_id}</td>
-                <td>{$site.platform}</td>
-                <td>{$site.domain}</td>
-                <td>{$site.site_script.url}</td>
+                <td>{$site.foreign_id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$site.store_id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$site.platform|escape:'htmlall':'UTF-8'}</td>
+                <td>{$site.domain|escape:'htmlall':'UTF-8'}</td>
+                <td>{$site.site_script.url|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProSites', true, [], ['action' => 'entitydelete', 'entity_id' => $site.foreign_id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProSites', true, [], ['action' => 'entitydelete', 'entity_id' => $site.foreign_id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

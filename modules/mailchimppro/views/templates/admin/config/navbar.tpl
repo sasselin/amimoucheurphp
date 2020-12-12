@@ -21,12 +21,12 @@
     </div>
     <div class="col-sm-6">
         <div class="btn-group pull-right" role="group" style="height:100%; vertical-align:center;line-height : 100%;">
-            <a class="btn btn-default" href="{LinkHelper::getAdminLink('AdminMailchimpProWizard')}">
+            <a class="btn btn-default" href="{LinkHelper::getAdminLink('AdminMailchimpProWizard')|escape:'htmlall':'UTF-8'}">
                 <i class="icon icon-floppy-o" aria-hidden="true"></i>
 
                 {l s='Setup wizard' mod='mailchimppro'}
             </a>
-            <a class="btn btn-default" href="{LinkHelper::getAdminLink('AdminMailchimpProSync')}">
+            <a class="btn btn-default" href="{LinkHelper::getAdminLink('AdminMailchimpProSync')|escape:'htmlall':'UTF-8'}">
                 <i class="icon icon-retweet" aria-hidden="true"></i>
                 {l s='Sync' mod='mailchimppro'}
             </a>
@@ -39,53 +39,53 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches')|escape:'htmlall':'UTF-8'}">
                             {l s='Batches' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProCarts')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProCarts')|escape:'htmlall':'UTF-8'}">
                             {l s='Carts' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProCustomers')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProCustomers')|escape:'htmlall':'UTF-8'}">
                             {l s='Customers' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProLists')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProLists')|escape:'htmlall':'UTF-8'}">
                             {l s='Lists' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProOrders')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProOrders')|escape:'htmlall':'UTF-8'}">
                             {l s='Orders' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProProducts')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProProducts')|escape:'htmlall':'UTF-8'}">
                             {l s='Products' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProStores')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProStores')|escape:'htmlall':'UTF-8'}">
                             {l s='Stores' mod='mailchimppro'}
                         </a>
                     </li>
 
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProSites')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProSites')|escape:'htmlall':'UTF-8'}">
                             {l s='Sites' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProAutomations')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProAutomations')|escape:'htmlall':'UTF-8'}">
                             {l s='Automations' mod='mailchimppro'}
                         </a>
                     </li>
                     <li>
-                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProPromoRules')}">
+                        <a href="{LinkHelper::getAdminLink('AdminMailchimpProPromoRules')|escape:'htmlall':'UTF-8'}">
                             {l s='Promo rules' mod='mailchimppro'}
                         </a>
                     </li>

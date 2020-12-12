@@ -83,10 +83,17 @@ class OrderSyncCommand extends BaseApiCommand
                     $shippingAddress,
                     $this->context
                 );
-                $this->mailchimp->post(
-                    "/ecommerce/stores/{$this->context->shop->id}/orders",
-                    $formatter->format()
-                );
+                if ($this->getOrderExists($orderId)) {
+                    $this->mailchimp->patch(
+                        "/ecommerce/stores/{$this->context->shop->id}/orders",
+                        $formatter->format()
+                    );
+                } else {
+                    $this->mailchimp->post(
+                        "/ecommerce/stores/{$this->context->shop->id}/orders",
+                        $formatter->format()
+                    );
+                }
                 if (!$this->mailchimp->success()) {
                     throw new MailChimpException($this->mailchimp->getLastResponse());
                 }
@@ -115,6 +122,7 @@ class OrderSyncCommand extends BaseApiCommand
                 $this->mailchimp,
                 array($customer->id)
             );
+            $command->setMethod(CustomerSyncCommand::SYNC_METHOD_PUT);
             $command->triggerDoubleOptIn(true);
             $command->execute();
             if (!$this->mailchimp->success()) {
@@ -133,6 +141,20 @@ class OrderSyncCommand extends BaseApiCommand
         $this->mailchimp->get(
             "/ecommerce/stores/{$this->context->shop->id}/customers/{$customer->id}",
             array('fields' => array('opt_in_status'))
+        );
+
+        if ($this->mailchimp->success()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function getOrderExists($orderId)
+    {
+        $this->mailchimp->get(
+            "/ecommerce/stores/{$this->context->shop->id}/orders/{$orderId}",
+            array('fields' => array('id'))
         );
 
         if ($this->mailchimp->success()) {

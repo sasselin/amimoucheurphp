@@ -6,6 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    '95089e1053ae17ea4339fdd3c47d4152' => $baseDir . '/src/LinkHelper.php',
-    'cd21c07add94ed0a8ed2efd3e7005909' => $baseDir . '/src/MailchimpProConfig.php',
+    'd4b3877d06f9b76941adbfe5d3cb2fbf' => $baseDir . '/src/LinkHelper.php',
+    'b230e1fbf7ff4907477dbbf4766a9d49' => $baseDir . '/src/MailchimpProConfig.php',
 );

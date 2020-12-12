@@ -33,18 +33,18 @@
         {foreach $batches as $batch}
             <tr>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches', true, [], ['action' => 'single', 'entity_id' => $batch.id])}">
-                        {$batch.id}
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches', true, [], ['action' => 'single', 'entity_id' => $batch.id])|escape:'htmlall':'UTF-8'}">
+                        {$batch.id|escape:'htmlall':'UTF-8'}
                     </a>
                 </td>
-                <td>{$batch.status}</td>
-                <td>{$batch.total_operations}</td>
-                <td>{$batch.finished_operations}</td>
-                <td>{$batch.errored_operations}</td>
-                <td>{$batch.submitted_at}</td>
-                <td>{$batch.completed_at}</td>
+                <td>{$batch.status|escape:'htmlall':'UTF-8'}</td>
+                <td>{$batch.total_operations|escape:'htmlall':'UTF-8'}</td>
+                <td>{$batch.finished_operations|escape:'htmlall':'UTF-8'}</td>
+                <td>{$batch.errored_operations|escape:'htmlall':'UTF-8'}</td>
+                <td>{$batch.submitted_at|escape:'htmlall':'UTF-8'}</td>
+                <td>{$batch.completed_at|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches', true, [], ['action' => 'entitydelete', 'entity_id' => $batch.id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProBatches', true, [], ['action' => 'entitydelete', 'entity_id' => $batch.id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

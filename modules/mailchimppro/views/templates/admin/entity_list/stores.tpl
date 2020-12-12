@@ -43,34 +43,35 @@
         <tbody>
         {foreach $stores as $store}
             <tr>
-                <td>{$store.id}</td>
-                <td>{$store.list_id}</td>
-                <td>{$store.name}</td>
-                <td>{$store.platform}</td>
-                <td>{$store.domain}</td>
-                <td>{$store.is_syncing}</td>
-                <td>{$store.list_is_active}</td>
-                <td>{$store.email_address}</td>
-                <td>{$store.currency_code}</td>
-                <td>{$store.money_format}</td>
-                <td>{$store.primary_locale}</td>
-                <td>{$store.timezone}</td>
-                <td>{$store.phone}</td>
+                <td>{$store.id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.list_id|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.name|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.platform|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.domain|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.is_syncing|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.list_is_active|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.email_address|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.currency_code|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.money_format|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.primary_locale|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.timezone|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.phone|escape:'htmlall':'UTF-8'}</td>
                 <td>{', '|implode:$store.address|escape:'htmlall':'UTF-8'}</td>
                 <td>
                     {$JSON_PRETTY_PRINT = 128}
                     {foreach $store.automations as $name => $automation}
                         <div class="well">
-                            <p><b>{$name}</b></p>
+                            <p><b>{$name|escape:'htmlall':'UTF-8'}</b></p>
+                            {* HTML code, no need for escape *}
                             <pre>{json_encode($automation, $JSON_PRETTY_PRINT)}</pre>
                         </div>
                     {/foreach}
                 </td>
-                <td>{$store.list_is_active}</td>
-                <td>{$store.created_at}</td>
-                <td>{$store.updated_at}</td>
+                <td>{$store.list_is_active|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.created_at|escape:'htmlall':'UTF-8'}</td>
+                <td>{$store.updated_at|escape:'htmlall':'UTF-8'}</td>
                 <td>
-                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProStores', true, [], ['action' => 'entitydelete', 'entity_id' => $store.id])}">
+                    <a href="{LinkHelper::getAdminLink('AdminMailchimpProStores', true, [], ['action' => 'entitydelete', 'entity_id' => $store.id])|escape:'htmlall':'UTF-8'}">
                         Delete
                     </a>
                 </td>

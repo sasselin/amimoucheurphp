@@ -17,11 +17,14 @@
  * @license   commercial
  */
 
+use PrestaChamps\MailchimpPro\Formatters\ListMemberFormatter;
+
 /**
  * Class Mailchimppro
  */
 class Mailchimppro extends Module
 {
+    const MC_MIDDLEWARE = "https://prestashop.mailchimpapp.com";
     /**
      * @var \DrewM\MailChimp\MailChimp MailChimp API client object
      *
@@ -31,115 +34,115 @@ class Mailchimppro extends Module
 
     public $menus = array(
         array(
-            'is_root' => true,
-            'name' => 'Mailchimp Config',
-            'class_name' => 'mailchimppro',
-            'visible' => true,
+            'is_root'           => true,
+            'name'              => 'Mailchimp Config',
+            'class_name'        => 'mailchimppro',
+            'visible'           => true,
             'parent_class_name' => 0,
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Config',
-            'class_name' => 'AdminMailchimpProConfig',
-            'visible' => true,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Config',
+            'class_name'        => 'AdminMailchimpProConfig',
+            'visible'           => true,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Setup Wizard',
-            'class_name' => 'AdminMailchimpProWizard',
-            'visible' => true,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Setup Wizard',
+            'class_name'        => 'AdminMailchimpProWizard',
+            'visible'           => true,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp List',
-            'class_name' => 'AdminMailchimpProLists',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp List',
+            'class_name'        => 'AdminMailchimpProLists',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Batches',
-            'class_name' => 'AdminMailchimpProBatches',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Batches',
+            'class_name'        => 'AdminMailchimpProBatches',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Carts',
-            'class_name' => 'AdminMailchimpProCarts',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Carts',
+            'class_name'        => 'AdminMailchimpProCarts',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Customers',
-            'class_name' => 'AdminMailchimpProCustomers',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Customers',
+            'class_name'        => 'AdminMailchimpProCustomers',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Orders',
-            'class_name' => 'AdminMailchimpProOrders',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Orders',
+            'class_name'        => 'AdminMailchimpProOrders',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Products',
-            'class_name' => 'AdminMailchimpProProducts',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Products',
+            'class_name'        => 'AdminMailchimpProProducts',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Stores',
-            'class_name' => 'AdminMailchimpProStores',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Stores',
+            'class_name'        => 'AdminMailchimpProStores',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Sync',
-            'class_name' => 'AdminMailchimpProSync',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Sync',
+            'class_name'        => 'AdminMailchimpProSync',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Sites',
-            'class_name' => 'AdminMailchimpProSites',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Sites',
+            'class_name'        => 'AdminMailchimpProSites',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Mailchimp Automations',
-            'class_name' => 'AdminMailchimpProAutomations',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Mailchimp Automations',
+            'class_name'        => 'AdminMailchimpProAutomations',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'List members',
-            'class_name' => 'AdminMailchimpProListMembers',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'List members',
+            'class_name'        => 'AdminMailchimpProListMembers',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Promo rules',
-            'class_name' => 'AdminMailchimpProPromoRules',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Promo rules',
+            'class_name'        => 'AdminMailchimpProPromoRules',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
         array(
-            'is_root' => false,
-            'name' => 'Promo codes',
-            'class_name' => 'AdminMailchimpProPromoCodes',
-            'visible' => false,
+            'is_root'           => false,
+            'name'              => 'Promo codes',
+            'class_name'        => 'AdminMailchimpProPromoCodes',
+            'visible'           => false,
             'parent_class_name' => 'mailchimppro',
         ),
     );
@@ -149,7 +152,7 @@ class Mailchimppro extends Module
     {
         $this->name = 'mailchimppro';
         $this->tab = 'administration';
-        $this->version = '2.0.1';
+        $this->version = '2.0.4';
         $this->author = 'Mailchimp';
         $this->need_instance = 1;
         $this->bootstrap = true;
@@ -168,12 +171,12 @@ class Mailchimppro extends Module
     /**
      * Install the required tabs, configs and stuff
      *
-     * @since 0.0.1
-     *
-     * @throws PrestaShopDatabaseException
+     * @return bool
      * @throws PrestaShopException
      *
-     * @return bool
+     * @throws PrestaShopDatabaseException
+     * @since 0.0.1
+     *
      */
     public function install()
     {
@@ -198,7 +201,15 @@ class Mailchimppro extends Module
             $this->registerHook('displayAdminOrderTabOrder') &&
             $this->registerHook('displayBackOfficeTop') &&
             $this->registerHook('actionFrontControllerSetMedia') &&
-            $this->registerHook('actionObjectCartRuleUpdateAfter');
+            $this->registerHook('actionObjectCartRuleUpdateAfter') &&
+            $this->registerHook('displayFooterBefore') &&
+            $this->registerHook('actionCustomerAccountAdd') &&
+            $this->registerHook('actionCustomerAccountUpdate');
+    }
+
+    public function runUpgradeModule()
+    {
+        return parent::runUpgradeModule(); // TODO: Change the autogenerated stub
     }
 
     /**
@@ -243,7 +254,8 @@ class Mailchimppro extends Module
      */
     public function hookDisplayHeader($params)
     {
-        if (Tools::getValue('utm_source') === 'mailchimp' || !empty(Tools::getValue('mc_cid'))) {
+        if ((Tools::getValue('utm_source') === 'mailchimp' || !empty(Tools::getValue('mc_cid')))
+            && $this->isApiKeySet()) {
             $this->context->cookie->landing_site = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
             $mc_cid = Tools::getValue('mc_cid', false);
             $utm_source = Tools::getValue('utm_source', false);
@@ -268,7 +280,7 @@ class Mailchimppro extends Module
      */
     public function getApiClient()
     {
-        if ($this->apiClient) {
+        if ($this->apiClient instanceof \DrewM\MailChimp\MailChimp) {
             return $this->apiClient;
         }
         $this->apiClient = new DrewM\MailChimp\MailChimp(Configuration::get(MailchimpProConfig::MAILCHIMP_API_KEY));
@@ -310,31 +322,33 @@ class Mailchimppro extends Module
      */
     public function hookDisplayFooter($params)
     {
-        try {
-            $result = $this->sendApiRequest("ecommerce/stores/{$this->context->shop->id}", 'GET');
-            if ($this->getApiClient()->success()) {
-                $result = json_decode($result['body'], true);
+        if ($this->isApiKeySet()) {
+            try {
+                $result = $this->sendApiRequest("ecommerce/stores/{$this->context->shop->id}", 'GET');
+                if ($this->getApiClient()->success()) {
+                    $result = json_decode($result['body'], true);
 
-                if (isset($result['connected_site'])) {
-                    $footer = $result['connected_site']['site_script']['fragment'];
-                    if (!Configuration::get(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED)) {
-                        $site_id = $result['connected_site']['site_foreign_id'];
-                        (new \PrestaChamps\MailchimpPro\Commands\SiteVerifyCommand($this->apiClient, $site_id))
-                            ->execute();
-                        $this->sendApiRequest(
-                            "ecommerce/stores/{$this->context->shop->id}",
-                            'POST',
-                            array('is_syncing' => false)
-                        );
-                        Configuration::updateValue(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED, true);
+                    if (isset($result['connected_site'])) {
+                        $footer = $result['connected_site']['site_script']['fragment'];
+                        if (!Configuration::get(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED)) {
+                            $site_id = $result['connected_site']['site_foreign_id'];
+                            (new \PrestaChamps\MailchimpPro\Commands\SiteVerifyCommand($this->apiClient, $site_id))
+                                ->execute();
+                            $this->sendApiRequest(
+                                "ecommerce/stores/{$this->context->shop->id}",
+                                'POST',
+                                array('is_syncing' => false)
+                            );
+                            Configuration::updateValue(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED, true);
+                        }
+
+                        return $footer;
                     }
-
-                    return $footer;
                 }
+                PrestaShopLogger::addLog("[MAILCHIMP] :{$this->getApiClient()->getLastError()}");
+            } catch (Exception $e) {
+                PrestaShopLogger::addLog("[MAILCHIMP] :{$e->getMessage()}");
             }
-            PrestaShopLogger::addLog("[MAILCHIMP] :{$this->getApiClient()->getLastError()}");
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog("[MAILCHIMP] :{$e->getMessage()}");
         }
         return '';
     }
@@ -347,20 +361,22 @@ class Mailchimppro extends Module
      */
     public function hookActionFrontControllerSetMedia($params)
     {
-        $result = $this->getApiClient()->get("ecommerce/stores/{$this->context->shop->id}");
-        try {
-            if (!Configuration::get(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED)) {
-                $this->sendApiRequest(
-                    "connected-sites/{$result['connected_site']['site_foreign_id']}/actions/verify-script-installation",
-                    'POST'
-                );
-                Configuration::updateValue(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED, true);
+        if ($this->isApiKeySet()) {
+            $result = $this->getApiClient()->get("ecommerce/stores/{$this->context->shop->id}");
+            try {
+                if (!Configuration::get(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED)) {
+                    $siteId = $result['connected_site']['site_foreign_id'];
+                    $this->sendApiRequest(
+                        "connected-sites/{$siteId}/actions/verify-script-installation",
+                        'POST'
+                    );
+                    Configuration::updateValue(MailchimpProConfig::MAILCHIMP_SCRIPT_VERIFIED, true);
+                }
+                $this->context->controller->addJS($result['connected_site']['site_script']['url'], false);
+            } catch (Exception $exception) {
+                PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
             }
-            $this->context->controller->addJS($result['connected_site']['site_script']['url'], false);
-        } catch (Exception $exception) {
-            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
         }
-
         return '';
     }
 
@@ -371,127 +387,128 @@ class Mailchimppro extends Module
      */
     public function hookActionObjectCustomerAddAfter($params)
     {
-        try {
-            /**
-             * @var $customer Customer
-             */
-            $customer = $params['object'];
-            $command = new \PrestaChamps\MailchimpPro\Commands\CustomerSyncCommand(
-                $this->context,
-                $this->getApiClient(),
-                array($customer->id)
-            );
-            $command->triggerDoubleOptIn(true);
-            $command->execute();
-        } catch (Exception $exception) {
-            $this->context->controller->errors[] = "[MAILCHIMP] :{$exception->getMessage()}";
-            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
+        if ($this->isApiKeySet()) {
+            try {
+                /**
+                 * @var $customer Customer
+                 */
+                $customer = $params['object'];
+                $command = new \PrestaChamps\MailchimpPro\Commands\CustomerSyncCommand(
+                    $this->context,
+                    $this->getApiClient(),
+                    array($customer->id)
+                );
+                $command->setMethod(\PrestaChamps\MailchimpPro\Commands\CustomerSyncCommand::SYNC_METHOD_PUT);
+                $command->triggerDoubleOptIn(true);
+                $command->execute();
+            } catch (Exception $exception) {
+                $this->context->controller->errors[] = "[MAILCHIMP] :{$exception->getMessage()}";
+                PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
+            }
         }
     }
 
     /**
-     * @todo Refactor code to use a service pattern
-     *
      * @param $params
      *
      * @throws Exception
+     * @todo Refactor code to use a service pattern
+     *
      */
     public function hookActionObjectCartRuleAddAfter($params)
     {
-        $object = new CartRule($params['object']->id, $this->context->language->id);
-        $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
-            $this->context,
-            $this->getApiClient(),
-            array($object)
-        );
-        $command->setMethod($command::SYNC_METHOD_POST);
-        $command->setSyncMode($command::SYNC_MODE_REGULAR);
-        $command->execute();
+        if ($this->isApiKeySet()) {
+            $object = new CartRule($params['object']->id, $this->context->language->id);
+            $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
+                $this->context,
+                $this->getApiClient(),
+                array($object)
+            );
+            $command->setMethod($command::SYNC_METHOD_POST);
+            $command->setSyncMode($command::SYNC_MODE_REGULAR);
+            $command->execute();
+        }
     }
 
     /**
-     * @todo Refactor code to use a service pattern
-     *
      * @param $params
      *
      * @throws Exception
+     * @todo Refactor code to use a service pattern
+     *
      */
     public function hookActionObjectCartRuleUpdateAfter($params)
     {
-        $object = new CartRule($params['object']->id, $this->context->language->id);
-        $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
-            $this->context,
-            $this->getApiClient(),
-            array($object)
-        );
-        $command->setMethod($command::SYNC_METHOD_PATCH);
-        $command->setSyncMode($command::SYNC_MODE_REGULAR);
-        $command->execute();
+        if ($this->isApiKeySet()) {
+            $object = new CartRule($params['object']->id, $this->context->language->id);
+            $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
+                $this->context,
+                $this->getApiClient(),
+                array($object)
+            );
+            $command->setMethod($command::SYNC_METHOD_PATCH);
+            $command->setSyncMode($command::SYNC_MODE_REGULAR);
+            $command->execute();
+        }
     }
 
     /**
-     * @todo Refactor code to use a service pattern
-     *
      * @param $params
      *
      * @throws Exception
+     * @todo Refactor code to use a service pattern
+     *
      */
     public function hookActionObjectCartRuleDeleteBefore($params)
     {
-        $object = new CartRule($params['object']->id, $this->context->language->id);
-        $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
-            $this->context,
-            $this->getApiClient(),
-            array($object)
-        );
-        $command->setMethod($command::SYNC_METHOD_DELETE);
-        $command->setSyncMode($command::SYNC_MODE_REGULAR);
-        $command->execute();
+        if ($this->isApiKeySet()) {
+            $object = new CartRule($params['object']->id, $this->context->language->id);
+            $command = new \PrestaChamps\MailchimpPro\Commands\CartRuleSyncCommand(
+                $this->context,
+                $this->getApiClient(),
+                array($object)
+            );
+            $command->setMethod($command::SYNC_METHOD_DELETE);
+            $command->setSyncMode($command::SYNC_MODE_REGULAR);
+            $command->execute();
+        }
     }
 
 
     /**
      * Create or update the cart in Mailchimp
      *
-     * @todo Use command pattern instead
-     *
      * @param $params
      *
      * @throws Exception
+     * @todo Use command pattern instead
+     *
      */
     public function hookActionCartSave($params)
     {
         if (Tools::getValue('controller') === 'adminaddresses') {
             return;
         }
-        $cartId = isset(Context::getContext()->cart->id) ? Context::getContext()->cart->id : false;
-        if ($cartId && !$this->context->customer->isGuest()) {
-            try {
-                /**
-                 * @var $cart Cart
-                 */
-                $cart = new Cart($cartId, $this->context->language->id);
-                $data = (new \PrestaChamps\MailchimpPro\Formatters\CartFormatter(
-                    $cart,
-                    $this->context->customer,
-                    $this->context
-                ))->format();
-                $result = $this->sendApiRequest(
-                    "/ecommerce/stores/{$this->context->shop->id}/carts",
-                    'POST',
-                    $data
-                );
-                if ($result['headers']['http_code'] === 400) {
-                    $this->sendApiRequest(
-                        "/ecommerce/stores/{$this->context->shop->id}/carts/{$cart->id}",
-                        'PATCH',
-                        $data
-                    );
-                }
-            } catch (Exception $exception) {
-                PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
-            }
+        if ($this->isApiKeySet()) {
+            \PrestaChamps\MailchimpPro\Hooks\Action\CartSave::run(
+                $this->context,
+                $this->getApiClient()
+            );
         }
+    }
+
+    protected function getCartExists($cartId)
+    {
+        $this->getApiClient()->get(
+            "/ecommerce/stores/{$this->context->shop->id}/carts/{$cartId}",
+            array('fields' => array('id'))
+        );
+
+        if ($this->apiClient->success()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -501,38 +518,40 @@ class Mailchimppro extends Module
      */
     public function hookActionOrderStatusUpdate($params)
     {
-        try {
-            $order = new Order($params['id_order'], $this->context->language->id);
-            $shippingAddress = new \Address($order->id_address_delivery, $this->context->language->id);
-            $billingAddress = new \Address($order->id_address_invoice, $this->context->language->id);
-            $data = (new \PrestaChamps\MailchimpPro\Formatters\OrderFormatter(
-                $order,
-                $order->getCustomer(),
-                $billingAddress,
-                $shippingAddress,
-                $this->context
-            ))->format();
-            $result = $this->sendApiRequest(
-                "ecommerce/stores/{$this->context->shop->id}/orders",
-                'POST',
-                $data
-            );
-            if ($result['headers']['http_code'] === 400) {
-                $this->sendApiRequest(
-                    "ecommerce/stores/{$this->context->shop->id}/orders/{$order->id}",
-                    'PATCH',
+        if ($this->isApiKeySet()) {
+            try {
+                $order = new Order($params['id_order'], $this->context->language->id);
+                $shippingAddress = new \Address($order->id_address_delivery, $this->context->language->id);
+                $billingAddress = new \Address($order->id_address_invoice, $this->context->language->id);
+                $data = (new \PrestaChamps\MailchimpPro\Formatters\OrderFormatter(
+                    $order,
+                    $order->getCustomer(),
+                    $billingAddress,
+                    $shippingAddress,
+                    $this->context
+                ))->format();
+                $result = $this->sendApiRequest(
+                    "ecommerce/stores/{$this->context->shop->id}/orders",
+                    'POST',
                     $data
                 );
+                if ($result['headers']['http_code'] === 400) {
+                    $this->sendApiRequest(
+                        "ecommerce/stores/{$this->context->shop->id}/orders/{$order->id}",
+                        'PATCH',
+                        $data
+                    );
+                }
+            } catch (Exception $exception) {
+                $this->context->controller->errors[] = "[MAILCHIMP] :{$exception->getMessage()}";
+                PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
             }
-        } catch (Exception $exception) {
-            $this->context->controller->errors[] = "[MAILCHIMP] :{$exception->getMessage()}";
-            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
         }
     }
 
     public function hookActionValidateOrder($params)
     {
-        if (isset($params['order']) && is_subclass_of($params['order'], 'OrderCore')) {
+        if (isset($params['order']) && is_subclass_of($params['order'], 'OrderCore') && $this->isApiKeySet()) {
             try {
                 $order = new Order($params['order']->id, $this->context->language->id);
                 $orderSyncCommand = new \PrestaChamps\MailchimpPro\Commands\OrderSyncCommand(
@@ -560,7 +579,7 @@ class Mailchimppro extends Module
     public function hookActionProductUpdate($params)
     {
         try {
-            if (isset($params['product'])) {
+            if (isset($params['product']) && $this->isApiKeySet()) {
                 $product = $params['product'];
                 if (is_a($product, 'ProductCore')) {
                     /**
@@ -601,7 +620,7 @@ class Mailchimppro extends Module
      */
     public function hookActionObjectDeleteAfter($object)
     {
-        if (is_subclass_of($object['object'], 'ProductCore')) {
+        if (is_subclass_of($object['object'], 'ProductCore') && $this->isApiKeySet()) {
             $objectId = $object['object']->id;
             try {
                 $this->getApiClient()->delete("ecommerce/stores/{$this->context->shop->id}/products/$objectId");
@@ -619,12 +638,12 @@ class Mailchimppro extends Module
      */
     public function hookActionObjectUpdateAfter($object)
     {
-        if (is_subclass_of($object['object'], 'CustomerCore')) {
+        if (is_subclass_of($object['object'], 'CustomerCore') && $this->isApiKeySet()) {
             try {
                 $url = "ecommerce/stores/{$this->context->shop->id}/customers/{$object['object']->id}";
                 $data = (new \PrestaChamps\MailchimpPro\Formatters\CustomerFormatter($object['object'], $this->context))
                     ->format();
-                $this->sendApiRequest($url, 'PATCH', $data);
+                $this->sendApiRequest($url, 'PUT', $data);
             } catch (Exception $exception) {
                 $this->context->controller->errors[] = $exception->getMessage();
                 PrestaShopLogger::addLog(
@@ -638,7 +657,7 @@ class Mailchimppro extends Module
             }
         }
 
-        if (is_subclass_of($object['object'], 'ShopCore')) {
+        if (is_subclass_of($object['object'], 'ShopCore') && $this->isApiKeySet()) {
             try {
                 $service = new \PrestaChamps\MailchimpPro\Commands\StoreSyncCommand(
                     $this->context,
@@ -669,29 +688,30 @@ class Mailchimppro extends Module
      */
     public function hookDisplayAdminOrderContentOrder($params)
     {
-        try {
-            /**
-             * @var $order Order
-             */
-            $order = $params['order'];
-            $response = $this->getApiClient()->get("ecommerce/stores/{$order->id_shop}/orders/{$order->id}");
-            if ($this->getApiClient()->success()) {
-                $this->context->smarty->assign(array(
-                    'order' => $response,
-                ));
+        if ($this->isApiKeySet()) {
+            try {
+                /**
+                 * @var $order Order
+                 */
+                $order = $params['order'];
+                $response = $this->getApiClient()->get("ecommerce/stores/{$order->id_shop}/orders/{$order->id}");
+                if ($this->getApiClient()->success()) {
+                    $this->context->smarty->assign(array(
+                        'order' => $response,
+                    ));
+                    return $this->context->smarty->fetch(
+                        $this->getLocalPath() . 'views/templates/admin/mc-order-detail-tab-content.tpl'
+                    );
+                }
+
                 return $this->context->smarty->fetch(
-                    $this->getLocalPath() . 'views/templates/admin/mc-order-detail-tab-content.tpl'
+                    $this->getLocalPath() . 'views/templates/admin/mc-order-detail-tab-content-empty.tpl'
                 );
+            } catch (Exception $exception) {
+                $this->context->controller->errors[] =
+                    $this->l("Unable to fetch MailChimp order: {$exception->getMessage()}");
             }
-
-            return $this->context->smarty->fetch(
-                $this->getLocalPath() . 'views/templates/admin/mc-order-detail-tab-content-empty.tpl'
-            );
-        } catch (Exception $exception) {
-            $this->context->controller->errors[] =
-                $this->l("Unable to fetch MailChimp order: {$exception->getMessage()}");
         }
-
         return '';
     }
 
@@ -713,7 +733,8 @@ class Mailchimppro extends Module
      */
     public function hookDisplayBackOfficeTop()
     {
-        if ($this->context->controller->controller_name === 'AdminCarts' && isset($_REQUEST['viewcart'])) {
+        if ($this->context->controller->controller_name === 'AdminCarts' &&
+            isset($_REQUEST['viewcart']) && $this->isApiKeySet()) {
             $cart = new Cart(Tools::getValue('id_cart'));
             $response = $this->getApiClient()->get("ecommerce/stores/{$cart->id_shop}/carts/{$cart->id}");
             if ($this->getApiClient()->success()) {
@@ -725,6 +746,50 @@ class Mailchimppro extends Module
                         $this->getLocalPath() . 'views/templates/admin/mc-cart-detail.tpl'
                     );
             }
+        }
+    }
+
+    public function hookDisplayFooterBefore($params)
+    {
+        try {
+            \PrestaChamps\MailchimpPro\Hooks\Display\FooterBefore::run(
+                $params,
+                $this->getApiClient(),
+                $this->context
+            )->newsletterBlockRegistration();
+        } catch (Exception $exception) {
+            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
+        }
+    }
+
+    protected function isApiKeySet()
+    {
+        return !empty(Configuration::get(MailchimpProConfig::MAILCHIMP_API_KEY));
+    }
+
+    public function hookActionCustomerAccountAdd($params)
+    {
+        try {
+            \PrestaChamps\MailchimpPro\Hooks\Action\Customer\AccountAdd::run(
+                $this->context,
+                $this->getApiClient(),
+                $params['newCustomer']
+            );
+        } catch (Exception $exception) {
+            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
+        }
+    }
+
+    public function hookActionCustomerAccountUpdate($params)
+    {
+        try {
+            \PrestaChamps\MailchimpPro\Hooks\Action\Customer\AccountUpdate::run(
+                $this->context,
+                $this->getApiClient(),
+                $params['newCustomer']
+            );
+        } catch (Exception $exception) {
+            PrestaShopLogger::addLog("[MAILCHIMP] :{$exception->getMessage()}");
         }
     }
 }
