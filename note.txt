@@ -1,0 +1,23 @@
+SELECT
+    ps_stock_available.quantity as quantity,
+    ps_stock_available.out_of_stock as out_of_stock,
+	ps_product_lang.name as product_name,
+	GROUP_CONCAT(ps_attribute_lang.name) as declinaisons,
+    CONCAT("https://www.amimoucheur.com/fr/", ps_product_shop.id_product, "-", ps_product_lang.link_rewrite, ".html") as permalink,
+	ps_stock_available.id_stock_available as id_stock_available,
+	ps_stock_available.id_product as id_product,
+	ps_stock_available.id_product_attribute as id_product_attribute
+FROM ps_product_shop
+INNER JOIN ps_product_lang
+	ON ps_product_lang.id_product = ps_product_shop.id_product AND ps_product_lang.id_lang = 2
+LEFT JOIN ps_product_attribute
+	ON ps_product_attribute.id_product = ps_product_shop.id_product
+LEFT JOIN ps_product_attribute_combination
+	ON ps_product_attribute.id_product_attribute = ps_product_attribute_combination.id_product_attribute
+LEFT JOIN ps_attribute_lang
+	ON ps_attribute_lang.id_attribute = ps_product_attribute_combination.id_attribute AND ps_attribute_lang.id_lang = 2
+LEFT JOIN ps_stock_available
+	ON ps_stock_available.id_product = ps_product_shop.id_product AND (ps_stock_available.id_product_attribute = ps_product_attribute.id_product_attribute OR ps_stock_available.id_product_attribute = 0)
+WHERE ps_stock_available.id_product=484
+GROUP BY ps_stock_available.id_product, ps_stock_available.id_product_attribute
+
