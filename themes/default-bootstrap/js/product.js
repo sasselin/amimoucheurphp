@@ -517,7 +517,6 @@ function updateDisplay()
 {
 	var productPriceDisplay = productPrice;
 	var productPriceWithoutReductionDisplay = productPriceWithoutReduction;
-
 	if (!selectedCombination['unavailable'] && quantityAvailable > 0 && productAvailableForOrder == 1)
 	{
 		//show the choice of quantities
@@ -531,10 +530,17 @@ function updateDisplay()
 
 		$('#availability_date').fadeOut();
 
-		//availability value management
-		if (stock_management && availableNowValue != '')
+		// availability value management
+		if (stock_management)
 		{
-			$('#availability_value').removeClass('label-warning').addClass('label-success').text(availableNowValue).show();
+			$('#availability_value').removeClass('label-warning').removeClass('label-danger').addClass('label-success')
+			if (availableNowValue != "") {
+				$('#availability_value').text(availableNowValue)
+			}
+			else {
+				$('#availability_value').text(inStockLabel)
+			}
+			$('#availability_value').show();
 			$('#availability_statut:hidden').show('slow');
 		}
 		else
@@ -589,13 +595,13 @@ function updateDisplay()
 		//display that the product is unavailable with theses attributes
 		if (!selectedCombination['unavailable'])
 		{
-			$('#availability_value').text(doesntExistNoMore + (globalQuantity > 0 ? ' ' + doesntExistNoMoreBut : ''));
+			$('#availability_value').text(outOfStockLabel + (globalQuantity > 0 ? ' ' + outOfStockLabel : ''));
 			if (!allowBuyWhenOutOfStock)
-				$('#availability_value').removeClass('label-success').addClass('label-warning');
+				$('#availability_value').removeClass('label-success').removeClass('label-danger').addClass('label-warning');
 		}
 		else
 		{
-			$('#availability_value').text(doesntExist).removeClass('label-success').addClass('label-warning');
+			$('#availability_value').text(doesntExist).removeClass('label-success').removeClass('label-danger').addClass('label-warning');
 			$('#oosHook').hide();
 		}
 
@@ -626,10 +632,16 @@ function updateDisplay()
 		if (allowBuyWhenOutOfStock && !selectedCombination['unavailable'] && productAvailableForOrder)
 		{
 			$('#add_to_cart:hidden').fadeIn(600);
-
-			if (stock_management && availableLaterValue != '')
+			if (stock_management)
 			{
-				$('#availability_value').addClass('label-warning').text(availableLaterValue).show('slow');
+				$('#availability_value').removeClass('label-success').removeClass('label-danger').addClass('label-warning')
+				if (availableLaterValue != "") {
+					$('#availability_value').text(availableLaterValue)
+				}
+				else {
+					$('#availability_value').text(availableOnOrderLabel)
+				}
+				$('#availability_value').show();
 				$('#availability_statut:hidden').show('slow');
 			}
 			else

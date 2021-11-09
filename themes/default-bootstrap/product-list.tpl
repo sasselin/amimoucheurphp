@@ -186,7 +186,23 @@
 							<span class="availability">
 								{if ($product.allow_oosp || $product.quantity > 0)}
 									<span class="{if $product.quantity <= 0 && isset($product.allow_oosp) && !$product.allow_oosp} label-danger{elseif $product.quantity <= 0} label-warning{else} label-success{/if}">
-										{if $product.quantity <= 0}{if $product.allow_oosp}{if isset($product.available_later) && $product.available_later}{$product.available_later}{else}{l s='In Stock'}{/if}{else}{l s='Out of stock'}{/if}{else}{if isset($product.available_now) && $product.available_now}{$product.available_now}{else}{l s='In Stock'}{/if}{/if}
+										{if $product.quantity <= 0}
+											{if $product.allow_oosp}
+												{if isset($product.available_later) && $product.available_later}
+													{$product.available_later}
+												{else}
+													{l s='Available on order'}
+												{/if}
+											{else}
+												{l s='Out of stock'}
+											{/if}
+										{else}
+											{if isset($product.available_now) && $product.available_now}
+												{$product.available_now}
+											{else}
+												{l s='In Stock'}
+											{/if}
+										{/if}
 									</span>
 								{elseif (isset($product.quantity_all_versions) && $product.quantity_all_versions > 0)}
 									<span class="label-warning">

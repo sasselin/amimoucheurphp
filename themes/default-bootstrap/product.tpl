@@ -211,10 +211,28 @@
 				</p>
 			{/if}
 			<!-- availability or doesntExist -->
-			<p id="availability_statut"{if !$PS_STOCK_MANAGEMENT || ($product->quantity <= 0 && !$product->available_later && $allow_oosp) || ($product->quantity > 0 && !$product->available_now) || !$product->available_for_order || $PS_CATALOG_MODE} style="display: none;"{/if}>
-				{*<span id="availability_label">{l s='Availability:'}</span>*}
-				<span id="availability_value" class="label{if $product->quantity <= 0 && !$allow_oosp} label-danger{elseif $product->quantity <= 0} label-warning{else} label-success{/if}">{if $product->quantity <= 0}{if $PS_STOCK_MANAGEMENT && $allow_oosp}{$product->available_later}{else}{l s='This product is no longer in stock'}{/if}{elseif $PS_STOCK_MANAGEMENT}{$product->available_now}{/if}</span>
+			<p id="availability_statut">
+				<span id="availability_value" class="label{if $product->quantity <= 0 && !$allow_oosp} label-danger{elseif $product->quantity <= 0} label-warning{else} label-success{/if}">
+					{if $product->quantity <= 0}
+						{if $PS_STOCK_MANAGEMENT && $allow_oosp}
+							{if isset($product->available_later) && $product->available_later}
+								{$product->available_later}
+							{else}
+								{l s='Available on order'}
+							{/if}
+						{else}
+							{l s='Out of stock'}
+						{/if}
+					{else}
+						{if isset($product->available_now) && $product->available_now}
+							{$product->available_now}
+						{else}
+							{l s='In Stock'}
+						{/if}
+					{/if}
+				</span>
 			</p>
+
 			{if $PS_STOCK_MANAGEMENT}
 				{if !$product->is_virtual}{hook h="displayProductDeliveryTime" product=$product}{/if}
 				<p class="warning_inline" id="last_quantities"{if ($product->quantity > $last_qties || $product->quantity <= 0) || $allow_oosp || !$product->available_for_order || $PS_CATALOG_MODE} style="display: none"{/if} >{l s='Warning: Last items in stock!'}</p>
@@ -767,7 +785,9 @@
 {addJsDef stock_management=$PS_STOCK_MANAGEMENT|intval}
 {addJsDef taxRate=$tax_rate|floatval}
 {addJsDefL name=doesntExist}{l s='This combination does not exist for this product. Please select another combination.' js=1}{/addJsDefL}
-{addJsDefL name=doesntExistNoMore}{l s='This product is no longer in stock' js=1}{/addJsDefL}
+{addJsDefL name=outOfStockLabel}{l s='Out of stock' js=1}{/addJsDefL}
+{addJsDefL name=availableOnOrderLabel}{l s='Available on order' js=1}{/addJsDefL}
+{addJsDefL name=inStockLabel}{l s='In Stock' js=1}{/addJsDefL}
 {addJsDefL name=doesntExistNoMoreBut}{l s='with those attributes but is available with others.' js=1}{/addJsDefL}
 {addJsDefL name=fieldRequired}{l s='Please fill in all the required fields before saving your customization.' js=1}{/addJsDefL}
 {addJsDefL name=uploading_in_progress}{l s='Uploading in progress, please be patient.' js=1}{/addJsDefL}
