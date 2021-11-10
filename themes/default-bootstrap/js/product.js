@@ -597,7 +597,7 @@ function updateDisplay()
 		{
 			$('#availability_value').text(outOfStockLabel + (globalQuantity > 0 ? ' ' + outOfStockLabel : ''));
 			if (!allowBuyWhenOutOfStock)
-				$('#availability_value').removeClass('label-success').removeClass('label-danger').addClass('label-warning');
+				$('#availability_value').removeClass('label-success').removeClass('label-warning').addClass('label-danger');
 		}
 		else
 		{

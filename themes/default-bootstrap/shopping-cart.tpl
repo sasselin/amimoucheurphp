@@ -80,7 +80,6 @@
 	{hook h="displayBeforeShoppingCartBlock"}
 
 	<div id="order-detail-content" class="table_block table-responsive">
-		<p style="color: red; font-weight: bold">{l s='Please note that the inventory shown on the website may differs from the real inventory. Some product may need to be ordered. We will let you know about availability and other details as soon as possible. Thank you for your comprehension'}</p><br/>
 		<table id="cart_summary" class="table table-bordered {if $PS_STOCK_MANAGEMENT}stock-management-on{else}stock-management-off{/if}">
 			<thead>
 				<tr>
