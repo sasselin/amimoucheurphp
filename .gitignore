@@ -39,7 +39,8 @@ config/xml/*
 # Modules files
 modules/homeslider/images/*
 modules/blockbanner/img
-
+modules/gmerchantcenter/reporting/
+!modules/gmerchantcenter/reporting/
 # MISC
 *sitemap.xml
 gmerchantcenter*.xml
