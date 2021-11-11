@@ -595,7 +595,7 @@ function updateDisplay()
 		//display that the product is unavailable with theses attributes
 		if (!selectedCombination['unavailable'])
 		{
-			$('#availability_value').text(outOfStockLabel + (globalQuantity > 0 ? ' ' + outOfStockLabel : ''));
+			$('#availability_value').text(outOfStockLabel);
 			if (!allowBuyWhenOutOfStock)
 				$('#availability_value').removeClass('label-success').removeClass('label-warning').addClass('label-danger');
 		}
