@@ -706,7 +706,7 @@ class FrontControllerCore extends Controller
             'display_header' => $this->display_header,
             'display_footer' => $this->display_footer,
         ));
-		
+
 		if (!empty($this->page_name))
 			$page_name = $this->page_name;
 		elseif (!empty($this->php_self))
@@ -1110,6 +1110,11 @@ class FrontControllerCore extends Controller
 
         $this->orderBy  = Tools::strtolower(Tools::getValue('orderby', $order_by_values[(int)Configuration::get('PS_PRODUCTS_ORDER_BY')]));
         $this->orderWay = Tools::strtolower(Tools::getValue('orderway', $order_way_values[(int)Configuration::get('PS_PRODUCTS_ORDER_WAY')]));
+
+        if (!$_GET['orderby'] && !$_GET['orderway'] && $this->php_self == "prices-drop") {
+            $this->orderBy = 'price';
+            $this->orderWay = 'desc';
+        }
 
         if (!in_array($this->orderBy, $order_by_values)) {
             $this->orderBy = $order_by_values[0];
