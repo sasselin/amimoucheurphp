@@ -12,7 +12,7 @@ ALERT_TO=sebastien.asselin@gmail.com
 LOG="$DIR/cron.log"
 MIN_FREE_MB=3072      # espace libre minimal sur le disque avant de sauvegarder
 MAX_REPO_MB=5120      # taille maximale du dépôt local
-RCLONE_DEST=gdrive:restic   # copie hors-site ; ignorée tant que le remote « gdrive » n'existe pas
+RCLONE_DEST=gdrive:amimoucheur-backup/restic   # copie hors-site (dossier de Mon Drive créé par rclone) ; ignorée tant que le remote « gdrive » n'existe pas
 
 export RESTIC_REPOSITORY="$DIR/backups/restic"
 export RESTIC_PASSWORD_FILE="$DIR/restic-password"

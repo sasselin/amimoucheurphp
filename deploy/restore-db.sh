@@ -5,7 +5,7 @@
 #         restore-db.sh <snapshot|latest> --into-db         remplace la BD de prod (confirmation demandée,
 #                                                           snapshot de sécurité de l'état actuel avant)
 # Depuis une autre machine (droplet perdu) : copier le dépôt depuis Google Drive
-# (rclone copy gdrive:restic ./restic), puis
+# (rclone copy gdrive:amimoucheur-backup/restic ./restic), puis
 # RESTIC_REPOSITORY=./restic restic dump latest amimoucheur.sql > amimoucheur.sql
 set -euo pipefail
 
