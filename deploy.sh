@@ -30,8 +30,13 @@ remote_compose() {
 # Exclus : config propre à la prod, fichiers générés par PrestaShop (.htaccess,
 # config/xml, caches, rapports), fichiers créés par la prod (images et fichiers
 # ajoutés dans l'admin, logs) et vieux exports à la racine.
+# Propriétaires en prod : le code appartient à amimoucheur, les données générées
+# (cache, img, upload, log, sitemaps...) à www-data du conteneur, qui apparaît
+# sur l'hôte comme ct-www-data (UID/GID 165568, Docker rootless). Tout est au
+# groupe ct-www-data, dossiers setgid. D'où -rlt sans -p/-g : rsync n'envoie que
+# le contenu et ne touche pas aux propriétaires ni aux permissions de la prod.
 echo "Code (site/)..."
-rsync -azO --itemize-changes "${DRY_RUN[@]}" \
+rsync -rltzO --itemize-changes "${DRY_RUN[@]}" \
   --exclude /config/settings.inc.php \
   --exclude /config/defines_custom.inc.php \
   --exclude /.htaccess \
@@ -56,10 +61,16 @@ if [[ $INFRA == 1 ]]; then
     Dockerfile php-hardening.ini apache-site.conf apache-mpm.conf mysql-lowmem.cnf Caddyfile \
     "$PROD_SSH:$PROD_DIR/"
   rsync -az --itemize-changes "${DRY_RUN[@]}" docker-compose.prod.yml "$PROD_SSH:$PROD_DIR/docker-compose.yml"
+  rsync -az --chmod=F755 --itemize-changes "${DRY_RUN[@]}" cron-run.sh "$PROD_SSH:$PROD_DIR/"
+  rsync -az --itemize-changes "${DRY_RUN[@]}" crontab "$PROD_SSH:$PROD_DIR/"
 fi
 
 if [[ ${#DRY_RUN[@]} -eq 0 ]]; then
-  [[ $INFRA == 1 ]] && remote_compose up -d --build
+  if [[ $INFRA == 1 ]]; then
+    remote_compose up -d --build
+    # Remplace la crontab de l'usager amimoucheur
+    ssh "$PROD_SSH" crontab "$PROD_DIR/crontab"
+  fi
   # Vide les caches Smarty et l'index des classes (overrides) ; fichiers créés par www-data
   remote_compose exec -T apache sh -c "'rm -rf /var/www/html/cache/smarty/compile/* /var/www/html/cache/smarty/cache/* /var/www/html/cache/class_index.php'"
   echo "Déploiement terminé."

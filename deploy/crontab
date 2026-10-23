@@ -1,0 +1,13 @@
+# Crontab de l'usager amimoucheur (installée par ./deploy.sh --infra).
+# Les échecs sont envoyés par courriel par cron-run.sh et notés dans /srv/amimoucheur/cron.log.
+SHELL=/bin/bash
+MAILTO=""
+CRON_TZ=America/Toronto
+R=/srv/amimoucheur/cron-run.sh
+
+# Taux de change
+0 * * * *  $R devises "/admin0181/cron_currency_rates.php?secure_key=bb7aa156ff6d6e10f854dc6ef7402165"
+# Sitemap Google
+0 5 * * *  $R sitemap "/modules/gsitemap/gsitemap-cron.php?token=9b604a4236&id_shop=1" "1_index_sitemap.xml"
+# Flux Google Shopping
+1 0 * * *  $R merchant "/modules/gmerchantcenter/cron.php?id_shop=1&token=e0f4eec1a5c88e4c35fb81c5ff760eb9" "gmerchantcenter*.xml"
