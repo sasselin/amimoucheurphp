@@ -7,6 +7,7 @@ Extrait le catalogue **tel qu'il est vendu sur le site**, dans un format simple 
 ./export-catalogue/run.sh --verify           # + compare chaque page produit du site local à l'export
 ./export-catalogue/run.sh --tout             # garde aussi tout ce qui est exclu (voir plus bas)
 ./export-catalogue/run.sh --prod             # base de prod via SSH
+./export-catalogue/run.sh --sans-test        # sans le test des redirections Caddy
 ABANDON_AVANT=2024-01-01 ./export-catalogue/run.sh   # change la date limite « abandonné »
 ```
 
@@ -31,7 +32,7 @@ Les compteurs sont dans `meta.excluded`. Avec `--tout`, on garde tout, et chaque
 | Fichier | Contenu |
 |---|---|
 | `catalogue.html` | Le mini catalogue à ouvrir dans un navigateur : recherche, filtres (catégorie, marque, promo, rupture), fiche produit avec variantes et prix, onglets Catégories et Promotions. Le fichier est autonome, avec les données intégrées. Les images viennent du site de prod. |
-| `catalogue.json` | La source de vérité, imbriquée : `meta`, `categories[]` et `products[]` (avec `variants[]`, `images[]`, `categories[]`, `seo`). |
+| `catalogue.json` | La source de vérité, imbriquée : `meta`, `categories[]`, `brands[]`, `products[]` (avec `variants[]`, `images[]`, `categories[]`, `seo`) et `bought_together` (paires de produits présents dans au moins 3 mêmes commandes valides, avec le nombre de commandes par produit). |
 | `catalogue.xlsx` | Onglets Produits, Variantes, Categories, Images, Promotions (en cours), URL. |
 | `variantes.csv` | Une ligne par article vendable : chaque variante, ou le produit lui-même s'il n'a pas de variante. |
 | `produits.csv` | Une ligne par produit, avec les descriptions HTML en fr et en. |
@@ -40,7 +41,8 @@ Les compteurs sont dans `meta.excluded`. Avec `--tout`, on garde tout, et chaque
 | `images-descriptions/` | Seulement les images de description récupérées d'archive.org, dont l'original n'existe plus : à héberger sur le nouveau site. La correspondance est dans `meta.description_images.recovered_files`. |
 | `images_descriptions.csv` | Le rapport des images des descriptions : `ok`, `archive` (URL de la copie archive.org) ou `perdue` (balise retirée). |
 | `verification.csv` | Avec `--verify` : le résultat produit par produit. |
-| `recategorisation/` | La nouvelle taxonomie appliquée au catalogue : `avant_apres.html`, les mappings produits, variantes, catégories et couleurs, et `rapport.md`. Voir plus bas. |
+| `recategorisation/` | La nouvelle taxonomie appliquée au catalogue : `index.html` (la page à consulter), les mappings produits, variantes, catégories et couleurs, et `rapport.md`. Voir plus bas. |
+| `recategorisation/caddy/` | Les redirections 301 du jour J : `redirections.caddy`, `redirections.csv`, `LISEZMOI.md`. Voir plus bas. |
 
 Les CSV sont en UTF-8 avec BOM et séparateur virgule.
 
@@ -53,6 +55,16 @@ uv run export-catalogue/recategorise.py export-catalogue/out/local/catalogue.jso
 ```
 
 On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
+
+## Redirections du jour J
+
+`recategorise.py` produit aussi, à chaque run, les redirections 301 de toutes les anciennes URL vers le nouveau site, dans `recategorisation/caddy/`. Ensuite, `run.sh` les teste dans un vrai Caddy (`test_redirections.py`, image `caddy:2.8.4` comme en prod) : chaque ligne de la table, plus des URL piège. Un écart fait échouer le run.
+
+- Les anciennes URL sont reconnues par leur id, comme le fait PrestaShop. Le segment de catégorie, le slug, le suffixe EAN13, les filtres et la pagination n'ont pas d'importance, et les formes `index.php?id_product=` sont couvertes aussi.
+- Un produit actif redirige vers sa fiche. Un produit exclu (seulement avec `--tout`) redirige vers sa nouvelle catégorie. Une catégorie redirige vers sa cible, et une catégorie-marque ou une marque vers la page marque.
+- Pour le jour J, il faut **`./export-catalogue/run.sh --prod --tout`**. Sans `--tout`, les anciennes URL exclues tombent sur l'accueil.
+
+La procédure de mise en place est dans `recategorisation/caddy/LISEZMOI.md`.
 
 ## Prix
 

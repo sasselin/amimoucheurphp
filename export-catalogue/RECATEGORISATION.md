@@ -5,7 +5,7 @@ Proposition pour le nouveau site de L'Ami du Moucheur. Elle couvre l'arborescenc
 Tout est **calculé et vérifiable**, rien n'est fait à la main dans un tableur :
 - `taxonomie.json` décrit la proposition : l'arbre, les filtres, les tags, les marques, les couleurs et les règles ;
 - `recategorise.py` l'applique à chaque produit et à chaque variante ;
-- `out/local/recategorisation/avant_apres.html` montre le résultat.
+- `out/local/recategorisation/index.html` montre le résultat.
 
 ```bash
 ./export-catalogue/run.sh                       # extraction + recatégorisation
@@ -52,7 +52,8 @@ C'est là qu'on se démarque.
 2. **Filtre = attribut typé, propre à la famille du produit.** Une canne a un numéro de soie, une longueur et des sections ; un hameçon a une taille, un usage et une quantité par paquet.
 3. **Deux couches : le libellé du fabricant et la valeur de filtre** (voir section 6).
 4. **Tag = vocabulaire contrôlé** : espèce, technique, milieu. **Badge = mise en avant**, calculée automatiquement autant que possible.
-5. **Marque = filtre + page marque.** Les 97 anciennes catégories-marques deviennent des URL filtrées (redirection 301).
+5. **Marque = filtre + page marque.** Les 97 anciennes catégories-marques redirigent (301) vers la page marque, qui est indexable. Elles ne redirigent pas vers une URL filtrée, que Google conseille de ne pas indexer.
+6. **URL du nouveau site** (`taxonomie.json` → `urls`) : `/fr/produit/{slug}`, `/fr/{univers}/{categorie}`, `/fr/marques/{marque}`, et l'équivalent en `/en/`. La catégorie n'est pas dans l'URL du produit : l'URL reste stable si on recatégorise, et un produit n'a qu'une URL. Les raisons et les sources sont dans `CLAUDE.md`.
 
 ## 4. Arborescence : 9 univers, 71 catégories
 
@@ -172,13 +173,16 @@ Dans `export-catalogue/out/local/recategorisation/` :
 
 | Fichier | Contenu |
 |---|---|
-| `avant_apres.html` | Page autonome. Onglets : **Après** (méga-menu, filtres par famille, badges, fiche avant/après, « Complète ton montage ») ; **Avant** (arbre actuel, filtre marque) ; correspondance des catégories ; familles de couleurs. |
+| `index.html` | Page autonome. Onglets : **Après** (méga-menu, filtres par famille, badges, fiche avant/après, « Complète ton montage ») ; **Avant** (arbre actuel, filtre marque) ; correspondance des catégories ; familles de couleurs ; **Redirections (jour J)** : diagramme de flux des anciennes URL vers les nouvelles pages, test d'une ancienne URL, table filtrable. **Graphe** : vue en graphe à la Obsidian, en deux modes. *Redirections* relie les anciennes catégories à leur cible. *Arborescences avant / après* montre l'arbre actuel et la nouvelle taxonomie côte à côte, sans redirections. Les produits sont en option. *Produits liés* relie les produits par compatibilité (numéro de soie), même modèle ou gamme (déclinaisons vendues séparément, à fusionner en un produit à variantes), même marque et achats communs (au moins 3 commandes communes, d'après l'historique de PrestaShop). La page est générée à partir du gabarit `view_recategorisation.html`. |
 | `mapping_produits.csv` | Une ligne par produit : ancienne et nouvelle catégorie, catégories secondaires, marque (et sa source), espèces, techniques, milieu, badges, filtres, confiance, raisons de révision, nouvelle URL. |
 | `mapping_variantes.csv` | Une ligne par option de variante : groupe, libellé du fabricant, filtre, valeur de filtre et statut (`ok`, `auto`, `manuel`, `partiel`, `à_classer`, `à_confirmer`, `option libre`). |
 | `correspondance_categories.csv` | Chaque ancienne catégorie : ce qu'elle devient, avec les redirections 301 en FR et en EN. |
 | `nouvelles_categories.csv` | L'arbre proposé, avec le nombre de produits, les filtres et les URL. |
 | `couleurs.csv` | Chaque libellé de couleur, ses familles et la colonne `famille_a_assigner`. |
 | `url_mapping.csv` | `url_mapping.csv` de l'extraction, avec la colonne `nouvelle_url` remplie. |
+| `caddy/redirections.caddy` | Les redirections 301 de toutes les anciennes URL (produits, catégories, marques), prêtes à importer dans Caddy au jour J. Elles sont testées dans Caddy à chaque `run.sh`. |
+| `caddy/redirections.csv` | Chaque ancienne URL, sa cible et la règle appliquée. |
+| `caddy/LISEZMOI.md` | La procédure du jour J. |
 | `rapport.md` | Avant/après chiffré, couverture des filtres, produits à réviser. |
 | `recategorisation.xlsx` | Les mêmes tableaux en onglets. |
 
@@ -187,6 +191,9 @@ Dans `export-catalogue/out/local/recategorisation/` :
 - ajouter une règle sur le nom ;
 - forcer un produit dans `produits` ;
 - ajouter une notation de moulinet ;
-- classer une couleur dans `couleurs.manuel`.
+- classer une couleur dans `couleurs.manuel` ;
+- surcharger le slug d'un produit dans `urls.slugs`.
 
-Le script refuse de produire un résultat dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
+Les redirections sont recalculées à chaque run : il n'y a jamais rien à corriger à la main dans `caddy/`.
+
+Le script refuse de produire un résultat dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible. Il refuse aussi de produire des redirections incohérentes : deux produits avec la même URL, une nouvelle URL qui ressemble à une ancienne, ou une cible qui n'existera pas.

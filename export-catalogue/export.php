@@ -192,8 +192,16 @@ foreach (rows('SELECT od.product_id, MAX(o.date_add) last FROM '.$p.'order_detai
 }
 
 $brands = array();
-foreach (rows('SELECT id_manufacturer, name FROM '.$p.'manufacturer') as $r) {
-    $brands[(int)$r['id_manufacturer']] = $r['name'];
+$brands_out = array();
+foreach (rows('SELECT id_manufacturer, name, active FROM '.$p.'manufacturer ORDER BY id_manufacturer') as $r) {
+    $mid = (int)$r['id_manufacturer'];
+    $brands[$mid] = $r['name'];
+    // Format des liens marque de PrestaShop 1.6 : /{lang}/{id}_{rewrite} (route manufacturer_rule par défaut)
+    $seo = array();
+    foreach ($langs as $iso) {
+        $seo[$iso] = array('url' => $base_url.'/'.($multi_lang ? $iso.'/' : '').$mid.'_'.Tools::link_rewrite($r['name']));
+    }
+    $brands_out[] = array('id' => $mid, 'name' => $r['name'], 'active' => (bool)$r['active'], 'seo' => $seo);
 }
 
 $prod_cats = array();
@@ -453,6 +461,7 @@ foreach ($products as $row) {
         'reference' => txt($row['reference']),
         'name' => ml($prod_lang, $id, 'name'),
         'brand' => isset($brands[(int)$row['id_manufacturer']]) ? $brands[(int)$row['id_manufacturer']] : null,
+        'brand_id' => isset($brands[(int)$row['id_manufacturer']]) ? (int)$row['id_manufacturer'] : null,
         'price' => $price,
         'stock' => array(
             'quantity' => $quantity,
@@ -486,6 +495,31 @@ foreach ($used_cats as $cid => $count) {
     }
 }
 $subtree_count[$home_id] = count($out_products);
+
+// Achetés ensemble : paires de produits exportés présents dans au moins 3 mêmes commandes valides,
+// et le nombre de commandes de chaque produit (pour pondérer : un produit vendu partout n'est lié à rien en particulier)
+progress('Produits achetés ensemble...');
+$exported = array();
+foreach ($out_products as $op) {
+    $exported[$op['id']] = true;
+}
+$order_count = array();
+foreach (rows('SELECT od.product_id, COUNT(DISTINCT od.id_order) n FROM '.$p.'order_detail od
+        JOIN '.$p.'orders o ON o.id_order = od.id_order AND o.valid = 1 GROUP BY od.product_id') as $r) {
+    if (isset($exported[(int)$r['product_id']])) {
+        $order_count[(int)$r['product_id']] = (int)$r['n'];
+    }
+}
+$pairs = array();
+foreach (rows('SELECT a.product_id x, b.product_id y, COUNT(DISTINCT a.id_order) n
+        FROM '.$p.'order_detail a
+        JOIN '.$p.'order_detail b ON b.id_order = a.id_order AND a.product_id < b.product_id
+        JOIN '.$p.'orders o ON o.id_order = a.id_order AND o.valid = 1
+        GROUP BY a.product_id, b.product_id HAVING n >= 3') as $r) {
+    if (isset($exported[(int)$r['x']], $exported[(int)$r['y']])) {
+        $pairs[] = array((int)$r['x'], (int)$r['y'], (int)$r['n']);
+    }
+}
 
 // Arbre des catégories : seulement les catégories affichées et non vides (ou toutes avec --tout)
 $categories_out = array();
@@ -548,11 +582,14 @@ $doc = array(
             'products' => count($out_products),
             'variants' => $total_variants,
             'categories' => count($categories_out),
+            'brands' => count($brands_out),
         ),
         'excluded' => array_merge($skipped, array('orphans_not_in_shop' => $orphans)),
     ),
     'categories' => $categories_out,
+    'brands' => $brands_out,
     'products' => $out_products,
+    'bought_together' => array('min_orders' => 3, 'orders_by_product' => $order_count, 'pairs' => $pairs),
 );
 
 $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT;

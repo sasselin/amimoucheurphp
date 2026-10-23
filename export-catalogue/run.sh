@@ -5,6 +5,8 @@
 #         ./export-catalogue/run.sh --prod      base de prod via SSH (rien n'est écrit sur le serveur)
 #         ./export-catalogue/run.sh --verify    + contrôle des pages produit sur le site local
 #         ./export-catalogue/run.sh --tout      garde aussi les exclus (non affichés, 0 $, abandonnés, catégories vides)
+#         ./export-catalogue/run.sh --sans-test ne teste pas les redirections Caddy (testées par défaut si Docker répond)
+#         Jour J : ./export-catalogue/run.sh --prod --tout (redirections de toutes les anciennes URL)
 #         Options combinables. --sample N limite la vérification à N produits.
 #         ABANDON_AVANT=2024-01-01 change la date limite des produits abandonnés (défaut 2023-01-01).
 set -euo pipefail
@@ -18,12 +20,14 @@ BASE_URL="${BASE_URL:-https://www.amimoucheur.com}"
 SOURCE=local
 VERIFY=0
 TOUT=""
+TEST=1
 SAMPLE=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --prod) SOURCE=prod ;;
     --verify) VERIFY=1 ;;
     --tout) TOUT=" --tout" ;;
+    --sans-test) TEST=0 ;;
     --sample) SAMPLE=(--sample "$2"); shift ;;
     *) echo "Option inconnue : $1" >&2; exit 2 ;;
   esac
@@ -50,6 +54,14 @@ fi
 uv run --quiet "$DIR/description_images.py" "$JSON" "$OUT"
 uv run --quiet "$DIR/build.py" "$JSON" "$OUT"
 uv run --quiet "$DIR/recategorise.py" "$JSON" "$OUT"
+
+if [[ $TEST == 1 ]]; then
+  if docker info > /dev/null 2>&1; then
+    uv run --quiet "$DIR/test_redirections.py" "$OUT"
+  else
+    echo "Test des redirections ignoré : Docker ne répond pas." >&2
+  fi
+fi
 
 if [[ $VERIFY == 1 ]]; then
   if [[ $SOURCE == prod ]]; then

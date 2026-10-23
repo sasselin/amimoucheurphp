@@ -1,5 +1,13 @@
 {
   "_doc": "Nouvelle taxonomie du catalogue. Lu par recategorise.py. Voir RECATEGORISATION.md.",
+  "urls": {
+    "_doc": "Gabarits des URL du nouveau site (décidés le 2026-10-23, voir CLAUDE.md). Produit : /{l}/{produit}/{slug PrestaShop}. Marque : /{l}/{marque}/{slug de la marque}. Catégorie : /{l}/{univers}/{categorie} (id des nœuds en fr, nom anglais en en). Les redirections Caddy en découlent.",
+    "produit": {"fr": "produit", "en": "product"},
+    "marque": {"fr": "marques", "en": "brands"},
+    "slugs": {
+      "_doc": "Surcharge du slug d'un produit : id -> {fr, en} (une langue suffit). Sert à régler une collision ou un slug abîmé."
+    }
+  },
   "arbre": [
     {
       "id": "cannes",

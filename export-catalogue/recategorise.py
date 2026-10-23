@@ -8,7 +8,7 @@ Pour chaque produit : nouvelle catégorie, marque, filtres normalisés, tags et 
 Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de filtre.
 
 Usage : uv run export-catalogue/recategorise.py <catalogue.json> <dossier_sortie>
-Sortie : <dossier_sortie>/recategorisation/ (CSV, XLSX, rapport.md, avant_apres.html)
+Sortie : <dossier_sortie>/recategorisation/ (index.html, CSV, XLSX, rapport.md, caddy/)
 """
 import json
 import re
@@ -62,6 +62,8 @@ class Taxonomie:
                               key=lambda x: -len(x[0]))
         self.alias_map = dict(self.aliases)
         self.couleurs = data["couleurs"]
+        self.urls = data["urls"]
+        self.slugs = {int(k): v for k, v in data["urls"]["slugs"].items() if not k.startswith("_")}
 
     def _add(self, n, parent, famille, depth):
         famille = n.get("famille", famille)
@@ -88,6 +90,56 @@ class Taxonomie:
         if lang == "fr":
             return "/".join(self.chain(cid))
         return "/".join(slug(self.nodes[c]["en"]) for c in self.chain(cid))
+
+    # Chemins du nouveau site (sans le domaine) : voir taxonomie.json -> urls
+    def cat_path(self, cid, lang):
+        return f"/{lang}/{self.url(cid, lang)}"
+
+    def assign_slugs(self, products):
+        """Slug de chaque produit, unique par langue parmi les produits actifs. -> {(id, l): (slug, source)}
+
+        Le slug PrestaShop est gardé s'il est sain. Il est refait à partir du nom actuel s'il a perdu ses accents,
+        ou s'il est partagé avec un autre produit (souvent une copie renommée qui a gardé le slug de l'original :
+        le produit dont le nom donne ce slug le garde). Un doublon qui reste (même nom) reçoit son id en suffixe.
+        """
+        out = {}
+        for l in ("fr", "en"):
+            actifs = sorted((p for p in products if not p.get("excluded_reasons")), key=lambda p: p["id"])
+            for p in products:
+                name = t(p["name"], l)
+                if self.slugs.get(p["id"], {}).get(l):
+                    out[(p["id"], l)] = (self.slugs[p["id"]][l], "surcharge")
+                elif not p["seo"][l]["slug"] or slug_abime(p["seo"][l]["slug"], name):
+                    out[(p["id"], l)] = (slug(name), "nom (slug abîmé)")
+                else:
+                    out[(p["id"], l)] = (p["seo"][l]["slug"], "prestashop")
+            groups = defaultdict(list)
+            for p in actifs:
+                groups[out[(p["id"], l)][0]].append(p)
+            taken = set(groups)
+            for sl, ps in groups.items():
+                if len(ps) < 2:
+                    continue
+                keep = next((p for p in ps if slug(t(p["name"], l)) == sl), ps[0])
+                for p in ps:
+                    if p is keep or out[(p["id"], l)][1] == "surcharge":
+                        continue
+                    new = slug(t(p["name"], l))
+                    if new in taken:
+                        out[(p["id"], l)] = (f"{new}-{p['id']}", "nom + id (doublon à fusionner)")
+                    else:
+                        out[(p["id"], l)] = (new, "nom (slug partagé)")
+                    taken.add(out[(p["id"], l)][0])
+        self.slug_of = out
+
+    def product_slug(self, p, lang):
+        return self.slug_of[(p["id"], lang)][0]
+
+    def product_path(self, p, lang):
+        return f"/{lang}/{self.urls['produit'][lang]}/{self.product_slug(p, lang)}"
+
+    def brand_path(self, brand, lang):
+        return f"/{lang}/{self.urls['marque'][lang]}" + (f"/{slug(brand)}" if brand else "")
 
 
 # ---------------------------------------------------------------- marques
@@ -669,6 +721,223 @@ def tags_for(p, cat, famille, tax, infos, brand, facets, ref_date):
     return sorted(tags), badges
 
 
+# ---------------------------------------------------------------- redirections (jour J)
+
+# Formes d'URL de l'ancien site (PrestaShop 1.6, routes par défaut ; vérifié dans classes/Dispatcher.php).
+# Le routage se fait par id : le segment de catégorie d'une URL produit et le slug peuvent varier.
+# Sans préfixe de langue, PrestaShop sert la langue par défaut (fr). Syntaxe compatible RE2 (Caddy) et Python.
+ANCIENNES_URL = {
+    "produit": {"fr": r"^/(?:fr/)?(?:[^/]+/)*(\d+)-[^/]*\.html$", "en": r"^/en/(?:[^/]+/)*(\d+)-[^/]*\.html$"},
+    # La suite optionnelle couvre les filtres du blocklayered : /fr/491-accessoires/couleur-rouge
+    "categorie": {"fr": r"^/(?:fr/)?(\d+)-[^/.]+(?:/.*)?$", "en": r"^/en/(\d+)-[^/.]+(?:/.*)?$"},
+    "marque": {"fr": r"^/(?:fr/)?(\d+)_[^/]+/?$", "en": r"^/en/(\d+)_[^/]+/?$"},
+}
+ANCIEN_PARAM = {"produit": "id_product", "categorie": "id_category", "marque": "id_manufacturer"}
+ANCIEN_ID_LANG = {"en": "1", "fr": "2"}  # ps_lang
+
+
+def slug_abime(s, name):
+    """Slug PrestaShop qui a perdu ses lettres accentuées (« cordes-de-rserve ») au lieu de les translittérer."""
+    good = set(slug(name).split("-"))
+    lost = set(re.sub(r"[^a-z0-9]+", "-", re.sub(r"[^\x00-\x7f]", "", name.lower())).split("-"))
+    return any(w in lost and w not in good for w in s.split("-"))
+
+
+def write_redirections(dest, doc, results, tax, old_rows):
+    """Table 301 ancienne URL -> nouvelle URL et directives Caddy prêtes à importer. Retourne la table.
+
+    Produit actif -> sa fiche. Produit exclu (extraction --tout) -> sa nouvelle catégorie, sinon celle de son
+    ancienne catégorie par défaut, sinon l'accueil. Catégorie -> sa cible (page marque pour une catégorie-marque).
+    Marque -> sa page marque. Une cible est toujours une page qui existera : catégorie ou marque avec des produits actifs.
+    """
+    dest.mkdir(parents=True, exist_ok=True)
+    base = doc["meta"]["base_url"]
+    tout = doc["meta"].get("mode") != "catalogue_actif"
+    by_id = {r["id"]: r for r in results}
+    actifs = [p for p in doc["products"] if not p.get("excluded_reasons")]
+    live_cats = {x for p in actifs for c in [by_id[p["id"]]["cat"]] + by_id[p["id"]]["second"] if c for x in tax.chain(c)}
+    live_brands = {by_id[p["id"]]["brand"] for p in actifs if by_id[p["id"]]["brand"]}
+    langs = ("fr", "en")
+    home = {l: f"/{l}/" for l in langs}
+
+    def live_cat(cid, l):
+        """La catégorie si elle a des produits actifs, sinon son parent le plus proche qui en a, sinon l'accueil."""
+        for c in reversed(tax.chain(cid) if cid in tax.nodes else []):
+            if c in live_cats:
+                return tax.cat_path(c, l), c
+        return home[l], None
+
+    def rel(url):
+        return url[len(base):] if url.startswith(base) else url
+
+    # -------- cibles
+    rows, cible = [], {k: {l: {} for l in langs} for k in ANCIENNES_URL}
+    cat_target = {}
+    parent = {c["id"]: c["parent_id"] for c in doc["categories"]}
+    old_cible = {r["ancienne_id"]: r["nouvelle_categorie_id"] for r in old_rows}
+
+    def parent_cible(cid):
+        """Ancienne catégorie sans cible (masquée ou vide, extraction --tout) : la cible de son plus proche parent."""
+        while cid in parent and not old_cible.get(cid):
+            cid = parent[cid]
+        return old_cible.get(cid)
+
+    for r in old_rows:
+        cid = r["ancienne_id"]
+        m = tax.old.get(cid) or {}
+        for l in langs:
+            if cid == 2:
+                to, regle = home[l], "accueil"
+            elif r["devient"].startswith("page marque") and m.get("marque") in live_brands:
+                to, regle = tax.brand_path(m["marque"], l), "catégorie-marque -> page marque"
+            elif r["nouvelle_categorie_id"]:
+                to, c = live_cat(r["nouvelle_categorie_id"], l)
+                regle = "catégorie" if c == r["nouvelle_categorie_id"] else "catégorie vide -> parent" if c else "catégorie vide -> accueil"
+            elif parent_cible(cid) and live_cat(parent_cible(cid), l)[1]:
+                to, regle = live_cat(parent_cible(cid), l)[0], "sans cible -> cible de l'ancien parent"
+            else:
+                to, regle = home[l], "sans cible -> accueil"
+            cat_target[(cid, l)] = to
+            cible["categorie"][l][cid] = to
+            c = next(c for c in doc["categories"] if c["id"] == cid)
+            rows.append({"type": "categorie", "id": cid, "langue": l, "nom": t(c["name"], l),
+                         "ancienne_url": rel(c["seo"][l]["url"]), "cible": to, "regle": regle})
+    for p in doc["products"]:
+        r = by_id[p["id"]]
+        dc = (p.get("default_category") or {}).get("id")
+        for l in langs:
+            if not p.get("excluded_reasons"):
+                to, regle = tax.product_path(p, l), "produit actif"
+            elif r["cat"] and live_cat(r["cat"], l)[1]:
+                to, regle = live_cat(r["cat"], l)[0], "produit exclu -> nouvelle catégorie"
+            elif (dc, l) in cat_target:
+                to, regle = cat_target[(dc, l)], "produit exclu -> cible de l'ancienne catégorie"
+            else:
+                to, regle = home[l], "produit exclu -> accueil"
+            cible["produit"][l][p["id"]] = to
+            rows.append({"type": "produit", "id": p["id"], "langue": l, "nom": t(p["name"], l),
+                         "ancienne_url": rel(p["seo"][l]["url"]), "cible": to, "regle": regle})
+    for b in doc.get("brands", []):
+        canon = tax.alias_map.get(norm(b["name"]).rstrip(".")) or b["name"].strip(" .")
+        for l in langs:
+            if canon in live_brands:
+                to, regle = tax.brand_path(canon, l), "page marque"
+            else:
+                to, regle = tax.brand_path("", l), "marque sans produit -> liste des marques"
+            cible["marque"][l][b["id"]] = to
+            rows.append({"type": "marque", "id": b["id"], "langue": l, "nom": b["name"],
+                         "ancienne_url": rel(b["seo"][l]["url"]), "cible": to, "regle": regle})
+    rows.insert(0, {"type": "racine", "id": "", "langue": "fr", "nom": "Racine du site", "ancienne_url": "/",
+                    "cible": "/fr/", "regle": "racine"})
+    rows = [r for r in rows if r["ancienne_url"] != r["cible"]]  # l'accueil /fr/ reste /fr/ : pas de 301 sur soi-même
+
+    # -------- garde-fous
+    new_paths = ({home[l] for l in langs} | {tax.product_path(p, l) for p in actifs for l in langs}
+                 | {tax.cat_path(c, l) for c in live_cats for l in langs}
+                 | {tax.brand_path(b, l) for b in live_brands | {""} for l in langs})
+    rx = [re.compile(x) for v in ANCIENNES_URL.values() for x in v.values()]
+    dup = defaultdict(list)
+    for p in actifs:
+        for l in langs:
+            dup[tax.product_path(p, l)].append(p["id"])
+    problems = [
+        ("Nouvelles URL de produit en double (surcharger urls.slugs dans taxonomie.json)",
+         {u: ids for u, ids in dup.items() if len(ids) > 1}),
+        ("Nouvelles URL qui ressemblent à une ancienne URL (boucle de redirection)",
+         sorted(u for u in new_paths if any(x.match(u) for x in rx))),
+        ("Redirections vers une page qui n'existera pas", sorted({r["cible"] for r in rows} - new_paths)),
+    ]
+    for label, bad in problems:
+        if bad:
+            sys.exit(f"Redirections — {label} : {bad}")
+
+    # -------- fichiers
+    write_csv(dest / "redirections.csv", rows)
+    regles = Counter(r["regle"] for r in rows)
+    L = ["# Redirections 301 de l'ancien site PrestaShop vers le nouveau site.",
+         "# Généré par export-catalogue/recategorise.py : ne pas modifier à la main, relancer run.sh.",
+         f"# Source : {doc['meta']['source']} ({doc['meta']['mode']}), extraction du {doc['meta']['generated_at']}.",
+         f"# {len(rows)} redirections : " + ", ".join(f"{k} {v}" for k, v in regles.most_common()) + ".",
+         ]
+    if not tout:
+        L.append("# ATTENTION : extraction du catalogue actif seulement. Les produits et catégories exclus tombent sur "
+                 "l'accueil. Pour le jour J : ./export-catalogue/run.sh --prod --tout")
+    L += ["#", "# Usage : importer ce fichier dans le bloc du site, avant le reverse_proxy (voir LISEZMOI.md) :",
+          "#   import /etc/caddy/redirections.caddy", ""]
+    for k, by_l in ANCIENNES_URL.items():
+        for l, pattern in by_l.items():
+            name = f"{k}_{l}"
+            L += [f"@{name} {{", f"\tpath_regexp {name} {pattern}"]
+            if k == "categorie":
+                L.append("\tnot path /content/* /fr/content/* /en/content/*")
+            # Formes non réécrites : /index.php?controller=...&id_product=N. Langue : isolang, sinon id_lang, sinon fr
+            L += ["}", f"@{name}_q {{", "\tpath /index.php", f"\tquery {ANCIEN_PARAM[k]}=*"]
+            L += ["\tquery isolang=en", "}", f"@{name}_q2 {{", "\tpath /index.php",
+                  f"\tquery {ANCIEN_PARAM[k]}=*", f"\tquery id_lang={ANCIEN_ID_LANG['en']}",
+                  "\tnot query isolang=fr", "}"] if l == "en" else ["}"]
+    for k, by_l in ANCIENNES_URL.items():
+        for l in by_l:
+            for src, suffix in ((f"{{re.{k}_{l}.1}}", ""), (f"{{query.{ANCIEN_PARAM[k]}}}", "_q")):
+                L.append(f"map {src} {{redir_{k}_{l}{suffix}}} {{")
+                L += [f"\t{i} {to}" for i, to in sorted(cible[k][l].items())]
+                L += [f"\tdefault {home[l]}", "}"]
+    # Dans un route, l'ordre écrit est l'ordre d'exécution, et redir termine la requête :
+    # le produit avant la catégorie (le .html les distingue), l'anglais avant le français (sans préfixe = fr)
+    L += ["@racine path /", "route {", "\tredir @racine /fr/ 301"]
+    for k in ANCIENNES_URL:
+        L += [f"\tredir @{k}_en {{redir_{k}_en}} 301", f"\tredir @{k}_fr {{redir_{k}_fr}} 301"]
+    for k in ANCIENNES_URL:
+        L += [f"\tredir @{k}_en_q {{redir_{k}_en_q}} 301", f"\tredir @{k}_en_q2 {{redir_{k}_en_q}} 301",
+              f"\tredir @{k}_fr_q {{redir_{k}_fr_q}} 301"]
+    L += ["}", ""]
+    (dest / "redirections.caddy").write_text("\n".join(L), encoding="utf-8")
+    (dest / "LISEZMOI.md").write_text(LISEZMOI, encoding="utf-8")
+    return rows
+
+
+LISEZMOI = """# Redirections du jour J
+
+Fichiers générés par `export-catalogue/recategorise.py` à chaque extraction. Ne pas les modifier à la main :
+on change `taxonomie.json`, puis on relance `run.sh`.
+
+| Fichier | Contenu |
+|---|---|
+| `redirections.caddy` | Directives Caddy à importer dans le bloc du site : les 301 des produits, catégories et marques, plus la racine. |
+| `redirections.csv` | Chaque ancienne URL, sa cible et la règle appliquée. C'est aussi le jeu de test de `test_redirections.py`. |
+
+Les cibles sont des chemins relatifs : la redirection reste sur le même domaine.
+
+## Ce qui est couvert
+
+- Les produits, par id, quel que soit le segment de catégorie ou le slug : `/fr/{n'importe quoi}/480-x.html`, `/fr/480-x.html`, `/480-x.html`, ainsi qu'avec le suffixe EAN13.
+- Les catégories, par id, filtres du blocklayered compris : `/fr/491-x`, `/fr/491-x/couleur-rouge`. Les paramètres `?p=`, `?orderby=`, `utm_*` et `gmc_currency` sont abandonnés.
+- Les marques : `/fr/12_simms`.
+- Les formes non réécrites : `/index.php?controller=product&id_product=480`, avec `id_category` et `id_manufacturer`. La langue vient de `isolang`, puis de `id_lang` (1 = en, 2 = fr), sinon fr.
+- La racine `/` redirige vers `/fr/`.
+- Un id inconnu redirige vers l'accueil de la langue.
+
+## Jour J
+
+1. Extraire la prod en gardant tout : `./export-catalogue/run.sh --prod --tout`. Sans `--tout`, les produits et catégories exclus tombent sur l'accueil (l'en-tête du fichier le signale).
+2. Relire `redirections.csv`, surtout les règles « -> accueil ». Le test des redirections est lancé par `run.sh`.
+3. Copier `redirections.caddy` dans `deploy/` et le monter dans le conteneur caddy (`docker-compose.prod.yml` : `./redirections.caddy:/etc/caddy/redirections.caddy:ro`).
+4. Dans `deploy/Caddyfile`, bloc `www.amimoucheur.com` :
+
+   ```
+   www.amimoucheur.com {
+   	import /etc/caddy/redirections.caddy
+   	reverse_proxy <nouveau-site>
+   }
+   ```
+
+5. `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+6. Pointer le flux Google Merchant Center vers les nouvelles URL de produit, et soumettre le nouveau sitemap dans Search Console.
+7. Garder ces redirections au moins un an (recommandation de Google), idéalement pour toujours.
+
+Le nouveau site doit servir chaque cible : fiches produit, catégories, pages marque et la liste des marques (`/fr/marques`, `/en/brands`).
+"""
+
+
 # ---------------------------------------------------------------- principal
 
 def main():
@@ -690,6 +959,7 @@ def main():
     badge_label = {b["id"]: b["fr"] for k in ("badges_auto", "badges_manuels") for b in tax.data["tags"][k]}
     fac_label = {k: v["fr"] for k, v in tax.data["facettes"].items()}
 
+    tax.assign_slugs(doc["products"])
     results, var_rows, prod_rows = [], [], []
     for p in doc["products"]:
         cat, second, source, infos, old_brands = classify(p, tax, cats_old)
@@ -723,7 +993,7 @@ def main():
         confiance = "basse" if not cat else "moyenne" if (grave or source == "regle" or bsrc in ("", "champ_non_reconnu")) else "haute"
 
         seo = p["seo"]
-        new_url = {l: f"{base}/{l}/{tax.url(cat, l)}/{seo[l]['slug']}" if cat else "" for l in ("fr", "en")}
+        new_url = {l: base + tax.product_path(p, l) for l in ("fr", "en")}
         dc = p.get("default_category") or {}
         r = {
             "id": p["id"], "cat": cat, "second": second, "source": source, "brand": brand, "brand_src": bsrc,
@@ -748,6 +1018,7 @@ def main():
             "confiance": confiance, "a_reviser": "oui" if raisons else "",
             "raisons": " ; ".join(raisons),
             "url_actuelle_fr": seo["fr"]["url"], "nouvelle_url_fr": new_url["fr"], "nouvelle_url_en": new_url["en"],
+            "source_slug_fr": tax.slug_of[(p["id"], "fr")][1], "source_slug_en": tax.slug_of[(p["id"], "en")][1],
         })
 
     by_id = {r["id"]: r for r in results}
@@ -778,9 +1049,9 @@ def main():
         if c["id"] == 2:
             devient, fr, en = "accueil", f"{base}/fr/", f"{base}/en/"
         elif marque and cible and slug(marque) in slug(t(c["name"])):
-            devient = f"filtre Marque = {marque} (dans {tax.path(cible)})"
-            fr = f"{base}/fr/{tax.url(cible, 'fr')}?marque={slug(marque)}"
-            en = f"{base}/en/{tax.url(cible, 'en')}?brand={slug(marque)}"
+            # Une URL filtrée n'est pas indexée : la cible d'un 301 est la page marque, qui l'est
+            devient = f"page marque {marque} (filtre Marque dans {tax.path(cible)})"
+            fr, en = base + tax.brand_path(marque, "fr"), base + tax.brand_path(marque, "en")
         elif cible:
             devient = f"catégorie {tax.path(cible)}"
             fr, en = f"{base}/fr/{tax.url(cible, 'fr')}", f"{base}/en/{tax.url(cible, 'en')}"
@@ -841,6 +1112,7 @@ def main():
     write_csv(dest / "nouvelles_categories.csv", new_rows)
     write_csv(dest / "couleurs.csv", color_rows)
     write_csv(dest / "url_mapping.csv", url_rows)
+    redir = write_redirections(dest / "caddy", doc, results, tax, old_rows)
     wb = Workbook()
     wb.remove(wb.active)
     for title, rows in (("Produits", prod_rows), ("Nouvelles categories", new_rows),
@@ -851,9 +1123,9 @@ def main():
 
     stats = compute_stats(doc, results, var_rows, tax, count, color_rows)
     (dest / "rapport.md").write_text(report(stats, results, prod_rows, tax), encoding="utf-8")
-    write_html(dest / "avant_apres.html", doc, results, tax, stats, old_rows, color_rows)
+    write_html(dest / "index.html", doc, results, tax, stats, old_rows, color_rows, redir)
     print(f"Recatégorisation : {len(results)} produits -> {len(tax.nodes)} catégories ; "
-          f"{stats['a_reviser']} à réviser. Voir {dest}")
+          f"{stats['a_reviser']} à réviser ; {len(redir)} redirections Caddy. Voir {dest}")
 
 
 def compute_stats(doc, results, var_rows, tax, count, color_rows):
@@ -925,6 +1197,15 @@ def report(s, results, prod_rows, tax):
     L += ["", "## Nouvelle arborescence", "", "| Catégorie | Produits (principale) |", "|---|---|"]
     for cid, n in tax.nodes.items():
         L.append(f"| {'  ' * (n['depth'] - 1)}{'**' if n['depth'] == 1 else ''}{n['fr']}{'**' if n['depth'] == 1 else ''} | {s['count'].get(cid, 0)} |")
+    src = Counter(r[f"source_slug_{l}"] for r in prod_rows for l in ("fr", "en"))
+    L += ["", "## Nouvelles URL de produit", "",
+          f"Gabarit : `/fr/{tax.urls['produit']['fr']}/{{slug}}`, `/en/{tax.urls['produit']['en']}/{{slug}}`. "
+          "Source du slug (fr + en) : " + ", ".join(f"{k} {v}" for k, v in src.most_common()) + ".", ""]
+    dbl = [r for r in prod_rows if "doublon" in r["source_slug_fr"] + r["source_slug_en"]]
+    if dbl:
+        L += ["Doublons à fusionner (même nom qu'un autre produit actif ; l'id est ajouté au slug en attendant) :", "",
+              "| Id | Produit | Nouvelle URL |", "|---|---|---|"]
+        L += [f"| {r['produit_id']} | {r['nom_fr']} | {r['nouvelle_url_fr']} |" for r in dbl]
     rev = [r for r in prod_rows if r["a_reviser"]]
     L += ["", f"## À réviser ({len(rev)})", "",
           "Hors « marque inconnue » et « couleurs à classer », qui se règlent en lot dans les CSV. Couverture calculée sur les produits qui ont des variantes.", "",
@@ -936,8 +1217,73 @@ def report(s, results, prod_rows, tax):
     return "\n".join(L) + "\n"
 
 
-def write_html(path, doc, results, tax, stats, old_rows, color_rows):
-    """Page autonome avant/après : gabarit avant_apres.html + données intégrées."""
+MOTS_GENERIQUES = {"m", "s", "w", "men", "women", "mens", "womens", "homme", "femme", "pour", "de", "du", "la", "le", "et", "a"}
+
+
+def model_groups(products, brand_of_id, is_brand):
+    """Produits qui sont des déclinaisons d'un même modèle ou d'une même gamme : même nom, à 1 à 3 mots de fin près
+    (« Neptune - Deceiver - Blanc et Rose » / « … Blanc et Vert », « Rio - Skagit Mow Tip Light » / « … Heavy »).
+    Le préfixe commun doit garder au moins deux mots significatifs hors marque : « Simms - M's Guide Shirt » et
+    « Simms - M's Hoody » ne sont pas un modèle. -> {préfixe: [ids]}"""
+    toks = {}
+    for p in products:
+        name = t(p["name"])
+        # « Marque - Modèle - Déclinaison » : on retire la marque, jamais un autre premier segment
+        # (« Sabre de Paon - Couleur Naturelle » n'est pas de la même gamme que « Ailes de Dinde - Couleur Naturelle »)
+        if " - " in name and is_brand(name.split(" - ", 1)[0]):
+            name = name.split(" - ", 1)[1]
+        tk = slug(name).split("-")
+        b = slug(brand_of_id.get(p["id"]) or "").split("-")
+        if b != [""] and tk[:len(b)] == b:
+            tk = tk[len(b):]
+        toks[p["id"]] = tk
+    group = {}
+    for k in (0, 1, 2, 3):
+        by = defaultdict(list)
+        for p in products:
+            tk = toks[p["id"]]
+            pre = tk[:len(tk) - k] if k else tk
+            if p["id"] not in group and len([w for w in pre if w not in MOTS_GENERIQUES]) >= 2:
+                by[(slug(brand_of_id.get(p["id"]) or ""), "-".join(pre))].append(p["id"])
+        for key, ids in by.items():
+            if len(ids) > 1:
+                group.update({i: key for i in ids})
+    out = defaultdict(list)
+    for i, key in group.items():
+        out[key].append(i)
+    return out
+
+
+def related_links(doc, results, tax):
+    """Liens entre produits actifs pour le graphe « Produits liés » (la compatibilité est calculée dans la page)."""
+    by_id = {r["id"]: r for r in results}
+    actifs = [p for p in doc["products"] if not p.get("excluded_reasons")]
+    ids = {p["id"] for p in actifs}
+    groups = model_groups(actifs, {i: r["brand"] for i, r in by_id.items()},
+                          lambda seg: norm(seg).rstrip(".") in tax.alias_map)
+    # Libellé de la gamme : la marque et les mots communs (« Neptune – deceiver blanc et »)
+    modeles = [[" – ".join(x for x in (by_id[g[0]]["brand"], pre.replace("-", " ")) if x), sorted(g)]
+               for (_, pre), g in groups.items()]
+    # Achetés ensemble : cosinus n / √(commandes a × commandes b), pour qu'un produit vendu dans toutes les
+    # commandes (soie, bas de ligne) ne soit pas lié à tout. Chaque produit garde ses 4 meilleurs partenaires.
+    bt = doc.get("bought_together") or {}
+    cnt = {int(k): v for k, v in (bt.get("orders_by_product") or {}).items()}
+    best = defaultdict(list)
+    for a, b, n in bt.get("pairs", []):
+        if a in ids and b in ids and cnt.get(a) and cnt.get(b):
+            sc = n / (cnt[a] * cnt[b]) ** .5
+            best[a].append((sc, b, n))
+            best[b].append((sc, a, n))
+    keep = {}
+    for a, lst in best.items():
+        for sc, b, n in sorted(lst, reverse=True)[:4]:
+            keep[(min(a, b), max(a, b))] = (n, round(sc, 3))
+    achats = [[a, b, n, sc] for (a, b), (n, sc) in sorted(keep.items())]
+    return {"modeles": modeles, "achats": achats, "commandes": {i: cnt.get(i, 0) for i in ids}}
+
+
+def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir):
+    """Page autonome avant/après : gabarit view_recategorisation.html + données intégrées."""
     by_id = {r["id"]: r for r in results}
     prods = []
     for p in doc["products"]:
@@ -959,6 +1305,7 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows):
                    for v in p["variants"]],
             "c": r["cat"], "c2": r["second"], "b": r["brand"], "f": r["facets"], "sp": r["specs"][:40],
             "tg": r["tags"], "bd": r["badges"], "cf": r["confiance"], "rs": r["raisons"], "nu": r["new_url"]["fr"],
+            "ex": bool(p.get("excluded_reasons")),
         })
     data = {
         "meta": {"generated": doc["meta"]["generated_at"], "source": doc["meta"]["source"]},
@@ -974,8 +1321,14 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows):
         "corr": [{k: r[k] for k in ("ancienne_id", "ancien_chemin", "nb_produits", "devient")} for r in old_rows],
         "col": [{k: r[k] for k in ("libelle_fabricant", "familles", "statut", "nb_variantes", "groupes")} for r in color_rows],
         "products": prods,
+        "lies": related_links(doc, results, tax),
+        # Onglet Redirections : la table complète, et de quoi rejouer les règles de Caddy dans la page
+        "redir": [[r["type"], r["id"], r["langue"], r["nom"], r["ancienne_url"], r["cible"], r["regle"]] for r in redir],
+        "redir_meta": {"mode": doc["meta"]["mode"], "regex": ANCIENNES_URL, "param": ANCIEN_PARAM,
+                       "id_lang_en": ANCIEN_ID_LANG["en"],
+                       "urls": {k: v for k, v in tax.urls.items() if k in ("produit", "marque")}},
     }
-    tpl = (HERE / "avant_apres.html").read_text(encoding="utf-8")
+    tpl = (HERE / "view_recategorisation.html").read_text(encoding="utf-8")
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     path.write_text(tpl.replace("/*__DATA__*/", payload), encoding="utf-8")
 
