@@ -12,6 +12,8 @@ ABANDON_AVANT=2024-01-01 ./export-catalogue/run.sh   # change la date limite « 
 
 Le résultat est écrit dans `export-catalogue/out/<date>_<source>/`, et `out/latest` pointe vers la dernière extraction. Le dossier `out/` n'est pas versionné.
 
+En local, `docker-compose.yml` monte ce dossier en lecture seule dans `/var/www/html/export-catalogue` (le site est dans `site/`), comme en prod.
+
 ## Ce qui est exclu par défaut
 
 | Exclu | Pourquoi |
@@ -38,8 +40,19 @@ Les compteurs sont dans `meta.excluded`. Avec `--tout`, on garde tout, et chaque
 | `images-descriptions/` | Seulement les images de description récupérées d'archive.org, dont l'original n'existe plus : à héberger sur le nouveau site. La correspondance est dans `meta.description_images.recovered_files`. |
 | `images_descriptions.csv` | Le rapport des images des descriptions : `ok`, `archive` (URL de la copie archive.org) ou `perdue` (balise retirée). |
 | `verification.csv` | Avec `--verify` : le résultat produit par produit. |
+| `recategorisation/` | La nouvelle taxonomie appliquée au catalogue : `avant_apres.html`, les mappings produits, variantes, catégories et couleurs, et `rapport.md`. Voir plus bas. |
 
 Les CSV sont en UTF-8 avec BOM et séparateur virgule.
+
+## Recatégorisation
+
+`recategorise.py` est lancé par `run.sh` après `build.py`. Il applique `taxonomie.json` à chaque produit : la nouvelle catégorie, la marque, les filtres normalisés, les tags d'espèce et de technique, et les badges. La proposition et le benchmark sont dans [RECATEGORISATION.md](RECATEGORISATION.md).
+
+```bash
+uv run export-catalogue/recategorise.py export-catalogue/out/latest/catalogue.json export-catalogue/out/latest
+```
+
+On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
 
 ## Prix
 

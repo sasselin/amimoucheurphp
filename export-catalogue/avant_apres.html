@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recatégorisation avant/après</title>
+<style>
+:root {
+  --bg: #f6f5f1; --surface: #ffffff; --surface-2: #f0eee8; --border: #e2dfd6;
+  --text: #1d2420; --muted: #6b726d; --accent: #1f6b52; --accent-soft: #e2f0ea;
+  --promo: #b4441f; --promo-soft: #fbe9e1; --warn: #9a6b00; --warn-soft: #fbf1d6;
+  --before: #8a5a2b; --before-soft: #f6ece1;
+  --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 4px 16px rgb(0 0 0 / .06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131715; --surface: #1b201d; --surface-2: #232925; --border: #313833;
+    --text: #e6ebe7; --muted: #949c96; --accent: #5fbf98; --accent-soft: #1d3329;
+    --promo: #f08b66; --promo-soft: #3a231a; --warn: #e0b54a; --warn-soft: #332a14;
+    --before: #d9a36d; --before-soft: #33271b;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 4px 16px rgb(0 0 0 / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131715; --surface: #1b201d; --surface-2: #232925; --border: #313833;
+  --text: #e6ebe7; --muted: #949c96; --accent: #5fbf98; --accent-soft: #1d3329;
+  --promo: #f08b66; --promo-soft: #3a231a; --warn: #e0b54a; --warn-soft: #332a14;
+  --before: #d9a36d; --before-soft: #33271b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+header { padding: 20px 24px 0; max-width: 1500px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 13px; max-width: 900px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 14px 0 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; }
+.stat .ba { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.stat .b { color: var(--before); font-size: 15px; font-weight: 600; text-decoration: line-through; text-decoration-thickness: 1px; }
+.stat .a { font-size: 19px; font-weight: 750; color: var(--accent); }
+.stat .arr { color: var(--muted); }
+.stat span.l { color: var(--muted); font-size: 12px; display: block; }
+nav.tabs { display: flex; gap: 4px; margin-top: 18px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+nav.tabs button { background: none; border: 0; padding: 10px 14px; cursor: pointer; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600; white-space: nowrap; }
+nav.tabs button.on { color: var(--text); border-color: var(--accent); }
+nav.tabs button[data-tab="avant"].on { border-color: var(--before); }
+main { max-width: 1500px; margin: 0 auto; padding: 18px 24px 60px; }
+.intro { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; color: var(--muted); font-size: 13px; }
+.intro.before { border-left-color: var(--before); }
+.intro b { color: var(--text); }
+/* Méga-menu */
+.mega { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; }
+.mega .top { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; border-bottom: 1px solid var(--border); }
+.mega .top button { border: 0; background: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 650; }
+.mega .top button:hover { background: var(--surface-2); }
+.mega .top button.on { background: var(--accent); color: #fff; }
+.mega .top .sep { flex: 1; }
+.mega .top button.util { font-weight: 500; color: var(--muted); }
+.mega .top button.util.on { color: #fff; }
+.mega .subs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+.mega .subs:empty { display: none; }
+.chipbtn { border: 1px solid var(--border); background: var(--surface); border-radius: 99px; padding: 4px 11px; cursor: pointer; font-size: 13px; }
+.chipbtn:hover { border-color: var(--accent); }
+.chipbtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chipbtn small { color: var(--muted); margin-left: 3px; font-variant-numeric: tabular-nums; }
+.subs .lvl3 { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; padding-left: 14px; border-left: 2px solid var(--accent-soft); }
+.layout { display: grid; grid-template-columns: 270px 1fr; gap: 20px; align-items: start; }
+aside.side { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 12px;
+  position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.facet { border-bottom: 1px solid var(--border); padding: 10px 0; }
+.facet:last-child { border-bottom: 0; }
+.facet h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  display: flex; justify-content: space-between; gap: 6px; }
+.facet h4 em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--accent); }
+.opt { display: flex; align-items: center; gap: 7px; padding: 2px 0; cursor: pointer; font-size: 13px; }
+.opt input { margin: 0; accent-color: var(--accent); }
+.opt .lbl { flex: 1; }
+.opt .n { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.opt.zero { opacity: .45; }
+.nums { display: flex; flex-wrap: wrap; gap: 4px; }
+.nums button { min-width: 38px; padding: 4px 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px;
+  cursor: pointer; font-variant-numeric: tabular-nums; font-size: 13px; }
+.nums button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.nums button:disabled { opacity: .35; cursor: default; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 6px; }
+.sw { aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; position: relative; padding: 0; }
+.sw.on { outline: 3px solid var(--accent); outline-offset: 1px; }
+.sw:disabled { opacity: .25; cursor: default; }
+.more { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 4px 0 0; font-size: 12px; }
+.tree .node { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+.tree .node:hover { background: var(--surface-2); }
+.tree .node.on { background: var(--before-soft); color: var(--before); font-weight: 600; }
+.tree .tog { width: 16px; text-align: center; color: var(--muted); flex: none; font-size: 10px; }
+.tree .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree .cnt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tree .kids { margin-left: 14px; }
+.tree .brandcat .lbl { color: var(--before); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.toolbar input[type=search] { flex: 1 1 260px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.toolbar select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); max-width: 240px; }
+.meta-line { color: var(--muted); font-size: 13px; margin: 0 0 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.crumb { background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 99px; }
+.crumb button { border: 0; background: none; cursor: pointer; color: inherit; padding: 0 0 0 4px; }
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  cursor: pointer; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.card .img { aspect-ratio: 1; background: #fff; display: grid; place-items: center; position: relative; }
+.card .img img { width: 100%; height: 100%; object-fit: contain; }
+.noimg { color: #aaa; font-size: 12px; }
+.badges { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: var(--surface-2); color: var(--text); }
+.bd-promo { background: var(--promo); color: #fff; }
+.bd-nouveau { background: var(--accent); color: #fff; }
+.bd-dernieres-unites, .bd-sur-commande { background: var(--warn-soft); color: var(--warn); }
+.bd-epuise { background: #555; color: #fff; }
+.bd-signature, .bd-quebec { background: #1d3557; color: #fff; }
+.bd-debutant, .bd-choix-equipe { background: #6a3d8f; color: #fff; }
+.card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.card .brand { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; min-height: 1em; }
+.card .brand.none { color: var(--before); text-transform: none; letter-spacing: 0; font-style: italic; }
+.card .name { font-weight: 600; line-height: 1.3; }
+.card .cat { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .cat.old { color: var(--before); }
+.card .tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.tag { font-size: 11px; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.tag.tech { background: var(--surface-2); color: var(--text); }
+.card .foot { margin-top: auto; padding-top: 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.price { font-weight: 700; font-variant-numeric: tabular-nums; }
+.price.promo { color: var(--promo); }
+.old { color: var(--muted); text-decoration: line-through; font-weight: 400; font-size: 12px; margin-left: 4px; }
+.dots { display: flex; gap: 3px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--border); }
+.small { color: var(--muted); font-size: 12px; }
+.pager { display: flex; gap: 6px; justify-content: center; margin: 18px 0 0; flex-wrap: wrap; }
+.pager button { min-width: 36px; padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; cursor: pointer; }
+.pager button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pager button:disabled { opacity: .4; cursor: default; }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+table.grid { width: 100%; border-collapse: collapse; background: var(--surface); }
+table.grid th, table.grid td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+table.grid th { background: var(--surface-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); position: sticky; top: 0; }
+table.grid td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+.kind { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.k-cat { background: var(--accent-soft); color: var(--accent); }
+.k-marque { background: var(--before-soft); color: var(--before); }
+.k-autre { background: var(--surface-2); color: var(--muted); }
+.k-classer { background: var(--warn-soft); color: var(--warn); }
+.famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.fam { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.fam.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.fam .sw { width: 30px; flex: none; cursor: inherit; }
+.fam b { display: block; font-size: 13px; }
+/* Fiche */
+dialog { border: 0; padding: 0; border-radius: 16px; width: min(1180px, 96vw); max-height: 92vh;
+  background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgb(0 0 0 / .3); }
+dialog::backdrop { background: rgb(10 15 12 / .55); }
+.dlg { display: flex; flex-direction: column; max-height: 92vh; }
+.dlg-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: center; }
+.dlg-head img { width: 64px; height: 64px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid var(--border); flex: none; }
+.dlg-head h2 { margin: 0; font-size: 18px; flex: 1; }
+.dlg-head h2 small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; }
+.x { border: 0; background: var(--surface-2); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 18px; flex: none; }
+.dlg-body { overflow: auto; padding: 16px 20px 24px; }
+.ba2 { display: grid; grid-template-columns: 1fr 1.35fr; gap: 16px; }
+.col { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.col.before { background: var(--before-soft); border-color: transparent; }
+.col h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.col.before h3 { color: var(--before); }
+.col.after h3 { color: var(--accent); }
+.kv { display: grid; grid-template-columns: 120px 1fr; gap: 6px 10px; margin: 0 0 10px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.rawlist { max-height: 220px; overflow: auto; font-size: 12px; margin: 0; padding-left: 16px; }
+.specs { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+.specs th, .specs td { border-bottom: 1px solid var(--border); padding: 4px 6px; text-align: left; vertical-align: top; }
+.specs th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.specs td.v { color: var(--accent); font-weight: 600; }
+.specs th.num, .specs td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.variants { margin-top: 16px; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.variants h3 { margin: 0 0 4px; font-size: 15px; }
+.vwrap { max-height: 360px; overflow: auto; }
+.vtable th { position: sticky; top: 0; background: var(--surface); }
+.vtable tr.oos td { color: var(--muted); }
+.vcol { display: inline-flex; align-items: center; gap: 5px; }
+.vcol .dot { flex: none; }
+.warnbox { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 6px 10px; font-size: 12px; margin-top: 8px; }
+.compat { margin-top: 16px; border: 1px solid var(--accent); border-radius: 12px; padding: 12px 14px; }
+.compat h3 { margin: 0 0 4px; font-size: 15px; }
+.compat .cgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+.mini { display: flex; gap: 8px; align-items: center; padding: 5px; border-radius: 8px; cursor: pointer; }
+.mini:hover { background: var(--surface-2); }
+.mini img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; flex: none; }
+.mini .t { font-size: 13px; line-height: 1.25; }
+.mini .t small { color: var(--muted); display: block; }
+@media (max-width: 900px) {
+  header, main { padding-left: 16px; padding-right: 16px; }
+  .layout { grid-template-columns: 1fr; }
+  aside.side { position: static; max-height: 360px; }
+  .ba2 { grid-template-columns: 1fr; }
+  .list { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .kv { grid-template-columns: 100px 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Recatégorisation du catalogue</h1>
+  <div class="sub" id="sub"></div>
+  <div class="stats" id="stats"></div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="apres" class="on">Après : proposition</button>
+    <button data-tab="avant">Avant : site actuel</button>
+    <button data-tab="corr">Anciennes catégories → nouvelles</button>
+    <button data-tab="couleurs">Familles de couleurs</button>
+  </nav>
+</header>
+<main>
+  <section id="tab-apres">
+    <div class="intro"><b>Navigation proposée.</b> Neuf univers par type de produit, la marque en filtre, et des filtres propres à chaque famille (numéro de soie, longueur, taille d'hameçon, famille de couleur…). Cliquer un produit compare son classement avant et après.</div>
+    <div class="mega" id="mega"><div class="top" id="megaTop"></div><div class="subs" id="megaSubs"></div></div>
+    <div class="layout">
+      <aside class="side" id="facets"></aside>
+      <div>
+        <div class="toolbar">
+          <input type="search" id="q" placeholder="Rechercher un produit, une marque…">
+          <select id="sort">
+            <option value="pert">Tri : en vedette</option>
+            <option value="new">Nouveautés</option>
+            <option value="price-asc">Prix croissant</option>
+            <option value="price-desc">Prix décroissant</option>
+            <option value="name">Nom A→Z</option>
+          </select>
+        </div>
+        <div class="meta-line" id="ameta"></div>
+        <div class="list" id="alist"></div>
+        <div class="pager" id="apager"></div>
+      </div>
+    </div>
+  </section>
+  <section id="tab-avant" hidden>
+    <div class="intro before"><b>Navigation actuelle.</b> Un arbre de 226 catégories où la marque sert souvent de niveau (Simms, Rio, Neptunes…), un seul filtre (la marque, vide pour plus de la moitié des produits) et aucune valeur technique filtrable.</div>
+    <div class="layout">
+      <aside class="side tree" id="otree"></aside>
+      <div>
+        <div class="toolbar">
+          <input type="search" id="oq" placeholder="Rechercher…">
+          <select id="obrand"></select>
+        </div>
+        <div class="meta-line" id="ometa"></div>
+        <div class="list" id="olist"></div>
+        <div class="pager" id="opager"></div>
+      </div>
+    </div>
+  </section>
+  <section id="tab-corr" hidden>
+    <div class="intro">Ce que devient chacune des anciennes catégories : une nouvelle catégorie, un filtre Marque, un badge ou une collection. La colonne de redirection 301 est dans <code>correspondance_categories.csv</code>.</div>
+    <div class="toolbar"><input type="search" id="cq" placeholder="Filtrer…">
+      <select id="ckind"><option value="">Toutes</option><option value="cat">Devient une catégorie</option><option value="marque">Devient un filtre Marque</option><option value="autre">Autre (badge, collection, accueil)</option></select></div>
+    <div class="wrap"><table class="grid" id="ctable"></table></div>
+  </section>
+  <section id="tab-couleurs" hidden>
+    <div class="intro">Chaque libellé du fabricant reste affiché sur la fiche (« Riviera », « Fl. Chartreuse #6957 »). On lui associe une ou plusieurs <b>familles</b> qui servent au filtre et à la pastille. Les libellés <span class="kind k-classer">à classer</span> sont des noms commerciaux à assigner une fois dans <code>couleurs.csv</code>.</div>
+    <div class="famgrid" id="famgrid"></div>
+    <div class="toolbar"><input type="search" id="colq" placeholder="Filtrer les libellés…"></div>
+    <div class="wrap"><table class="grid" id="coltable"></table></div>
+  </section>
+</main>
+<dialog id="dlg"><div class="dlg" id="dlgc"></div></dialog>
+<script type="application/json" id="data">/*__DATA__*/</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const P = DATA.products, S0 = DATA.stats;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = v => v == null ? '' : v.toLocaleString('fr-CA', {style: 'currency', currency: 'CAD'});
+const thumb = url => url ? url.replace(/\.jpg$/, '-home_default.jpg') : '';
+const fold = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const PAGE = 48;
+
+// ---------- Index
+const NODE = new Map();
+(function walk(list, parent, famille, depth) {
+  list.forEach(n => {
+    const f = n.famille || famille;
+    NODE.set(n.id, {id: n.id, fr: n.fr, parent, famille: f, depth, util: !!n.utilitaire, kids: (n.enfants || []).map(c => c.id)});
+    walk(n.enfants || [], n.id, f, depth + 1);
+  });
+})(DATA.tree, null, 'generique', 1);
+const chain = id => { const o = []; while (id) { o.unshift(id); id = NODE.get(id).parent; } return o; };
+const pathOf = id => id ? chain(id).map(c => NODE.get(c).fr).join(' › ') : '';
+const desc = id => { const o = [id]; NODE.get(id).kids.forEach(k => o.push(...desc(k))); return o; };
+const TAG = {};
+['espece', 'technique'].forEach(k => DATA.tags[k].forEach(t => TAG[`${k}:${t.id}`] = t.fr));
+TAG['milieu:eau-salee'] = 'Eau salée';
+const BADGE = {};
+[...DATA.tags.badges_auto, ...DATA.tags.badges_manuels].forEach(b => BADGE[b.id] = b.fr);
+const COL = Object.fromEntries(DATA.couleurs.map(c => [c.id, c]));
+const swatchBg = id => COL[id] ? (COL[id].hex.includes('gradient') ? COL[id].hex : COL[id].hex) : '#ccc';
+const FAC = DATA.facettes;
+const BPRIO = ['promo', 'nouveau', 'signature', 'quebec', 'debutant', 'choix-equipe', 'epuise', 'sur-commande', 'dernieres-unites'];
+P.forEach(p => {
+  p._fam = p.c ? NODE.get(p.c).famille : 'generique';
+  p._cats = new Set([p.c, ...p.c2].flatMap(c => c ? chain(c) : []));
+  p._s = fold([p.n, p.ne, p.b, p.bo, p.id].join(' '));
+  p._promo = p.bd.includes('promo');
+});
+const byId = new Map(P.map(p => [p.id, p]));
+
+// ---------- En-tête
+$('#sub').textContent = `${S0.produits} produits et ${S0.variantes.toLocaleString('fr-CA')} variantes du catalogue actuel, reclassés automatiquement par recategorise.py à partir de taxonomie.json. Extraction du ${new Date(DATA.meta.generated).toLocaleDateString('fr-CA')}.`;
+const pct = (a, b) => Math.round(100 * a / b) + ' %';
+const STATS = [
+  [S0.cat_avant, S0.cat_apres, 'catégories'],
+  [S0.prof_avant, S0.prof_apres, 'niveaux de profondeur'],
+  [S0.groupes_avant, S0.facettes_apres, 'groupes d\'attributs → filtres'],
+  [pct(S0.marque_avant, S0.produits), pct(S0.marque_apres, S0.produits), 'des produits avec une marque'],
+  [S0.tags_avant, S0.tags_apres, 'produits avec des tags'],
+  [0, S0.espece_apres, 'produits classés par espèce'],
+  [S0.nb_couleurs, DATA.couleurs.length, 'libellés de couleur → familles'],
+];
+$('#stats').innerHTML = STATS.map(([b, a, l]) =>
+  `<div class="stat"><div class="ba"><span class="b">${b}</span><span class="arr">→</span><span class="a">${a}</span></div><span class="l">${esc(l)}</span></div>`).join('');
+
+// ---------- Onglets
+$('#tabs').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === t));
+  ['apres', 'avant', 'corr', 'couleurs'].forEach(n => $('#tab-' + n).hidden = n !== t.dataset.tab);
+});
+
+// ---------- Cartes
+function card(p, mode) {
+  const promo = p.pr < p.rp;
+  const badges = mode === 'apres' ? [...p.bd].sort((x, y) => BPRIO.indexOf(x) - BPRIO.indexOf(y)).slice(0, 2)
+    .map(b => `<span class="badge bd-${b}">${esc(BADGE[b])}</span>`).join('') :
+    (promo ? '<span class="badge bd-promo">Promo</span>' : '') + (p.st <= 0 ? '<span class="badge bd-epuise">Rupture</span>' : '');
+  const brand = mode === 'apres' ? (p.b ? esc(p.b) : '') : (p.bo ? esc(p.bo) : '<span>sans marque</span>');
+  const tags = mode === 'apres' ? p.tg.filter(t => t.startsWith('espece:')).slice(0, 2).map(t => `<span class="tag">${esc(TAG[t])}</span>`).join('') +
+    p.tg.filter(t => t.startsWith('technique:')).slice(0, 1).map(t => `<span class="tag tech">${esc(TAG[t])}</span>`).join('') : '';
+  const dots = mode === 'apres' && p.f.couleur ? `<div class="dots">${p.f.couleur.slice(0, 8).map(c => `<span class="dot" style="background:${swatchBg(c)}" title="${esc(COL[c]?.fr)}"></span>`).join('')}</div>` : '';
+  const price = p.mn != null && p.mx != null && p.mn !== p.mx ? `<span class="small">dès</span> ${money(p.mn)}` : money(p.pr);
+  return `<div class="card" data-id="${p.id}">
+    <div class="img">${p.img ? `<img loading="lazy" src="${esc(thumb(p.img))}" alt="">` : '<span class="noimg">Sans image</span>'}
+      <div class="badges">${badges}</div></div>
+    <div class="body">
+      <div class="brand ${mode === 'avant' && !p.bo ? 'none' : ''}">${brand}</div>
+      <div class="name">${esc(p.n)}</div>
+      <div class="cat ${mode === 'avant' ? 'old' : ''}">${esc(mode === 'apres' ? pathOf(p.c) : p.op)}</div>
+      ${tags ? `<div class="tags">${tags}</div>` : ''}
+      <div class="foot"><span class="price ${promo ? 'promo' : ''}">${price}${promo ? `<span class="old">${money(p.rp)}</span>` : ''}</span>${dots}</div>
+    </div></div>`;
+}
+function pager(el, total, page, go) {
+  const pages = Math.ceil(total / PAGE);
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  const btn = (i, l = i + 1) => `<button data-p="${i}" class="${i === page ? 'on' : ''}" ${i < 0 || i >= pages ? 'disabled' : ''}>${l}</button>`;
+  const around = [...new Set([0, page - 2, page - 1, page, page + 1, page + 2, pages - 1])].filter(i => i >= 0 && i < pages).sort((a, b) => a - b);
+  el.innerHTML = btn(page - 1, '‹') + around.map(i => btn(i)).join('') + btn(page + 1, '›');
+  el.onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) { go(+b.dataset.p); window.scrollTo({top: el.closest('section').offsetTop - 10}); } };
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('.card, .mini'); if (c) openProduct(+c.dataset.id);
+});
+
+// ========== APRÈS
+const A = {cat: null, q: '', sort: 'pert', page: 0, f: {}, more: new Set()};
+const COMMON = ['badge', 'marque', 'espece', 'technique', 'milieu', 'stock'];
+const LABEL = {badge: 'Mise en avant', marque: 'Marque', espece: 'Espèce', technique: 'Technique', milieu: 'Milieu', stock: 'Disponibilité'};
+function valuesOf(p, k) {
+  switch (k) {
+    case 'badge': return p.bd.filter(b => ['nouveau', 'promo', 'signature', 'quebec', 'debutant', 'choix-equipe'].includes(b));
+    case 'marque': return p.b ? [p.b] : [];
+    case 'espece': case 'technique': case 'milieu': return p.tg.filter(t => t.startsWith(k + ':'));
+    case 'stock': return p.st > 0 ? ['en-stock'] : [];
+    default: return (p.f[k] || []).map(String);
+  }
+}
+function labelOf(k, v) {
+  if (k === 'badge') return BADGE[v];
+  if (k === 'espece' || k === 'technique' || k === 'milieu') return TAG[v];
+  if (k === 'stock') return 'En stock';
+  if (k === 'couleur') return COL[v]?.fr || v;
+  if (k === 'numero_soie') return '#' + v;
+  if (k === 'grains') return v + ' gr';
+  if (k === 'resistance_lb') return v + ' lb';
+  return v;
+}
+const SIZE = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+const inches = s => { const m = /^(\d+)'(\d+)"$/.exec(s); return m ? +m[1] * 12 + +m[2] : 999; };
+const hookKey = s => /^\d+\/0$/.test(s) ? -parseInt(s) : /^\d+$/.test(s) ? +s : 999;
+function sortVals(k, vals, counts) {
+  const by = {
+    numero_soie: (a, b) => a - b, grains: (a, b) => a - b, resistance_lb: (a, b) => a - b,
+    longueur: (a, b) => inches(a) - inches(b), taille_hamecon: (a, b) => hookKey(a) - hookKey(b) || a.localeCompare(b),
+    taille: (a, b) => (SIZE.indexOf(a) + 1 || 99) - (SIZE.indexOf(b) + 1 || 99) || a.localeCompare(b, 'fr', {numeric: true}),
+    couleur: (a, b) => DATA.couleurs.findIndex(c => c.id === a) - DATA.couleurs.findIndex(c => c.id === b),
+    sections: (a, b) => a - b, diametre_x: (a, b) => parseFloat(b) - parseFloat(a),
+    pointure: (a, b) => parseFloat(a) - parseFloat(b), diametre_mm: (a, b) => parseFloat(a) - parseFloat(b),
+  }[k];
+  return vals.sort(by || ((a, b) => counts[b] - counts[a] || String(a).localeCompare(String(b), 'fr')));
+}
+function inCat(p) { return !A.cat || p._cats.has(A.cat); }
+function inQ(p) { return !A.q || fold(A.q).split(/\s+/).every(w => p._s.includes(w)); }
+function passes(p, except) {
+  for (const [k, set] of Object.entries(A.f)) {
+    if (k === except || !set.size) continue;
+    const vs = valuesOf(p, k);
+    if (!vs.some(v => set.has(v))) return false;
+  }
+  return true;
+}
+function facetKeys(base) {
+  const fams = new Set(base.map(p => p._fam));
+  const keys = [];
+  fams.forEach(f => (DATA.familles[f] || []).forEach(k => { if (!keys.includes(k)) keys.push(k); }));
+  // Hors catégorie, on limite aux filtres communs pour ne pas noyer la page
+  return A.cat ? keys : [];
+}
+function renderMega() {
+  const top = DATA.tree.filter(n => !n.utilitaire);
+  const cur = A.cat ? chain(A.cat) : [];
+  const count = id => P.filter(p => p._cats.has(id)).length;
+  $('#megaTop').innerHTML = `<button data-c="" class="${!A.cat ? 'on' : ''}">Tout</button>` +
+    top.map(n => `<button data-c="${n.id}" class="${cur[0] === n.id ? 'on' : ''}">${esc(n.fr)}</button>`).join('') +
+    `<span class="sep"></span>` +
+    `<button class="util" data-q="badge:nouveau">Nouveautés</button><button class="util" data-q="badge:promo">Promos</button>` +
+    `<button class="util" data-q="badge:signature">Signature</button><button class="util" data-c="cartes-cadeaux">Cartes-cadeaux</button>`;
+  let subs = '';
+  if (cur[0] && NODE.get(cur[0]).kids.length) {
+    subs = NODE.get(cur[0]).kids.map(id => `<button class="chipbtn ${cur[1] === id ? 'on' : ''}" data-c="${id}">${esc(NODE.get(id).fr)}<small>${count(id)}</small></button>`).join('');
+    if (cur[1] && NODE.get(cur[1]).kids.length)
+      subs += `<div class="lvl3">${NODE.get(cur[1]).kids.map(id => `<button class="chipbtn ${cur[2] === id ? 'on' : ''}" data-c="${id}">${esc(NODE.get(id).fr)}<small>${count(id)}</small></button>`).join('')}</div>`;
+  }
+  $('#megaSubs').innerHTML = subs;
+}
+$('#mega').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.q) {
+    const [k, v] = b.dataset.q.split(':');
+    A.f = {[k]: new Set([v])}; A.cat = null;
+  } else {
+    A.cat = b.dataset.c || null;
+    // Les filtres propres à une famille ne survivent pas à un changement d'univers
+    Object.keys(A.f).forEach(k => { if (!COMMON.includes(k)) delete A.f[k]; });
+  }
+  A.page = 0; renderApres();
+});
+function renderFacets(base) {
+  const keys = [...COMMON, ...facetKeys(base)];
+  const html = keys.map(k => {
+    const pool = base.filter(p => passes(p, k));
+    const counts = {};
+    pool.forEach(p => new Set(valuesOf(p, k)).forEach(v => counts[v] = (counts[v] || 0) + 1));
+    const sel = A.f[k] || new Set();
+    sel.forEach(v => { if (!(v in counts)) counts[v] = 0; });
+    let vals = sortVals(k, Object.keys(counts), counts);
+    if (!vals.length) return '';
+    const title = LABEL[k] || FAC[k]?.fr || k;
+    const reset = sel.size ? `<em data-reset="${k}" style="cursor:pointer">effacer</em>` : '';
+    let body;
+    if (k === 'couleur') {
+      body = `<div class="swatches">${vals.map(v => `<button class="sw ${sel.has(v) ? 'on' : ''}" data-k="${k}" data-v="${esc(v)}" title="${esc(labelOf(k, v))} (${counts[v]})" style="background:${swatchBg(v)}" ${counts[v] || sel.has(v) ? '' : 'disabled'}></button>`).join('')}</div>`;
+    } else if (['numero_soie', 'taille_hamecon', 'sections', 'taille', 'diametre_x', 'pointure', 'longueur'].includes(k)) {
+      body = `<div class="nums">${vals.map(v => `<button class="${sel.has(v) ? 'on' : ''}" data-k="${k}" data-v="${esc(v)}" title="${counts[v]} produit(s)" ${counts[v] || sel.has(v) ? '' : 'disabled'}>${esc(labelOf(k, v))}</button>`).join('')}</div>`;
+    } else {
+      const lim = A.more.has(k) ? vals.length : 8;
+      body = vals.slice(0, lim).map(v => `<label class="opt ${counts[v] ? '' : 'zero'}"><input type="checkbox" data-k="${k}" data-v="${esc(v)}" ${sel.has(v) ? 'checked' : ''}><span class="lbl">${esc(labelOf(k, v))}</span><span class="n">${counts[v]}</span></label>`).join('') +
+        (vals.length > 8 ? `<button class="more" data-more="${k}">${A.more.has(k) ? 'Moins' : `Voir les ${vals.length}`}</button>` : '');
+    }
+    return `<div class="facet"><h4>${esc(title)}${reset}</h4>${body}</div>`;
+  }).join('');
+  $('#facets').innerHTML = html || '<div class="small" style="padding:10px 0">Aucun filtre.</div>';
+}
+$('#facets').addEventListener('click', e => {
+  const r = e.target.closest('[data-reset]'); if (r) { delete A.f[r.dataset.reset]; A.page = 0; renderApres(); return; }
+  const m = e.target.closest('[data-more]'); if (m) { A.more.has(m.dataset.more) ? A.more.delete(m.dataset.more) : A.more.add(m.dataset.more); renderApres(); return; }
+  const b = e.target.closest('button[data-k], input[data-k]'); if (!b || b.disabled) return;
+  const {k, v} = b.dataset;
+  const set = A.f[k] || (A.f[k] = new Set());
+  set.has(v) ? set.delete(v) : set.add(v);
+  if (!set.size) delete A.f[k];
+  A.page = 0; renderApres();
+});
+function renderApres() {
+  renderMega();
+  const base = P.filter(p => inCat(p) && inQ(p));
+  renderFacets(base);
+  let list = base.filter(p => passes(p));
+  const sorts = {
+    pert: (a, b) => (b.st > 0) - (a.st > 0) || b.bd.length - a.bd.length || a.n.localeCompare(b.n, 'fr'),
+    new: (a, b) => b.id - a.id, 'price-asc': (a, b) => a.pr - b.pr, 'price-desc': (a, b) => b.pr - a.pr,
+    name: (a, b) => a.n.localeCompare(b.n, 'fr'),
+  };
+  list.sort(sorts[A.sort]);
+  const chips = Object.entries(A.f).flatMap(([k, set]) => [...set].map(v =>
+    `<span class="crumb">${esc(LABEL[k] || FAC[k]?.fr || k)} : ${esc(labelOf(k, v))}<button data-k="${k}" data-v="${esc(v)}" title="Retirer">×</button></span>`));
+  $('#ameta').innerHTML = `<b>${list.length}</b> produit(s)` + (A.cat ? ` dans <span class="crumb">${esc(pathOf(A.cat))}</span>` : '') + chips.join('');
+  const page = list.slice(A.page * PAGE, (A.page + 1) * PAGE);
+  $('#alist').innerHTML = page.length ? page.map(p => card(p, 'apres')).join('') : '<div class="empty">Aucun produit ne correspond.</div>';
+  pager($('#apager'), list.length, A.page, i => { A.page = i; renderApres(); });
+}
+$('#ameta').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  A.f[b.dataset.k]?.delete(b.dataset.v); if (!A.f[b.dataset.k]?.size) delete A.f[b.dataset.k];
+  renderApres();
+});
+$('#q').addEventListener('input', e => { A.q = e.target.value; A.page = 0; renderApres(); });
+$('#sort').addEventListener('change', e => { A.sort = e.target.value; renderApres(); });
+
+// ========== AVANT
+const O = {cat: null, q: '', brand: '', page: 0, open: new Set()};
+const OC = new Map(DATA.old.map(c => [c.id, {...c, kids: []}]));
+OC.forEach(c => { if (OC.has(c.p)) OC.get(c.p).kids.push(c); });
+OC.forEach(c => c.kids.sort((a, b) => a.pos - b.pos));
+const oDesc = id => { const o = [id]; OC.get(id).kids.forEach(k => o.push(...oDesc(k.id))); return o; };
+const brandCat = new Set(DATA.corr.filter(r => r.devient.startsWith('filtre Marque')).map(r => r.ancienne_id));
+P.forEach(p => p._ocs = new Set(p.ocs));
+const ocount = new Map();
+OC.forEach(c => { const ds = new Set(oDesc(c.id)); ocount.set(c.id, P.filter(p => p.ocs.some(x => ds.has(x))).length); });
+function renderOTree() {
+  const node = c => {
+    const has = c.kids.length, open = O.open.has(c.id);
+    return `<div class="node ${O.cat === c.id ? 'on' : ''} ${brandCat.has(c.id) ? 'brandcat' : ''}" data-id="${c.id}" title="${brandCat.has(c.id) ? 'Catégorie qui est en fait une marque' : ''}">
+      <span class="tog" data-tog="${c.id}">${has ? (open ? '▾' : '▸') : ''}</span>
+      <span class="lbl">${esc(c.n)}</span><span class="cnt">${ocount.get(c.id)}</span></div>` +
+      (has && open ? `<div class="kids">${c.kids.map(node).join('')}</div>` : '');
+  };
+  const root = [...OC.values()].find(c => !OC.has(c.p) && c.d === 0) || [...OC.values()].find(c => !OC.has(c.p));
+  $('#otree').innerHTML = `<div class="small" style="padding:6px 6px 8px">En <span style="color:var(--before)">brun</span> : catégories qui sont des marques.</div>` +
+    `<div class="node ${!O.cat ? 'on' : ''}" data-id=""><span class="tog"></span><span class="lbl">Tout le catalogue</span><span class="cnt">${P.length}</span></div>` +
+    root.kids.map(node).join('');
+}
+$('#otree').addEventListener('click', e => {
+  const tg = e.target.closest('[data-tog]');
+  if (tg && tg.dataset.tog) { const id = +tg.dataset.tog; O.open.has(id) ? O.open.delete(id) : O.open.add(id); renderOTree(); return; }
+  const n = e.target.closest('.node'); if (!n) return;
+  O.cat = n.dataset.id ? +n.dataset.id : null; if (O.cat) O.open.add(O.cat); O.page = 0; renderAvant();
+});
+const brandsBefore = {};
+P.forEach(p => { const b = p.bo || ''; brandsBefore[b] = (brandsBefore[b] || 0) + 1; });
+$('#obrand').innerHTML = `<option value="*">Toutes les marques (${Object.keys(brandsBefore).length - 1})</option>` +
+  Object.keys(brandsBefore).sort((a, b) => a.localeCompare(b, 'fr')).map(b => `<option value="${esc(b)}">${b ? esc(b) : '(sans marque)'} · ${brandsBefore[b]}</option>`).join('');
+O.brand = '*';
+function renderAvant() {
+  renderOTree();
+  const ds = O.cat ? new Set(oDesc(O.cat)) : null;
+  const list = P.filter(p => (!ds || p.ocs.some(x => ds.has(x))) && (O.brand === '*' || p.bo === O.brand) &&
+    (!O.q || fold(O.q).split(/\s+/).every(w => p._s.includes(w)))).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+  $('#ometa').innerHTML = `<b>${list.length}</b> produit(s)` + (O.cat ? ` dans <span class="crumb" style="background:var(--before-soft);color:var(--before)">${esc(OC.get(O.cat).path)}</span>` : '') +
+    ` · seul filtre disponible : la marque, vide pour ${list.filter(p => !p.bo).length} de ces produits`;
+  const page = list.slice(O.page * PAGE, (O.page + 1) * PAGE);
+  $('#olist').innerHTML = page.length ? page.map(p => card(p, 'avant')).join('') : '<div class="empty">Aucun produit.</div>';
+  pager($('#opager'), list.length, O.page, i => { O.page = i; renderAvant(); });
+}
+$('#oq').addEventListener('input', e => { O.q = e.target.value; O.page = 0; renderAvant(); });
+$('#obrand').addEventListener('change', e => { O.brand = e.target.value; O.page = 0; renderAvant(); });
+
+// ========== Correspondance
+const kindOf = r => r.devient.startsWith('catégorie') ? 'cat' : r.devient.startsWith('filtre Marque') ? 'marque' : 'autre';
+function renderCorr() {
+  const q = fold($('#cq').value), k = $('#ckind').value;
+  const rows = DATA.corr.filter(r => (!q || fold(r.ancien_chemin + ' ' + r.devient).includes(q)) && (!k || kindOf(r) === k));
+  const lab = {cat: 'Catégorie', marque: 'Filtre Marque', autre: 'Autre'};
+  const cnt = {cat: 0, marque: 0, autre: 0}; DATA.corr.forEach(r => cnt[kindOf(r)]++);
+  $('#ctable').innerHTML = `<caption style="caption-side:top;text-align:left;padding:8px 10px;color:var(--muted)">${DATA.corr.length} anciennes catégories : ${cnt.cat} deviennent une catégorie, ${cnt.marque} un filtre Marque, ${cnt.autre} autre chose.</caption>
+    <tr><th>Ancienne catégorie</th><th class="num">Produits</th><th>Devient</th><th></th></tr>` +
+    rows.map(r => `<tr><td>${esc(r.ancien_chemin)}</td><td class="num">${r.nb_produits}</td><td>${esc(r.devient)}</td><td><span class="kind k-${kindOf(r)}">${lab[kindOf(r)]}</span></td></tr>`).join('');
+}
+$('#cq').addEventListener('input', renderCorr);
+$('#ckind').addEventListener('change', renderCorr);
+
+// ========== Couleurs
+let colFam = '';
+function renderCouleurs() {
+  const n = {}; let classer = 0;
+  DATA.col.forEach(c => { c.familles.split(', ').filter(Boolean).forEach(f => n[f] = (n[f] || 0) + c.nb_variantes); if (c.statut === 'à_classer') classer += c.nb_variantes; });
+  $('#famgrid').innerHTML = DATA.couleurs.map(c => `<div class="fam ${colFam === c.id ? 'on' : ''}" data-f="${c.id}"><span class="sw" style="background:${swatchBg(c.id)}"></span><div><b>${esc(c.fr)}</b><span class="small">${n[c.id] || 0} variantes</span></div></div>`).join('') +
+    `<div class="fam ${colFam === '?' ? 'on' : ''}" data-f="?"><span class="sw" style="background:repeating-linear-gradient(45deg,#ddd 0 4px,#fff 4px 8px)"></span><div><b>À classer</b><span class="small">${classer} variantes</span></div></div>`;
+  const q = fold($('#colq').value);
+  const rows = DATA.col.filter(c => (!q || fold(c.libelle_fabricant + ' ' + c.groupes).includes(q)) &&
+    (!colFam || (colFam === '?' ? c.statut === 'à_classer' : c.familles.split(', ').includes(colFam))));
+  $('#coltable').innerHTML = `<tr><th>Libellé du fabricant (affiché)</th><th>Famille(s) de filtre</th><th class="num">Variantes</th><th>Groupe d'attribut d'origine</th></tr>` +
+    rows.slice(0, 400).map(c => `<tr><td>${esc(c.libelle_fabricant)}</td><td>${c.statut === 'à_classer' ? '<span class="kind k-classer">à classer</span>' :
+      c.familles.split(', ').map(f => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px"><span class="dot" style="background:${swatchBg(f)}"></span>${esc(COL[f]?.fr)}</span>`).join('')}${c.statut === 'manuel' ? ' <span class="small">(manuel)</span>' : ''}</td>
+      <td class="num">${c.nb_variantes}</td><td class="small">${esc(c.groupes)}</td></tr>`).join('') +
+    (rows.length > 400 ? `<tr><td colspan="4" class="small">… ${rows.length - 400} autres</td></tr>` : '');
+}
+$('#famgrid').addEventListener('click', e => { const f = e.target.closest('[data-f]'); if (!f) return; colFam = colFam === f.dataset.f ? '' : f.dataset.f; renderCouleurs(); });
+$('#colq').addEventListener('input', renderCouleurs);
+
+// ========== Fiche produit : avant / après + compatibilité
+function compatible(p) {
+  const ws = (p.f.numero_soie || []).map(Number);
+  if (!ws.length || !['cannes', 'moulinets', 'soies'].includes(p._fam)) return null;
+  const spey = p.c === 'cannes-spey-switch' || p.c === 'soies-spey';
+  const want = {
+    cannes: [['Moulinets', q => q.c === 'moulinets-mouche'], ['Soies', q => q.c === (spey ? 'soies-spey' : 'soies-une-main')]],
+    moulinets: [['Cannes', q => q.c === 'cannes-une-main' || q.c === 'cannes-spey-switch'], ['Soies', q => q.c === 'soies-une-main' || q.c === 'soies-spey']],
+    soies: [['Cannes', q => q.c === (spey ? 'cannes-spey-switch' : 'cannes-une-main')], ['Moulinets', q => q.c === 'moulinets-mouche']],
+  }[p._fam];
+  const center = ws.length > 3 ? ws.slice(1, -1) : ws;  // pour une plage large, viser le milieu
+  return want.map(([title, pred]) => {
+    const list = P.filter(q => q.id !== p.id && pred(q) && (q.f.numero_soie || []).some(w => center.includes(+w)))
+      .sort((a, b) => (b.st > 0) - (a.st > 0) || a.pr - b.pr).slice(0, 6);
+    return [title, list];
+  });
+}
+function openProduct(id) {
+  const p = byId.get(id); if (!p) return;
+  const oldCats = p.ocs.map(c => OC.get(c)?.path).filter(Boolean);
+  const specs = p.sp.length ? `<table class="specs"><tr><th>Option</th><th>Libellé du fabricant (affiché)</th><th>Valeur de filtre</th></tr>${p.sp.slice(0, 25).map(([g, l, v]) =>
+    `<tr><td class="small">${esc(g)}</td><td>${esc(l)}</td><td class="v">${esc(v || '—')}</td></tr>`).join('')}</table>${p.sp.length > 25 ? `<div class="small">… ${p.sp.length - 25} autres</div>` : ''}` : '';
+  const filtres = Object.entries(p.f).map(([k, vs]) => `<dt>${k === 'couleur' ? 'Familles de couleur (filtre)' : esc(FAC[k]?.fr || k)}</dt><dd>${k === 'couleur' ?
+    vs.map(v => `<span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px"><span class="dot" style="background:${swatchBg(v)}"></span>${esc(COL[v]?.fr)}</span>`).join('') :
+    esc(vs.map(v => labelOf(k, String(v))).join(', '))}</dd>`).join('');
+  const tg = p.tg.map(t => `<span class="tag ${t.startsWith('technique') ? 'tech' : ''}">${esc(TAG[t])}</span>`).join(' ');
+  // Variantes telles que vendues : le nom du fabricant reste affiché, la pastille indique seulement la famille du filtre
+  const groups = [...new Set(p.vs.flatMap(v => v.a.map(a => a[0])))];
+  const cell = v => g => {
+    const a = v.a.find(x => x[0] === g); if (!a) return '<td></td>';
+    const [, val, fams] = a;
+    if (!fams) return `<td>${esc(val)}</td>`;
+    const title = fams.length ? 'Famille du filtre : ' + fams.map(f => COL[f]?.fr).join(', ') : 'Famille à classer';
+    const dots = fams.length ? fams.map(f => `<span class="dot" style="background:${swatchBg(f)}"></span>`).join('') :
+      '<span class="dot" style="background:repeating-linear-gradient(45deg,#ddd 0 3px,#fff 3px 6px)"></span>';
+    return `<td><span class="vcol" title="${esc(title)}">${dots}<span>${esc(val)}</span></span></td>`;
+  };
+  const variants = p.vs.length ? `<div class="variants"><h3>Variantes telles que vendues <span class="small">(${p.vs.length})</span></h3>
+    <div class="small" style="margin-bottom:6px">Le nom de couleur du fabricant est conservé sur la fiche ; la pastille indique la famille utilisée par le filtre.</div>
+    <div class="vwrap"><table class="specs vtable"><tr>${groups.map(g => `<th>${esc(g)}</th>`).join('')}<th class="num">Prix</th><th class="num">Stock</th></tr>
+    ${p.vs.map(v => `<tr class="${v.q <= 0 ? 'oos' : ''}">${groups.map(cell(v)).join('')}
+      <td class="num"><span class="price ${v.pr < v.rp ? 'promo' : ''}">${money(v.pr)}</span>${v.pr < v.rp ? `<span class="old">${money(v.rp)}</span>` : ''}</td>
+      <td class="num">${v.q > 0 ? v.q : '<span class="small">rupture</span>'}</td></tr>`).join('')}</table></div></div>` : '';
+  const comp = compatible(p);
+  const compHtml = comp && comp.some(([, l]) => l.length) ? `<div class="compat"><h3>Complète ton montage</h3>
+    <div class="small">Suggestions calculées à partir du numéro de soie (#${(p.f.numero_soie || []).join(', #')}), quelle que soit la notation du fabricant.</div>
+    <div class="cgrid">${comp.map(([t, l]) => `<div><b class="small">${t} compatibles</b>${l.length ? l.map(q => `<div class="mini" data-id="${q.id}">${q.img ? `<img src="${esc(thumb(q.img))}" alt="">` : ''}<div class="t">${esc(q.n)}<small>${esc(q.b)} · ${money(q.mn ?? q.pr)} · #${(q.f.numero_soie || []).join('/')}</small></div></div>`).join('') : '<div class="small">Aucun.</div>'}</div>`).join('')}</div></div>` : '';
+  $('#dlgc').innerHTML = `<div class="dlg-head">${p.img ? `<img src="${esc(thumb(p.img))}" alt="">` : ''}
+      <h2>${esc(p.n)}<small>Produit ${p.id} · ${p.nv} variante(s) · <a href="${esc(p.url)}" target="_blank" rel="noopener">voir sur le site</a></small></h2>
+      <button class="x" onclick="document.getElementById('dlg').close()" aria-label="Fermer">×</button></div>
+    <div class="dlg-body"><div class="ba2">
+      <div class="col before"><h3>Avant</h3><dl class="kv">
+        <dt>Catégorie</dt><dd>${esc(p.op || '—')}</dd>
+        <dt>Toutes</dt><dd>${oldCats.map(esc).join('<br>') || '—'}</dd>
+        <dt>Marque</dt><dd>${p.bo ? esc(p.bo) : '<i>vide</i>'}</dd>
+        <dt>Tags</dt><dd>${p.ot.length ? esc(p.ot.join(', ')) : '<i>aucun</i>'}</dd>
+        <dt>Filtres</dt><dd><i>aucun filtre technique</i></dd></dl>
+        <div class="small" style="margin-bottom:4px">Attributs bruts des variantes :</div>
+        <ul class="rawlist">${p.oa.map(a => `<li>${esc(a)}</li>`).join('') || '<li><i>aucune variante</i></li>'}</ul></div>
+      <div class="col after"><h3>Après</h3><dl class="kv">
+        <dt>Catégorie</dt><dd><b>${esc(pathOf(p.c))}</b></dd>
+        ${p.c2.length ? `<dt>Aussi dans</dt><dd>${p.c2.map(c => esc(pathOf(c))).join('<br>')}</dd>` : ''}
+        <dt>Marque</dt><dd>${p.b ? esc(p.b) : '<i>sans marque (matériau maison)</i>'}</dd>
+        <dt>Tags</dt><dd>${tg || '<i>aucun</i>'}</dd>
+        <dt>Badges</dt><dd>${p.bd.map(b => `<span class="badge bd-${b}">${esc(BADGE[b])}</span>`).join(' ') || '<i>aucun</i>'}</dd>
+        ${filtres}
+        <dt>Nouvelle URL</dt><dd class="small">${esc(p.nu)}</dd></dl>
+        ${specs}
+        ${p.rs.length ? `<div class="warnbox">À réviser : ${esc(p.rs.join(' ; '))}</div>` : ''}</div>
+    </div>${variants}${compHtml}</div>`;
+  const d = $('#dlg'); if (!d.open) d.showModal(); d.querySelector('.dlg-body').scrollTop = 0;
+}
+$('#dlg').addEventListener('click', e => { if (e.target.id === 'dlg') e.target.close(); });
+
+renderApres(); renderAvant(); renderCorr(); renderCouleurs();
+</script>
+</body>
+</html>

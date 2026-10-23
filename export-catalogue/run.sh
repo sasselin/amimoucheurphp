@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Extraction du catalogue -> export-catalogue/out/<date>/ (JSON, CSV, XLSX).
+# Extraction du catalogue -> export-catalogue/out/<date>/ (JSON, CSV, XLSX, recatégorisation proposée).
 # Usage : ./export-catalogue/run.sh             base locale (conteneur apache du docker-compose.yml)
 #         ./export-catalogue/run.sh --prod      base de prod via SSH (rien n'est écrit sur le serveur)
 #         ./export-catalogue/run.sh --verify    + contrôle des pages produit sur le site local
@@ -46,6 +46,7 @@ fi
 
 uv run --quiet "$DIR/description_images.py" "$JSON" "$OUT"
 uv run --quiet "$DIR/build.py" "$JSON" "$OUT"
+uv run --quiet "$DIR/recategorise.py" "$JSON" "$OUT"
 ln -sfn "$(basename "$OUT")" "$DIR/out/latest"
 
 if [[ $VERIFY == 1 ]]; then
