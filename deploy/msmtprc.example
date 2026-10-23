@@ -1,0 +1,16 @@
+# Relais SMTP Brevo pour mail() de PHP. Copier en /srv/amimoucheur/msmtprc
+defaults
+auth           on
+tls            on
+tls_starttls   on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile        /tmp/msmtp.log
+
+account        brevo
+host           smtp-relay.brevo.com
+port           2525
+from           info@amimoucheur.com
+user           REMPLACER_LOGIN@smtp-brevo.com
+password       REMPLACER_CLE_SMTP
+
+account default : brevo

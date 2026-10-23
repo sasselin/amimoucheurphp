@@ -28,6 +28,6 @@ services:
     #   # PS_DOMAIN: localhost:8001
     #   # PS_FOLDER_ADMIN: admin0181
     ports:
-      - "8001:80"
+      - "80:80"
     volumes:
       - ./:/var/www/html

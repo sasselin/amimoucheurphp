@@ -1,0 +1,44 @@
+# Production : Docker rootless sous l'utilisateur « amimoucheur », dans /srv/amimoucheur
+# (code dans ./site). En rootless, les ports publiés restent soumis à UFW.
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
+
+services:
+  mysql:
+    image: mysql:5.6
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    mem_limit: 400m
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./mysql-lowmem.cnf:/etc/mysql/conf.d/lowmem.cnf:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: amimoucheur
+      TZ: 'America/Toronto'
+
+  apache:
+    build: .
+    image: amimoucheur-php56
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    mem_limit: 700m
+    volumes:
+      - ./site:/var/www/html
+      - ./msmtprc:/etc/msmtprc:ro
+
+  caddy:
+    image: caddy:2.8.4
+    restart: unless-stopped
+    depends_on:
+      - apache
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config

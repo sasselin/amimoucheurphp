@@ -1,0 +1,14 @@
+# Certificats Let's Encrypt obtenus et renouvelés automatiquement par Caddy
+# (challenge HTTP-01 via Cloudflare : le port 80 doit rester ouvert aux IPs Cloudflare).
+
+www.amimoucheur.com {
+	encode gzip
+	request_body {
+		max_size 32MB
+	}
+	reverse_proxy apache:80
+}
+
+amimoucheur.com {
+	redir https://www.amimoucheur.com{uri} permanent
+}
