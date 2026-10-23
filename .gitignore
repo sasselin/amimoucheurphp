@@ -51,3 +51,7 @@ google*.html
 admin0181/export/
 /*.csv
 modules/export_catalog/
+
+# Extractions du catalogue
+export-catalogue/out/
+.playwright-mcp

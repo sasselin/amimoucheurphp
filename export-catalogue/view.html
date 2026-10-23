@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalogue amimoucheur</title>
+<style>
+:root {
+  --bg: #f6f5f1; --surface: #ffffff; --surface-2: #f0eee8; --border: #e2dfd6;
+  --text: #1d2420; --muted: #6b726d; --accent: #1f6b52; --accent-soft: #e2f0ea;
+  --promo: #b4441f; --promo-soft: #fbe9e1; --warn: #9a6b00; --warn-soft: #fbf1d6;
+  --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 4px 16px rgb(0 0 0 / .06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131715; --surface: #1b201d; --surface-2: #232925; --border: #313833;
+    --text: #e6ebe7; --muted: #949c96; --accent: #5fbf98; --accent-soft: #1d3329;
+    --promo: #f08b66; --promo-soft: #3a231a; --warn: #e0b54a; --warn-soft: #332a14;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 4px 16px rgb(0 0 0 / .3);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+header { padding: 20px 24px 0; max-width: 1500px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 13px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; }
+.stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; }
+details.excl { margin-top: 10px; color: var(--muted); font-size: 13px; }
+details.excl ul { margin: 6px 0 0; padding-left: 18px; }
+nav.tabs { display: flex; gap: 4px; margin-top: 18px; border-bottom: 1px solid var(--border); }
+nav.tabs button { background: none; border: 0; padding: 10px 14px; cursor: pointer; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600; }
+nav.tabs button.on { color: var(--text); border-color: var(--accent); }
+main { max-width: 1500px; margin: 0 auto; padding: 18px 24px 60px; }
+.layout { display: grid; grid-template-columns: 290px 1fr; gap: 20px; align-items: start; }
+aside.tree { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+  position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.tree .node { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+.tree .node:hover { background: var(--surface-2); }
+.tree .node.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tree .tog { width: 16px; text-align: center; color: var(--muted); flex: none; font-size: 10px; }
+.tree .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree .cnt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tree .kids { margin-left: 14px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.toolbar input[type=search] { flex: 1 1 260px; padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: 9px; background: var(--surface); }
+.toolbar select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); max-width: 220px; }
+.chk { display: inline-flex; gap: 6px; align-items: center; padding: 7px 10px; border: 1px solid var(--border);
+  border-radius: 9px; background: var(--surface); cursor: pointer; user-select: none; }
+.meta-line { color: var(--muted); font-size: 13px; margin: 0 0 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.crumb { background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 99px; }
+.crumb button { border: 0; background: none; cursor: pointer; color: inherit; padding: 0 0 0 4px; }
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  cursor: pointer; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.card .img { aspect-ratio: 1; background: #fff; display: grid; place-items: center; position: relative; }
+.card .img img { width: 100%; height: 100%; object-fit: contain; }
+.card .noimg { color: #aaa; font-size: 12px; }
+.badges { position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
+.b-promo { background: var(--promo); color: #fff; }
+.b-oos { background: var(--warn-soft); color: var(--warn); }
+.card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.card .brand { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.card .name { font-weight: 600; line-height: 1.3; }
+.card .cat { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .foot { margin-top: auto; padding-top: 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.price { font-weight: 700; font-variant-numeric: tabular-nums; }
+.price.promo { color: var(--promo); }
+.old { color: var(--muted); text-decoration: line-through; font-weight: 400; font-size: 12px; margin-left: 4px; }
+.small { color: var(--muted); font-size: 12px; }
+.pager { display: flex; gap: 6px; justify-content: center; margin: 18px 0 0; flex-wrap: wrap; }
+.pager button { min-width: 36px; padding: 6px 10px; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 8px; cursor: pointer; }
+.pager button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pager button:disabled { opacity: .4; cursor: default; }
+table.grid { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; }
+table.grid th, table.grid td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+table.grid th { background: var(--surface-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); position: sticky; top: 0; }
+table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.grid tr.click { cursor: pointer; }
+table.grid tr.click:hover td { background: var(--surface-2); }
+.wrap { overflow-x: auto; border-radius: 12px; }
+/* Fiche produit */
+dialog { border: 0; padding: 0; border-radius: 16px; width: min(1100px, 96vw); max-height: 92vh;
+  background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgb(0 0 0 / .3); }
+dialog::backdrop { background: rgb(10 15 12 / .55); }
+.dlg { display: flex; flex-direction: column; max-height: 92vh; }
+.dlg-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: start; }
+.dlg-head h2 { margin: 0; font-size: 19px; flex: 1; }
+.dlg-head .en { color: var(--muted); font-size: 13px; font-weight: 400; display: block; margin-top: 2px; }
+.x { border: 0; background: var(--surface-2); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 18px; flex: none; }
+.dlg-body { overflow: auto; padding: 18px 20px 24px; display: grid; grid-template-columns: 340px 1fr; gap: 22px; }
+.gallery .main { aspect-ratio: 1; background: #fff; border: 1px solid var(--border); border-radius: 12px; display: grid; place-items: center; overflow: hidden; }
+.gallery .main img { width: 100%; height: 100%; object-fit: contain; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.thumbs img { width: 56px; height: 56px; object-fit: contain; background: #fff; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; }
+.thumbs img.on { border-color: var(--accent); }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; margin: 0 0 16px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 20px 0 8px; }
+.bigprice { font-size: 24px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.promo-box { background: var(--promo-soft); color: var(--promo); border-radius: 10px; padding: 8px 12px; display: inline-block; margin-top: 6px; font-weight: 600; }
+.pill { display: inline-block; background: var(--surface-2); border-radius: 99px; padding: 2px 9px; margin: 2px 4px 2px 0; font-size: 12px; }
+.langsw { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-left: 8px; vertical-align: middle; }
+.langsw button { border: 0; background: none; padding: 2px 10px; cursor: pointer; font-size: 12px; }
+.langsw button.on { background: var(--accent); color: #fff; }
+iframe.desc { width: 100%; height: 360px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.vthumb { width: 36px; height: 36px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid var(--border); }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+@media (max-width: 900px) {
+  header, main { padding-left: 16px; padding-right: 16px; }
+  .layout { grid-template-columns: 1fr; }
+  aside.tree { position: static; max-height: 300px; }
+  .dlg-body { grid-template-columns: 1fr; }
+  .list { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .kv { grid-template-columns: 100px 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Catalogue amimoucheur</h1>
+  <div class="sub" id="sub"></div>
+  <div class="stats" id="stats"></div>
+  <details class="excl"><summary>Ce qui est exclu de cette extraction</summary><ul id="excl"></ul></details>
+  <nav class="tabs" id="tabs">
+    <button data-tab="products" class="on">Produits</button>
+    <button data-tab="categories">Catégories</button>
+    <button data-tab="promos">Promotions</button>
+  </nav>
+</header>
+<main>
+  <section id="tab-products">
+    <div class="layout">
+      <aside class="tree" id="tree"></aside>
+      <div>
+        <div class="toolbar">
+          <input type="search" id="q" placeholder="Rechercher un nom, une référence, un SKU, une marque…">
+          <select id="brand"><option value="">Toutes les marques</option></select>
+          <label class="chk"><input type="checkbox" id="f-promo"> En promo</label>
+          <label class="chk"><input type="checkbox" id="f-oos"> En rupture</label>
+          <label class="chk"><input type="checkbox" id="f-var"> Avec variantes</label>
+          <select id="sort">
+            <option value="name">Tri : nom</option>
+            <option value="price-asc">Prix croissant</option>
+            <option value="price-desc">Prix décroissant</option>
+            <option value="stock-desc">Stock décroissant</option>
+            <option value="sale-desc">Dernière vente récente</option>
+            <option value="sale-asc">Dernière vente ancienne</option>
+            <option value="id">Id produit</option>
+          </select>
+        </div>
+        <div class="meta-line" id="pmeta"></div>
+        <div class="list" id="plist"></div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </div>
+  </section>
+  <section id="tab-categories" hidden>
+    <div class="toolbar"><input type="search" id="cq" placeholder="Filtrer les catégories…"></div>
+    <div class="wrap"><table class="grid" id="ctable"></table></div>
+  </section>
+  <section id="tab-promos" hidden>
+    <div class="meta-line" id="prmeta"></div>
+    <div class="wrap"><table class="grid" id="prtable"></table></div>
+  </section>
+</main>
+<dialog id="dlg"><div class="dlg" id="dlgc"></div></dialog>
+
+<script type="application/json" id="data">/*__DATA__*/</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const P = DATA.products, C = DATA.categories, M = DATA.meta;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fr = (o, l = 'fr') => (o && (o[l] || o.fr || o.en)) || '';
+const money = v => v == null ? '' : v.toLocaleString('fr-CA', {style: 'currency', currency: M.currency || 'CAD'});
+const thumb = url => url ? url.replace(/\.jpg$/, '-home_default.jpg') : '';
+const large = url => url ? url.replace(/\.jpg$/, '-large_default.jpg') : '';
+const date = s => s ? s.slice(0, 10) : '—';
+const PAGE = 48;
+
+// Index
+const catById = new Map(C.map(c => [c.id, c]));
+const kids = new Map();
+C.forEach(c => { const k = c.parent_id ?? 0; if (!kids.has(k)) kids.set(k, []); kids.get(k).push(c); });
+kids.forEach(l => l.sort((a, b) => a.position - b.position));
+P.forEach(p => {
+  p._cats = new Set(p.categories.map(c => c.id));
+  p._promo = !!(p.price.promo || p.price.some_variants_on_promo);
+  p._search = [fr(p.name), fr(p.name, 'en'), p.brand, p.reference, p.id,
+    ...p.variants.map(v => v.reference + ' ' + fr(v.label))].join(' ').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+});
+
+// En-tête
+$('#sub').textContent = `Extraction du ${new Date(M.generated_at).toLocaleString('fr-CA')} · source ${M.source} · prix ${M.prices}`;
+const stats = [
+  [P.length, 'produits'], [M.counts.variants, 'variantes'], [C.length, 'catégories'],
+  [P.filter(p => p._promo).length, 'en promo'], [P.filter(p => p.stock.quantity <= 0).length, 'en rupture'],
+  [P.reduce((s, p) => s + Math.max(0, p.stock.quantity), 0).toLocaleString('fr-CA'), 'unités en stock'],
+];
+$('#stats').innerHTML = stats.map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
+const EXCL = {
+  not_displayed: 'produits non affichés (inactifs, masqués, sans catégorie affichée)',
+  zero_price_variants: 'variantes à 0 $', zero_price_products: 'produits à 0 $',
+  abandoned: `produits abandonnés (stock 0, aucune vente ni création depuis ${M.abandoned_before || '—'})`,
+  empty_or_hidden_categories: 'catégories masquées ou vides',
+  orphans_not_in_shop: 'orphelins de la migration 2016 (dont démo PrestaShop)',
+};
+$('#excl').innerHTML = Object.entries(M.excluded || {}).map(([k, v]) => `<li><b>${v}</b> ${esc(EXCL[k] || k)}</li>`).join('');
+
+// Onglets
+$('#tabs').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === t));
+  ['products', 'categories', 'promos'].forEach(n => $('#tab-' + n).hidden = n !== t.dataset.tab);
+});
+const showTab = n => document.querySelector(`#tabs button[data-tab="${n}"]`).click();
+
+// État des filtres
+const st = { cat: null, q: '', brand: '', promo: false, oos: false, vars: false, sort: 'name', page: 0 };
+const open = new Set();
+
+// Arbre des catégories
+function renderTree() {
+  const node = c => {
+    const ch = kids.get(c.id) || [];
+    const isOpen = open.has(c.id);
+    return `<div><div class="node ${st.cat === c.id ? 'on' : ''}" data-id="${c.id}">
+      <span class="tog" data-tog="${c.id}">${ch.length ? (isOpen ? '▾' : '▸') : ''}</span>
+      <span class="lbl" title="${esc(fr(c.path))}">${esc(fr(c.name))}</span>
+      <span class="cnt">${c.product_count_with_children}</span></div>
+      ${ch.length && isOpen ? `<div class="kids">${ch.map(node).join('')}</div>` : ''}</div>`;
+  };
+  const home = C.find(c => c.parent_id == null);
+  const roots = home ? (kids.get(home.id) || []) : (kids.get(0) || []);
+  $('#tree').innerHTML = `<div class="node ${st.cat == null ? 'on' : ''}" data-id=""><span class="tog"></span>
+    <span class="lbl"><b>Tout le catalogue</b></span><span class="cnt">${P.length}</span></div>` + roots.map(node).join('');
+}
+$('#tree').addEventListener('click', e => {
+  const tog = e.target.closest('[data-tog]');
+  if (tog && tog.textContent) { const id = +tog.dataset.tog; open.has(id) ? open.delete(id) : open.add(id); renderTree(); return; }
+  const n = e.target.closest('.node'); if (!n) return;
+  selectCat(n.dataset.id ? +n.dataset.id : null);
+});
+function selectCat(id) {
+  st.cat = id; st.page = 0;
+  if (id != null) { // ouvre la branche jusqu'à la catégorie
+    let c = catById.get(id);
+    while (c) { open.add(c.id); c = catById.get(c.parent_id); }
+  }
+  renderTree(); renderProducts();
+}
+
+// Marques
+[...new Set(P.map(p => p.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'))
+  .forEach(b => $('#brand').insertAdjacentHTML('beforeend', `<option>${esc(b)}</option>`));
+
+const bind = (sel, key, ev = 'change', get = el => el.type === 'checkbox' ? el.checked : el.value) =>
+  $(sel).addEventListener(ev, e => { st[key] = get(e.target); st.page = 0; renderProducts(); });
+bind('#q', 'q', 'input'); bind('#brand', 'brand'); bind('#f-promo', 'promo'); bind('#f-oos', 'oos');
+bind('#f-var', 'vars'); bind('#sort', 'sort');
+
+function filtered() {
+  const q = st.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const words = q ? q.split(/\s+/) : [];
+  let r = P.filter(p => (st.cat == null || p._cats.has(st.cat))
+    && (!st.brand || p.brand === st.brand) && (!st.promo || p._promo)
+    && (!st.oos || p.stock.quantity <= 0) && (!st.vars || p.variants.length)
+    && words.every(w => p._search.includes(w)));
+  const by = {
+    name: (a, b) => fr(a.name).localeCompare(fr(b.name), 'fr'),
+    'price-asc': (a, b) => (a.price.min ?? a.price.final) - (b.price.min ?? b.price.final),
+    'price-desc': (a, b) => (b.price.max ?? b.price.final) - (a.price.max ?? a.price.final),
+    'stock-desc': (a, b) => b.stock.quantity - a.stock.quantity,
+    'sale-desc': (a, b) => (b.last_sale || '').localeCompare(a.last_sale || ''),
+    'sale-asc': (a, b) => (a.last_sale || '9').localeCompare(b.last_sale || '9'),
+    id: (a, b) => a.id - b.id,
+  };
+  return r.sort(by[st.sort]);
+}
+
+function priceHtml(p) {
+  const pr = p.price, hasRange = pr.min != null && pr.min !== pr.max;
+  const promo = !!pr.promo;
+  const main = hasRange ? `${money(pr.min)} – ${money(pr.max)}` : money(pr.final);
+  return `<span class="price ${p._promo ? 'promo' : ''}">${main}</span>${promo && !hasRange ? `<span class="old">${money(pr.regular)}</span>` : ''}`;
+}
+
+function renderProducts() {
+  const r = filtered();
+  const pages = Math.max(1, Math.ceil(r.length / PAGE));
+  st.page = Math.min(st.page, pages - 1);
+  const slice = r.slice(st.page * PAGE, st.page * PAGE + PAGE);
+  const cat = st.cat != null ? catById.get(st.cat) : null;
+  $('#pmeta').innerHTML = `<span><b>${r.length}</b> produit${r.length > 1 ? 's' : ''}</span>` +
+    (cat ? `<span class="crumb">${esc(fr(cat.path))}<button title="Retirer" data-clear>✕</button></span>` : '');
+  $('#plist').innerHTML = slice.length ? slice.map(p => {
+    const img = p.images[0];
+    const pct = p.price.promo && p.price.promo.discount_pct;
+    return `<article class="card" data-id="${p.id}">
+      <div class="img">${img ? `<img loading="lazy" src="${esc(thumb(img.url))}" alt="">` : '<span class="noimg">Sans image</span>'}
+        <div class="badges">${p._promo ? `<span class="badge b-promo">${pct ? '-' + Math.round(pct) + ' %' : 'Promo'}</span>` : ''}
+        ${p.stock.quantity <= 0 ? '<span class="badge b-oos">Rupture</span>' : ''}</div></div>
+      <div class="body"><div class="brand">${esc(p.brand || '')}</div>
+        <div class="name">${esc(fr(p.name))}</div>
+        <div class="cat" title="${esc(fr(p.default_category && p.default_category.path))}">${esc(fr(p.default_category && p.default_category.path))}</div>
+        <div class="foot"><div>${priceHtml(p)}</div>
+          <div class="small">${p.variants.length ? p.variants.length + ' var. · ' : ''}${p.stock.quantity} en stock</div></div></div>
+    </article>`;
+  }).join('') : '<div class="empty">Aucun produit ne correspond.</div>';
+  let pg = '';
+  if (pages > 1) {
+    const btn = (i, l = i + 1) => `<button data-p="${i}" class="${i === st.page ? 'on' : ''}">${l}</button>`;
+    pg += `<button data-p="${st.page - 1}" ${st.page === 0 ? 'disabled' : ''}>‹</button>`;
+    for (let i = 0; i < pages; i++) {
+      if (i === 0 || i === pages - 1 || Math.abs(i - st.page) <= 2) pg += btn(i);
+      else if (Math.abs(i - st.page) === 3) pg += '<span class="small">…</span>';
+    }
+    pg += `<button data-p="${st.page + 1}" ${st.page >= pages - 1 ? 'disabled' : ''}>›</button>`;
+  }
+  $('#pager').innerHTML = pg;
+}
+$('#pmeta').addEventListener('click', e => { if (e.target.closest('[data-clear]')) selectCat(null); });
+$('#pager').addEventListener('click', e => {
+  const b = e.target.closest('button[data-p]'); if (!b || b.disabled) return;
+  st.page = +b.dataset.p; renderProducts(); window.scrollTo({top: $('#tab-products').offsetTop - 10, behavior: 'smooth'});
+});
+$('#plist').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openProduct(+c.dataset.id); });
+
+// Fiche produit
+const byId = new Map(P.map(p => [p.id, p]));
+function promoText(pr) {
+  if (!pr) return '';
+  const v = pr.type === 'pourcentage' ? `-${pr.value} %` : `-${money(pr.value)}`;
+  const src = {produit: 'promo produit', variante: 'promo variante', regle_catalogue: 'règle catalogue'}[pr.source] || pr.source;
+  const per = pr.start || pr.end ? ` · ${pr.start ? 'du ' + date(pr.start) : ''} ${pr.end ? 'au ' + date(pr.end) : '(sans fin)'}` : '';
+  return `${v} (${src}${pr.rule ? ' « ' + esc(pr.rule) + ' »' : ''})${per}`;
+}
+function openProduct(id) {
+  const p = byId.get(id); if (!p) return;
+  const pr = p.price, hasRange = pr.min != null && pr.min !== pr.max;
+  const imgs = p.images;
+  const descDoc = l => `<!doctype html><meta charset="utf-8"><base target="_blank"><style>body{font:14px/1.5 system-ui,sans-serif;margin:12px;color:#222}img{max-width:100%;height:auto}</style>${[p.description_short && p.description_short[l], p.description && p.description[l]].filter(Boolean).join('<hr>') || '<p style="color:#888">Pas de description.</p>'}`;
+  $('#dlgc').innerHTML = `
+    <div class="dlg-head"><h2>${esc(fr(p.name))}<span class="en">${esc(fr(p.name, 'en'))}</span></h2>
+      <button class="x" data-close aria-label="Fermer">×</button></div>
+    <div class="dlg-body">
+      <div class="gallery">
+        <div class="main">${imgs.length ? `<a id="gmain-a" href="${esc(imgs[0].url)}" target="_blank" title="Ouvrir l'original"><img id="gmain" src="${esc(large(imgs[0].url))}" alt=""></a>` : '<span class="noimg">Sans image</span>'}</div>
+        ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((im, i) => `<img src="${esc(thumb(im.url))}" data-url="${esc(im.url)}" class="${i ? '' : 'on'}" alt="">`).join('')}</div>` : ''}
+        ${imgs.some(i => i.file_missing) ? '<p class="small">⚠ Certains fichiers originaux sont manquants en local.</p>' : ''}
+        <h3>Liens</h3>
+        <div><a href="${esc(p.seo.fr.url)}" target="_blank">Page FR ↗</a> · <a href="${esc(p.seo.en && p.seo.en.url)}" target="_blank">Page EN ↗</a></div>
+        <p class="small">Slug FR : ${esc(p.seo.fr.slug)}<br>Meta titre : ${esc(p.seo.fr.meta_title || '—')}</p>
+      </div>
+      <div>
+        <div class="bigprice ${p._promo ? 'price promo' : ''}">${hasRange ? `${money(pr.min)} – ${money(pr.max)}` : money(pr.final)}
+          ${pr.promo && !hasRange ? `<span class="old" style="font-size:15px">${money(pr.regular)}</span>` : ''}</div>
+        <div class="small">HT · ${M.currency}</div>
+        ${pr.promo ? `<div class="promo-box">${promoText(pr.promo)}</div>` : (pr.some_variants_on_promo ? '<div class="promo-box">Certaines variantes en promo</div>' : '')}
+        <h3>Fiche</h3>
+        <dl class="kv">
+          <dt>Id / Référence</dt><dd>#${p.id} · ${esc(p.reference || '—')}</dd>
+          <dt>Marque</dt><dd>${esc(p.brand || '—')}</dd>
+          <dt>Stock</dt><dd>${p.stock.quantity} ${p.stock.sell_when_out_of_stock ? '· commande possible en rupture' : '· pas de vente en rupture'}</dd>
+          <dt>Dernière vente</dt><dd>${date(p.last_sale)}</dd>
+          <dt>Catégorie princ.</dt><dd>${esc(fr(p.default_category && p.default_category.path))}</dd>
+          <dt>Catégories</dt><dd>${p.categories.filter(c => catById.get(c.id) && catById.get(c.id).parent_id != null).map(c => `<span class="pill">${esc(fr(c.path))}</span>`).join('')}</dd>
+          ${p.tags ? `<dt>Tags</dt><dd>${(p.tags.fr || []).map(t => `<span class="pill">${esc(t)}</span>`).join('')}</dd>` : ''}
+          <dt>Créé / modifié</dt><dd>${date(p.date_add)} · ${date(p.date_upd)}</dd>
+          ${p.excluded_reasons && p.excluded_reasons.length ? `<dt>Exclu car</dt><dd>${p.excluded_reasons.map(r => `<span class="pill">${esc(r)}</span>`).join('')}</dd>` : ''}
+        </dl>
+        ${p.variants.length ? `<h3>Variantes (${p.variants.length})</h3>
+        <div class="wrap"><table class="grid"><thead><tr><th></th><th>Variante</th><th>SKU</th><th class="num">Régulier</th><th class="num">Final</th><th>Promo</th><th class="num">Stock</th></tr></thead><tbody>
+        ${p.variants.map(v => `<tr><td>${v.images[0] ? `<img class="vthumb" loading="lazy" src="${esc(thumb(v.images[0]))}" alt="">` : ''}</td>
+          <td>${esc(fr(v.label))}${v.default ? ' <span class="pill">défaut</span>' : ''}</td><td class="small">${esc(v.reference || '')}</td>
+          <td class="num">${money(v.price.regular)}</td><td class="num ${v.price.promo ? 'price promo' : ''}">${money(v.price.final)}</td>
+          <td class="small">${v.price.promo ? (v.price.promo.type === 'pourcentage' ? '-' + v.price.promo.value + ' %' : '-' + money(v.price.promo.value)) : ''}</td>
+          <td class="num">${v.quantity}</td></tr>`).join('')}</tbody></table></div>` : ''}
+        <h3>Description <span class="langsw"><button class="on" data-lang="fr">FR</button><button data-lang="en">EN</button></span></h3>
+        <iframe class="desc" sandbox="allow-popups" id="desc"></iframe>
+      </div>
+    </div>`;
+  const iframe = $('#desc'); iframe.srcdoc = descDoc('fr');
+  $('#dlgc').querySelectorAll('.langsw button').forEach(b => b.onclick = () => {
+    $('#dlgc').querySelectorAll('.langsw button').forEach(x => x.classList.toggle('on', x === b));
+    iframe.srcdoc = descDoc(b.dataset.lang);
+  });
+  $('#dlgc').querySelectorAll('.thumbs img').forEach(t => t.onclick = () => {
+    $('#dlgc').querySelectorAll('.thumbs img').forEach(x => x.classList.toggle('on', x === t));
+    $('#gmain').src = large(t.dataset.url); $('#gmain-a').href = t.dataset.url;
+  });
+  $('#dlg').showModal();
+  $('#dlgc').scrollTop = 0;
+}
+$('#dlg').addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === $('#dlg')) $('#dlg').close(); });
+
+// Onglet catégories
+function renderCategories() {
+  const q = $('#cq').value.trim().toLowerCase();
+  const order = [];
+  const walk = (pid, depth) => (kids.get(pid) || []).forEach(c => { order.push(c); walk(c.id, depth + 1); });
+  const home = C.find(c => c.parent_id == null);
+  if (home) { order.push(home); walk(home.id); } else walk(0);
+  const rows = order.filter(c => !q || fr(c.path).toLowerCase().includes(q) || fr(c.path, 'en').toLowerCase().includes(q));
+  $('#ctable').innerHTML = `<thead><tr><th>#</th><th>Chemin (FR)</th><th>Chemin (EN)</th><th class="num">Produits</th><th class="num">Avec sous-cat.</th><th>URL</th></tr></thead><tbody>` +
+    rows.map(c => `<tr class="click" data-id="${c.id}"><td class="small">${c.id}</td>
+      <td style="padding-left:${10 + Math.max(0, c.depth - 1) * 18}px">${esc(fr(c.path))}</td>
+      <td class="small">${esc(fr(c.path, 'en'))}</td><td class="num">${c.product_count}</td>
+      <td class="num">${c.product_count_with_children}</td>
+      <td><a href="${esc(c.seo.fr.url)}" target="_blank" onclick="event.stopPropagation()">FR ↗</a></td></tr>`).join('') + '</tbody>';
+}
+$('#cq').addEventListener('input', renderCategories);
+$('#ctable').addEventListener('click', e => {
+  const r = e.target.closest('tr.click'); if (!r) return;
+  const id = +r.dataset.id; const c = catById.get(id);
+  showTab('products'); selectCat(c && c.parent_id == null ? null : id);
+});
+
+// Onglet promotions
+function renderPromos() {
+  const rows = [];
+  P.forEach(p => {
+    const items = p.variants.length ? p.variants.map(v => [p, v, v.price]) : [[p, null, p.price]];
+    items.forEach(([p, v, pr]) => { if (pr.promo) rows.push([p, v, pr]); });
+  });
+  rows.sort((a, b) => (b[2].promo.discount_pct || 0) - (a[2].promo.discount_pct || 0));
+  $('#prmeta').innerHTML = `<span><b>${rows.length}</b> articles en promo sur ${new Set(rows.map(r => r[0].id)).size} produits</span>`;
+  $('#prtable').innerHTML = `<thead><tr><th>Produit</th><th>Variante</th><th class="num">Régulier</th><th class="num">Final</th><th class="num">Rabais</th><th>Promo</th><th class="num">Stock</th></tr></thead><tbody>` +
+    rows.map(([p, v, pr]) => `<tr class="click" data-id="${p.id}"><td>${esc(fr(p.name))}</td><td class="small">${esc(v ? fr(v.label) : '—')}</td>
+      <td class="num">${money(pr.regular)}</td><td class="num price promo">${money(pr.final)}</td>
+      <td class="num">${pr.promo.discount_pct != null ? '-' + pr.promo.discount_pct + ' %' : ''}</td>
+      <td class="small">${promoText(pr.promo)}</td><td class="num">${v ? v.quantity : p.stock.quantity}</td></tr>`).join('') + '</tbody>';
+}
+$('#prtable').addEventListener('click', e => { const r = e.target.closest('tr.click'); if (r) openProduct(+r.dataset.id); });
+
+renderTree(); renderProducts(); renderCategories(); renderPromos();
+</script>
+</body>
+</html>
