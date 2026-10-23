@@ -16,41 +16,44 @@ nbproject
 
 # Cache, temp and personal files
 
-cache/*
-download/*
-img/*
-log/*
-upload/*
-vendor/*
+/site/cache/*
+/site/download/*
+/site/img/*
+/site/log/*
+/site/upload/*
+/site/vendor/*
 
-admin0181/autoupgrade/*
-admin0181/backups/*
-admin0181/import/*
+/site/admin0181/autoupgrade/*
+/site/admin0181/backups/*
+/site/admin0181/import/*
 
-themes/*/cache/*
-admin0181/themes/*/cache/*
+/site/themes/*/cache/*
+/site/admin0181/themes/*/cache/*
 
 # Config
-config/settings.inc.php
-config/settings.old.php
-config/xml/*
-!config/xml/themes/default.xml
+/site/config/settings.inc.php
+/site/config/settings.old.php
+/site/config/xml/*
+!/site/config/xml/themes/default.xml
 
 # Modules files
-modules/homeslider/images/*
-modules/blockbanner/img
-modules/gmerchantcenter/reporting/
-!modules/gmerchantcenter/reporting/
+/site/modules/homeslider/images/*
+/site/modules/blockbanner/img
+/site/modules/gmerchantcenter/reporting/
+!/site/modules/gmerchantcenter/reporting/
 # MISC
 *sitemap.xml
 gmerchantcenter*.xml
 google*.html
 
-/.htaccess
+/site/.htaccess
 
-admin0181/export/
-/*.csv
-modules/export_catalog/
+# Point de montage de export-catalogue/ (docker-compose.yml local)
+/site/export-catalogue/
+
+/site/admin0181/export/
+/site/*.csv
+/site/modules/export_catalog/
 
 # Extractions du catalogue
 export-catalogue/out/

@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 volumes:
     db-data:
 
@@ -30,4 +28,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./:/var/www/html
+      - ./site:/var/www/html
+      # Même emplacement qu'en prod (site/export-catalogue/) pour export-catalogue/run.sh
+      - ./export-catalogue:/var/www/html/export-catalogue:ro
