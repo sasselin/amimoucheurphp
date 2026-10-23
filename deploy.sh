@@ -61,7 +61,7 @@ if [[ $INFRA == 1 ]]; then
     Dockerfile php-hardening.ini apache-site.conf apache-mpm.conf mysql-lowmem.cnf Caddyfile \
     "$PROD_SSH:$PROD_DIR/"
   rsync -az --itemize-changes "${DRY_RUN[@]}" docker-compose.prod.yml "$PROD_SSH:$PROD_DIR/docker-compose.yml"
-  rsync -az --chmod=F755 --itemize-changes "${DRY_RUN[@]}" cron-run.sh "$PROD_SSH:$PROD_DIR/"
+  rsync -az --chmod=F755 --itemize-changes "${DRY_RUN[@]}" cron-run.sh backup-db.sh restore-db.sh "$PROD_SSH:$PROD_DIR/"
   rsync -az --itemize-changes "${DRY_RUN[@]}" crontab "$PROD_SSH:$PROD_DIR/"
 fi
 

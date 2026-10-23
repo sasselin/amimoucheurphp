@@ -11,3 +11,5 @@ R=/srv/amimoucheur/cron-run.sh
 0 5 * * *  $R sitemap "/modules/gsitemap/gsitemap-cron.php?token=9b604a4236&id_shop=1" "1_index_sitemap.xml"
 # Flux Google Shopping
 1 0 * * *  $R merchant "/modules/gmerchantcenter/cron.php?id_shop=1&token=e0f4eec1a5c88e4c35fb81c5ff760eb9" "gmerchantcenter*.xml"
+# Sauvegarde de la BD (restic local + Google Drive) ; voir backup-db.sh
+30 3 * * * /srv/amimoucheur/backup-db.sh
