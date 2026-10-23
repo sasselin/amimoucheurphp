@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Extraction du catalogue -> export-catalogue/out/<date>/ (JSON, CSV, XLSX, recatégorisation proposée).
+# Extraction du catalogue -> export-catalogue/out/<source>/ (JSON, CSV, XLSX, recatégorisation proposée).
+# Le dossier est vidé et réécrit à chaque extraction : même chemin, il suffit de rafraîchir.
 # Usage : ./export-catalogue/run.sh             base locale (conteneur apache du docker-compose.yml)
 #         ./export-catalogue/run.sh --prod      base de prod via SSH (rien n'est écrit sur le serveur)
 #         ./export-catalogue/run.sh --verify    + contrôle des pages produit sur le site local
@@ -29,8 +30,10 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-OUT="$DIR/out/$(date +%Y-%m-%d_%H%M)_$SOURCE${TOUT:+_tout}"
+OUT="$DIR/out/$SOURCE${TOUT:+_tout}"
 mkdir -p "$OUT"
+# On vide le contenu sans supprimer le dossier : une fenêtre ou un onglet déjà ouverts restent valides
+find "$OUT" -mindepth 1 -delete
 JSON="$OUT/catalogue.json"
 PHP_ARGS="--base-url=$BASE_URL --source=$SOURCE --abandon-avant=${ABANDON_AVANT:-2023-01-01}$TOUT"
 
@@ -47,7 +50,6 @@ fi
 uv run --quiet "$DIR/description_images.py" "$JSON" "$OUT"
 uv run --quiet "$DIR/build.py" "$JSON" "$OUT"
 uv run --quiet "$DIR/recategorise.py" "$JSON" "$OUT"
-ln -sfn "$(basename "$OUT")" "$DIR/out/latest"
 
 if [[ $VERIFY == 1 ]]; then
   if [[ $SOURCE == prod ]]; then

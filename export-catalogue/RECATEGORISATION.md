@@ -5,11 +5,11 @@ Proposition pour le nouveau site de L'Ami du Moucheur. Elle couvre l'arborescenc
 Tout est **calculé et vérifiable**, rien n'est fait à la main dans un tableur :
 - `taxonomie.json` décrit la proposition : l'arbre, les filtres, les tags, les marques, les couleurs et les règles ;
 - `recategorise.py` l'applique à chaque produit et à chaque variante ;
-- `out/latest/recategorisation/avant_apres.html` montre le résultat.
+- `out/local/recategorisation/avant_apres.html` montre le résultat.
 
 ```bash
 ./export-catalogue/run.sh                       # extraction + recatégorisation
-uv run export-catalogue/recategorise.py export-catalogue/out/latest/catalogue.json export-catalogue/out/latest
+uv run export-catalogue/recategorise.py export-catalogue/out/local/catalogue.json export-catalogue/out/local
 ```
 
 ## 1. Ce qui ne va pas aujourd'hui
@@ -48,13 +48,13 @@ C'est là qu'on se démarque.
 
 ## 3. Principes
 
-1. **Catégorie = ce qu'est le produit.** Au plus 3 niveaux, jamais une marque ni un fournisseur.
+1. **Catégorie = ce qu'est le produit.** Au plus 2 niveaux, jamais une marque ni un fournisseur.
 2. **Filtre = attribut typé, propre à la famille du produit.** Une canne a un numéro de soie, une longueur et des sections ; un hameçon a une taille, un usage et une quantité par paquet.
 3. **Deux couches : le libellé du fabricant et la valeur de filtre** (voir section 6).
 4. **Tag = vocabulaire contrôlé** : espèce, technique, milieu. **Badge = mise en avant**, calculée automatiquement autant que possible.
 5. **Marque = filtre + page marque.** Les 97 anciennes catégories-marques deviennent des URL filtrées (redirection 301).
 
-## 4. Arborescence : 9 univers, 87 catégories
+## 4. Arborescence : 9 univers, 71 catégories
 
 Nombre de produits entre parenthèses, en comptant les catégories secondaires.
 
@@ -64,10 +64,7 @@ Nombre de produits entre parenthèses, en comptant les catégories secondaires.
 - **Mouches** (197) : Sèches · Nymphes · Noyées · Streamers & tandems · Mouches à saumon · Surface & souris · Eau salée · Flottants & calants
 - **Montage** (478) :
   - Étaux · Outils · Hameçons · Fils de montage
-  - Plumes (coq & poule, canard, dinde & marabou, faisan, paon, autres)
-  - Poils & fourrures (cervidés, lapin, renard, écureuil, autres)
-  - Dubbing
-  - Synthétiques (flash & fibres, chenilles, corps, pattes, mousse)
+  - Plumes · Poils & fourrures · Dubbing · Synthétiques : l'animal (coq, canard, faisan, lapin, renard…) ou le type (flash & fibres, chenille, corps, pattes, mousse) est un filtre **Matière**, pas un 3e niveau
   - Billes, cônes & yeux · Tinsels, floss & fils métalliques · Colles, vernis & UV · Mouche-tube · Ensembles & kits · Rangement
 - **Waders & bottes** (52) : Waders · Bottes de wading · Accessoires de wading (crampons, semelles, réparation, bâtons)
 - **Vêtements** (90) : Manteaux & pluie · Hauts & couches · Pantalons · Chapeaux, casquettes & tuques · Gants · Bas. Homme et Femme deviennent un filtre Genre.
@@ -171,7 +168,7 @@ Les espèces ne sont posées que là où le nom ou la catégorie le dit : 190 pr
 
 ## 11. Fichiers produits
 
-Dans `export-catalogue/out/latest/recategorisation/` :
+Dans `export-catalogue/out/local/recategorisation/` :
 
 | Fichier | Contenu |
 |---|---|

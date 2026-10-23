@@ -10,7 +10,7 @@ Extrait le catalogue **tel qu'il est vendu sur le site**, dans un format simple 
 ABANDON_AVANT=2024-01-01 ./export-catalogue/run.sh   # change la date limite « abandonné »
 ```
 
-Le résultat est écrit dans `export-catalogue/out/<date>_<source>/`, et `out/latest` pointe vers la dernière extraction. Le dossier `out/` n'est pas versionné.
+Le résultat est écrit dans `export-catalogue/out/<source>/` (`local`, `prod`, suffixe `_tout` avec `--tout`). Le dossier est vidé et réécrit à chaque extraction : le chemin ne change pas, il suffit de rafraîchir la page ou la fenêtre déjà ouverte. Le dossier `out/` n'est pas versionné.
 
 En local, `docker-compose.yml` monte ce dossier en lecture seule dans `/var/www/html/export-catalogue` (le site est dans `site/`), comme en prod.
 
@@ -49,7 +49,7 @@ Les CSV sont en UTF-8 avec BOM et séparateur virgule.
 `recategorise.py` est lancé par `run.sh` après `build.py`. Il applique `taxonomie.json` à chaque produit : la nouvelle catégorie, la marque, les filtres normalisés, les tags d'espèce et de technique, et les badges. La proposition et le benchmark sont dans [RECATEGORISATION.md](RECATEGORISATION.md).
 
 ```bash
-uv run export-catalogue/recategorise.py export-catalogue/out/latest/catalogue.json export-catalogue/out/latest
+uv run export-catalogue/recategorise.py export-catalogue/out/local/catalogue.json export-catalogue/out/local
 ```
 
 On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.

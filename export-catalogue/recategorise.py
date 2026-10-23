@@ -125,6 +125,8 @@ def classify(p, tax, cats_old):
 
     if p["id"] in tax.produits:
         o = tax.produits[p["id"]]
+        if o.get("matiere"):
+            infos.append({"matiere": o["matiere"]})
         return o["cat"], list(o.get("cat_secondaires", [])), "manuel", infos, old_brands
 
     cat, source = None, ""
@@ -312,7 +314,7 @@ def facets_for(p, cat, famille, tax, infos, brand):
     name = norm(t(p["name"]) + " | " + t(p["name"], "en"))
     F = defaultdict(list)
     specs, rows, alerts = [], [], []
-    old_info = {k: v for i in infos for k, v in i.items() if k in ("matiere", "type_outil", "usage_hamecon")}
+    old_info = {k: v for i in infos for k, v in i.items() if k in ("type_outil", "usage_hamecon")}
 
     def add(key, vals):
         for v in vals if isinstance(vals, list) else [vals]:
@@ -382,8 +384,9 @@ def facets_for(p, cat, famille, tax, infos, brand):
                 add("usage_hamecon", usages)
         add("usage_hamecon", old_info.get("usage_hamecon"))
         add("sans_ardillon", "Oui" if re.search(r"barbless|sans ardillon|\bbl\b", name) else "Non")
-    if famille in ("materiaux", "billes", "outils") and old_info.get("matiere"):
-        add("matiere", old_info["matiere"])
+    if famille in ("materiaux", "billes", "outils"):
+        # seules les anciennes catégories qui mènent à la catégorie principale donnent la matière
+        add("matiere", [i["matiere"] for i in infos if i.get("matiere") and i.get("cat", cat) == cat])
     if famille == "outils":
         add("type_outil", old_info.get("type_outil") or ("Étau" if cat == "etaux" else None))
     if famille == "billes":
