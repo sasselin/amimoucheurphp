@@ -45,8 +45,11 @@ REPO_MB=$(du -sm "$RESTIC_REPOSITORY" | cut -f1)
 # Dump non compressé (sinon pas de déduplication) ; --skip-dump-date pour une sortie
 # stable. restic 0.16 (Ubuntu 24.04) n'a pas --stdin-from-command : si mysqldump
 # échoue, le snapshot (dump tronqué) est supprimé.
+# ps_ccofflinepayment (numéros de cartes du module creditcardofflinepayment) : structure
+# seulement, jamais les données.
 docker compose exec -T mysql sh -c \
-  'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --quick --routines --triggers --events --skip-dump-date amimoucheur' \
+  'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --quick --routines --triggers --events --skip-dump-date --ignore-table=amimoucheur.ps_ccofflinepayment amimoucheur \
+   && exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --no-data --skip-dump-date amimoucheur ps_ccofflinepayment' \
   2>"$OUT" | restic backup --json --tag db --stdin --stdin-filename amimoucheur.sql >>"$OUT" 2>&1
 RC=("${PIPESTATUS[@]}")
 if (( RC[0] != 0 )); then

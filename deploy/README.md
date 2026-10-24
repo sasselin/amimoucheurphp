@@ -67,6 +67,7 @@ La crontab de l'usager `amimoucheur` (heure de Toronto) appelle `cron-run.sh`, q
 
 Chaque nuit à 3 h 30, `backup-db.sh` envoie un `mysqldump` complet dans un dépôt restic chiffré et dédupliqué (`/srv/amimoucheur/backups/restic`), puis le copie sur Google Drive (`gdrive:amimoucheur-backup/restic`) avec rclone.
 
+- La table `ps_ccofflinepayment` (cartes du module `creditcardofflinepayment`) est exclue : seule sa structure est sauvegardée, jamais son contenu.
 - Rétention : 14 jours, 8 semaines, 12 mois. Le nettoyage (`prune`) et la vérification (`restic check`) se font le dimanche.
 - Garde-fous : pas de sauvegarde s'il reste moins de 3 Go libres ou si le dépôt dépasse 5 Go.
 - Tout échec envoie un courriel.
