@@ -4,7 +4,7 @@ Extraction du catalogue PrestaShop 1.6.1.4, recatégorisation proposée pour le 
 
 ## Pipeline
 
-`run.sh` : `export.php` (dans le conteneur apache, local ou prod par SSH) → `description_images.py` → `build.py` → `recategorise.py` → `test_redirections.py`.
+`run.sh` : `export.php` (dans le conteneur apache, local ou prod par SSH ; en prod, le script passe par l'entrée standard, rien n'est copié sur le serveur) → `description_images.py` → `build.py` → `recategorise.py` → `test_redirections.py`.
 
 - La sortie va dans `out/<source>[_tout]/`, à un chemin fixe. Le dossier est vidé puis réécrit à chaque run. Il n'est pas versionné.
 - Le run local exige `docker compose up -d` à la racine du dépôt.

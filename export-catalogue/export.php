@@ -20,6 +20,16 @@ if (php_sapi_name() !== 'cli') {
     exit;
 }
 
+// Lu depuis l'entrée standard (extraction de prod, voir run.sh), PHP ne définit pas STDERR et le nom
+// du script vaut « - » : PrestaShop s'arrête alors sans message pendant config.inc.php
+if (!defined('STDERR')) {
+    define('STDERR', fopen('php://stderr', 'w'));
+}
+if ($_SERVER['SCRIPT_NAME'] === '-') {
+    $_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = '/export-catalogue/export.php';
+    $_SERVER['SCRIPT_FILENAME'] = getcwd().'/../export-catalogue/export.php';
+}
+
 ini_set('memory_limit', '1536M');
 set_time_limit(0);
 

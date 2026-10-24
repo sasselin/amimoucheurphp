@@ -92,7 +92,7 @@ Les liens `<a href="/...">` relatifs sont aussi réécrits en URL complètes. La
 
 ## Prod
 
-`--prod` exécute `export.php` dans le conteneur apache de la prod par SSH (`amimoucheur@143.198.43.249`, `/srv/amimoucheur`) et récupère le JSON en local : rien n'est écrit sur le serveur. Il faut d'abord y avoir copié ce dossier (`site/export-catalogue/`). On peut changer la cible avec `PROD_SSH`, `PROD_DIR` et `BASE_URL`. Le `.htaccess` bloque l'accès web au dossier, et `export.php` refuse de tourner hors CLI.
+`--prod` exécute `export.php` dans le conteneur apache de la prod par SSH (`amimoucheur@143.198.43.249`, `/srv/amimoucheur`) et récupère le JSON en local : rien n'est écrit sur le serveur. Le script n'est pas déployé en prod : `run.sh` l'envoie par l'entrée standard de SSH et le lance depuis `classes/`, avec `HTTP_HOST` égal au domaine de `BASE_URL` (sinon PrestaShop redirige et s'arrête sans message). On peut changer la cible avec `PROD_SSH`, `PROD_DIR` et `BASE_URL`. Le `.htaccess` bloque l'accès web au dossier, et `export.php` refuse de tourner hors CLI.
 
 ## Vérification
 

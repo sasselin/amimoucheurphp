@@ -46,9 +46,15 @@ if [[ $SOURCE == local ]]; then
   docker compose -f "$ROOT/docker-compose.yml" exec -T apache \
     php /var/www/html/export-catalogue/export.php $PHP_ARGS > "$JSON"
 else
-  # Docker rootless : le socket est celui de l'usager amimoucheur
+  # Docker rootless : le socket est celui de l'usager amimoucheur.
+  # export.php n'est pas déployé en prod : il passe par l'entrée standard, rien n'est copié sur le serveur.
+  # Lu depuis stdin, son dirname(__FILE__) vaut « . » : on l'exécute depuis un sous-dossier du site
+  # (classes/) pour que « ./../config/config.inc.php » trouve la configuration PrestaShop.
+  # HTTP_HOST doit être le domaine de la boutique, sinon PrestaShop redirige (et s'arrête) en silence.
+  HOST="${BASE_URL#*://}"; HOST="${HOST%%/*}"
   ssh "$PROD_SSH" "cd '$PROD_DIR' && export DOCKER_HOST=\${DOCKER_HOST:-unix:///run/user/\$(id -u)/docker.sock} \
-    && docker compose exec -T apache php /var/www/html/export-catalogue/export.php $PHP_ARGS" > "$JSON"
+    && docker compose exec -T -e HTTP_HOST=$HOST -w /var/www/html/classes apache php -- $PHP_ARGS" \
+    < "$DIR/export.php" > "$JSON"
 fi
 
 uv run --quiet "$DIR/description_images.py" "$JSON" "$OUT"
