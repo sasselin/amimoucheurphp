@@ -1,0 +1,95 @@
+# Infrastructure de production
+
+Hôte : droplet DigitalOcean `143.198.43.249` (Ubuntu 24.04, 1 vCPU, 1 Go de RAM, région tor1). DNS et pare-feu applicatif chez Cloudflare (proxy actif).
+
+## Architecture
+
+```
+Visiteur → Cloudflare → UFW (80/443 depuis les IP Cloudflare seulement)
+         → caddy (TLS Let's Encrypt) → apache (PHP 5.6, mod_php) → mysql 5.6
+```
+
+Tout est dans `/srv/amimoucheur`, sous l'usager `amimoucheur` (sans sudo, Docker rootless). Les comptes `sass` et `deploy` servent à l'administration ; la connexion SSH en root est désactivée.
+
+| Fichier | Rôle |
+|---|---|
+| `docker-compose.prod.yml` | Copié en `/srv/amimoucheur/docker-compose.yml`. Services `mysql` (400 Mo max), `apache` (700 Mo max), `caddy`. |
+| `Dockerfile` | Image `amimoucheur-php56` : Apache et PHP 5.6 de `ppa:ondrej/php`, qui publie le correctif php2shell. L'image officielle `prestashop/base:5.6-apache` n'est plus corrigée. |
+| `php-hardening.ini` | Atténuations php2shell, `disable_functions`, envoi des courriels par msmtp. |
+| `apache-site.conf` | Vraie IP client (`CF-Connecting-IP`), HTTPS vu par PrestaShop, blocage des POST multipart hors `/admin0181/`, pas de PHP dans les dossiers inscriptibles. |
+| `apache-mpm.conf`, `mysql-lowmem.cnf` | Réglages pour 1 Go de RAM. |
+| `Caddyfile` | Certificats automatiques, `amimoucheur.com` → `www`. |
+| `crontab`, `cron-run.sh` | Crons PrestaShop (taux de change, sitemap, flux Google Shopping) avec courriel d'alerte en cas d'échec. |
+| `backup-db.sh`, `restore-db.sh` | Sauvegarde nocturne de la BD et restauration. |
+| `ufw-cloudflare.sh` | Pare-feu : SSH ouvert, 80/443 depuis Cloudflare seulement. À lancer en sudo, et à relancer si Cloudflare change ses plages. |
+| `.env.example`, `msmtprc.example` | Modèles des fichiers secrets (voir plus bas). |
+
+## Déploiement
+
+Depuis la racine du dépôt :
+
+```bash
+./deploy.sh --dry-run --infra   # vérifier
+./deploy.sh --infra             # envoie deploy/, reconstruit les conteneurs, installe la crontab
+```
+
+Fichiers présents seulement sur le serveur, jamais dans le dépôt :
+
+| Fichier dans `/srv/amimoucheur` | Contenu |
+|---|---|
+| `.env` | `MYSQL_ROOT_PASSWORD` (modèle : `.env.example`). |
+| `msmtprc` | Accès au relais SMTP Brevo (modèle : `msmtprc.example`). |
+| `restic-password` | Mot de passe du dépôt de sauvegarde. **À garder aussi hors du serveur**, sans lui les sauvegardes sont illisibles. |
+| `site/config/settings.inc.php` | Accès BD et clés de PrestaShop. |
+| `~amimoucheur/.config/rclone/rclone.conf` | Accès Google Drive (portée `drive.file`). |
+
+## Courriels
+
+PrestaShop appelle `mail()`, qui passe par msmtp dans le conteneur, puis par Brevo (`smtp-relay.brevo.com:2525`, STARTTLS). DigitalOcean bloque les ports 25, 465 et 587, et le SwiftMailer de PrestaShop 1.6 ne gère pas STARTTLS. Les courriels entrants passent par Google Workspace.
+
+## Crons et alertes
+
+La crontab de l'usager `amimoucheur` (heure de Toronto) appelle `cron-run.sh`, qui interroge Caddy en local (`--resolve 127.0.0.1`, pour éviter le challenge Cloudflare sur l'admin). Un cron est en échec si le code HTTP n'est pas 2xx, si la réponse contient une erreur PHP, ou si le fichier attendu (sitemap, flux XML) n'a pas été régénéré. L'échec est noté dans `/srv/amimoucheur/cron.log` et envoyé par courriel.
+
+## Sauvegardes de la BD
+
+Chaque nuit à 3 h 30, `backup-db.sh` envoie un `mysqldump` complet dans un dépôt restic chiffré et dédupliqué (`/srv/amimoucheur/backups/restic`), puis le copie sur Google Drive (`gdrive:amimoucheur-backup/restic`) avec rclone.
+
+- Rétention : 14 jours, 8 semaines, 12 mois. Le nettoyage (`prune`) et la vérification (`restic check`) se font le dimanche.
+- Garde-fous : pas de sauvegarde s'il reste moins de 3 Go libres ou si le dépôt dépasse 5 Go.
+- Tout échec envoie un courriel.
+
+### Restaurer
+
+Sur le serveur, en tant qu'`amimoucheur` :
+
+```bash
+./restore-db.sh                                   # liste les sauvegardes
+./restore-db.sh latest --to-file /tmp/bd.sql      # extrait un dump
+./restore-db.sh <snapshot> --into-db              # remplace la BD de prod (demande « oui », sauvegarde l'état actuel avant)
+```
+
+Si le serveur est perdu, depuis une autre machine avec rclone et restic :
+
+```bash
+rclone copy gdrive:amimoucheur-backup/restic ./restic
+RESTIC_REPOSITORY=./restic restic dump latest amimoucheur.sql > amimoucheur.sql
+```
+
+## Sécurité (php2shell, CVE-2026-109618 / CVE-2026-109619)
+
+Plusieurs couches de protection :
+
+1. PHP 5.6.40-105 corrigé (`ppa:ondrej/php`).
+2. `session.upload_progress.enabled = 0`.
+3. POST multipart bloqués hors `/admin0181/`, dans Apache et par une règle Cloudflare.
+4. Admin bloqué hors Canada et protégé par un challenge Cloudflare.
+5. Port 80/443 fermé à tout sauf Cloudflare (UFW).
+
+## Permissions
+
+Le `www-data` du conteneur correspond sur l'hôte à l'usager `ct-www-data` (UID/GID 165568, Docker rootless). Le code appartient à `amimoucheur:ct-www-data` ; ce que PrestaShop génère (cache, img, upload, log, sitemaps, flux XML...) appartient à `ct-www-data`. Les dossiers sont en setgid. C'est pourquoi `deploy.sh` utilise `rsync -rlt`, sans `-p` ni `-g`.
+
+## Jour J (nouveau site)
+
+Les redirections 301 de l'ancien site sont produites par `export-catalogue/` et s'importent dans le bloc `www.amimoucheur.com` du `Caddyfile`, avant le `reverse_proxy`. La procédure est dans [export-catalogue/CLAUDE.md](../export-catalogue/CLAUDE.md). Le `Caddyfile` actuel n'est pas encore modifié.
