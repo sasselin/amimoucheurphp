@@ -42,6 +42,7 @@ Les compteurs sont dans `meta.excluded`. Avec `--tout`, on garde tout, et chaque
 | `images_descriptions.csv` | Le rapport des images des descriptions : `ok`, `archive` (URL de la copie archive.org) ou `perdue` (balise retirée). |
 | `verification.csv` | Avec `--verify` : le résultat produit par produit. |
 | `recategorisation/` | La nouvelle taxonomie appliquée au catalogue : `index.html` (la page à consulter), les mappings produits, variantes, catégories et couleurs, et `rapport.md`. Voir plus bas. |
+| `recategorisation/recategorisation.json` | Les décisions de la recatégorisation, typées, lues par l'import du nouveau site. Voir plus bas. |
 | `recategorisation/caddy/` | Les redirections 301 du jour J : `redirections.caddy`, `redirections.csv`, `LISEZMOI.md`. Voir plus bas. |
 
 Les CSV sont en UTF-8 avec BOM et séparateur virgule.
@@ -55,6 +56,18 @@ uv run export-catalogue/recategorise.py export-catalogue/out/local/catalogue.jso
 ```
 
 On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit (sauf la majuscule initiale des couleurs) : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
+
+### `recategorisation.json` (contrat de l'import du nouveau site)
+
+Écrit par `write_json` (recategorise.py). Il ne porte que les **décisions**, reliées par id PrestaShop ; les faits (prix, stock, variantes, images, descriptions) restent dans `catalogue.json`. Un changement incompatible incrémente `meta.schema_version`.
+
+- `categories[]` : `key` (id du nœud), `parent`, `position`, `family`, `utility`, `name`/`slug`/`path` en fr et en (slug fr = id du nœud, slug en = nom anglais).
+- `brands[]` : `name`, `slug`, `prestashop_id` (si la marque existait dans PrestaShop), `partner`.
+- `facets[]` : facettes propres aux familles (pas les communes) : `key`, `kind` (`range`, `number`, `bool`, `color`, `text`), `unit`, `label` fr/en, `values[]` (`value`, `label` fr/en, `en` à `null` quand il n'existe pas, `hex` pour les couleurs).
+- `families[]` (depuis la version 2) : les familles de `taxonomie.json`, devenues les types de produit du nouveau site : `key`, `position`, `name` fr/en, `facets[]` dans l'ordre (`key`, `varies` : portée par au moins une option de variante de la famille, `required` : filtre sans lequel le produit est à réviser).
+- `tags[]`, `badges[]` (badges manuels seulement : les autres se calculent), `fusions[]` (`absorbed` → `kept`).
+- `products[]` : `id`, `name` (après `noms_produit`), `slug` et `slug_source`, `category`, `secondary_categories`, `brand`, `facets`, `tags`, `badges`, `variant_ids` et `images` (après fusion : ceux de la fiche absorbée y sont), `absorbed`, `confidence`, `review`.
+- `variant_options[]` : une ligne par option de variante (`variant_id`, `position` de l'attribut), avec la facette principale, toutes les valeurs de filtre lues (`facets`) et le `status` de `mapping_variantes.csv`.
 
 ## Redirections du jour J
 

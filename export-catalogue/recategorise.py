@@ -9,7 +9,7 @@ Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de f
 Seule exception : une couleur prend une majuscule initiale (« earth » -> « Earth »).
 
 Usage : uv run export-catalogue/recategorise.py <catalogue.json> <dossier_sortie>
-Sortie : <dossier_sortie>/recategorisation/ (index.html, CSV, XLSX, rapport.md, caddy/)
+Sortie : <dossier_sortie>/recategorisation/ (index.html, CSV, XLSX, rapport.md, recategorisation.json, caddy/)
 """
 import json
 import re
@@ -382,16 +382,20 @@ def hook_sort(s):
 def facets_for(p, cat, famille, tax, infos, brand):
     """Facettes du produit et lignes de mapping des variantes.
 
-    Retourne (facettes: {clé: [valeurs]}, specs: [(clé, libellé fabricant, valeur filtre)], lignes, alertes)."""
+    Retourne (facettes: {clé: [valeurs]}, specs: [(clé, libellé fabricant, valeur filtre)], lignes, alertes,
+    options) ; options : les facettes de chaque option de variante, typées, pour recategorisation.json."""
     name = norm(t(p["name"]) + " | " + t(p["name"], "en"))
     F = defaultdict(list)
-    specs, rows, alerts = [], [], []
+    specs, rows, alerts, options = [], [], [], []
+    courantes = []  # (clé, valeur) ajoutées pendant la lecture de l'option en cours
     old_info = {k: v for i in infos for k, v in i.items() if k in ("type_outil", "usage_hamecon")}
 
     def add(key, vals):
         for v in vals if isinstance(vals, list) else [vals]:
-            if v not in (None, "") and v not in F[key]:
-                F[key].append(v)
+            if v not in (None, ""):
+                courantes.append((key, v))
+                if v not in F[key]:
+                    F[key].append(v)
 
     for k, vals in tax.data["filtres_produit"].get(str(p["id"]), {}).items():
         if not k.startswith("_"):
@@ -403,6 +407,12 @@ def facets_for(p, cat, famille, tax, infos, brand):
                      "libelle_fabricant": libelle_couleur(t(a["value"])) if facette == "couleur" else t(a["value"]),
                      "facette": tax.data["facettes"].get(facette, {}).get("fr", facette) if facette else "",
                      "valeur_filtre": valeur, "statut": statut})
+        valeurs = defaultdict(list)
+        for k, x in courantes:
+            if str(x) not in valeurs[k]:
+                valeurs[k].append(str(x))
+        options.append({"variant_id": v["id"], "position": v["attributes"].index(a), "facet": facette or None,
+                        "facets": dict(valeurs), "status": statut})
 
     # ---- niveau produit
     if famille == "cannes":
@@ -492,6 +502,7 @@ def facets_for(p, cat, famille, tax, infos, brand):
     # ---- niveau variante
     for v in p["variants"]:
         for a in v["attributes"]:
+            courantes.clear()
             g, val = t(a["group"]), t(a["value"])
             gn, vn = norm(g), norm(val)
             if gn == "moulinet ou bobine":
@@ -693,7 +704,7 @@ def facets_for(p, cat, famille, tax, infos, brand):
         F["taille_hamecon"] = sorted(set(F["taille_hamecon"]), key=lambda s: hook_sort(s) if hook_size(s) else 99)
     if F["taille"] and all(s in SIZE_ORDER for s in F["taille"]):
         F["taille"] = sorted(F["taille"], key=SIZE_ORDER.index)
-    return {k: v for k, v in F.items() if v}, specs, rows, alerts
+    return {k: v for k, v in F.items() if v}, specs, rows, alerts, options
 
 
 # ---------------------------------------------------------------- tags et badges
@@ -1085,16 +1096,17 @@ def main():
     fac_label = {k: v["fr"] for k, v in tax.data["facettes"].items()}
 
     tax.assign_slugs(doc["products"])
-    results, var_rows, prod_rows = [], [], []
+    results, var_rows, prod_rows, opt_rows = [], [], [], []
     for p in doc["products"]:
         cat, second, source, infos, old_brands = classify(p, tax, cats_old)
         brand, bsrc = brand_of(p, tax, old_brands)
         famille = tax.nodes[cat]["famille"] if cat else "generique"
-        facets, specs, rows, alerts = facets_for(p, cat, famille, tax, infos, brand)
+        facets, specs, rows, alerts, options = facets_for(p, cat, famille, tax, infos, brand)
         if famille == "moulinets" and "Bobine" in facets.get("moulinet_bobine", []) and "bobines" not in second:
             second.append("bobines")
         tags, badges = tags_for(p, cat, famille, tax, infos, brand, facets, ref_date)
         var_rows += rows
+        opt_rows += options
 
         raisons = uniq(alerts)
         if not cat:
@@ -1102,8 +1114,7 @@ def main():
         # Les matériaux en vrac emballés par la boutique n'ont pas de marque : ce n'est pas une erreur
         if not brand and famille not in ("materiaux", "billes", "outils") and str(p["id"]) not in tax.data["marques_produit"]:
             raisons.append("marque inconnue")
-        need = {"cannes": ["numero_soie", "longueur"], "moulinets": ["numero_soie"], "soies": ["numero_soie"],
-                "hamecons": ["taille_hamecon", "usage_hamecon"], "mouches": ["taille_hamecon"]}.get(famille, [])
+        need = list(FILTRES_REQUIS.get(famille, []))
         if cat in ("etuis-cannes", "etuis-moulinets", "entretien-soies", "flottants", "corde-reserve", "bobines",
                    "pointes", "running-lines"):
             need = []
@@ -1244,6 +1255,7 @@ def main():
     photos, photo_rows = photos_par_couleur(doc, tax)
     write_csv(dest / "photos_couleurs.csv", photo_rows)
     redir = write_redirections(dest / "caddy", doc, results, tax, old_rows)
+    write_json(dest / "recategorisation.json", doc, results, tax, opt_rows)
     wb = Workbook()
     wb.remove(wb.active)
     for title, rows in (("Produits", prod_rows), ("Nouvelles categories", new_rows),
@@ -1259,6 +1271,131 @@ def main():
     print(f"Recatégorisation : {len(results)} produits -> {len(tax.nodes)} catégories ; "
           f"{stats['a_reviser']} à réviser ; {len(redir)} redirections Caddy ; "
           f"{auto} photos de couleur devinées (photos_couleurs.csv). Voir {dest}")
+
+
+# Filtres sans lesquels un produit de la famille est « à réviser » ; repris par le nouveau site comme
+# caractéristiques obligatoires de chaque type de produit.
+FILTRES_REQUIS = {"cannes": ["numero_soie", "longueur"], "moulinets": ["numero_soie"], "soies": ["numero_soie"],
+                  "hamecons": ["taille_hamecon", "usage_hamecon"], "mouches": ["taille_hamecon"]}
+
+# Nom des familles, devenues les « types de produit » du nouveau site.
+NOMS_FAMILLES = {
+    "cannes": ("Cannes", "Rods"), "moulinets": ("Moulinets", "Reels"), "soies": ("Soies", "Fly lines"),
+    "avancons": ("Avançons et pointes", "Leaders and tippets"), "mouches": ("Mouches", "Flies"),
+    "hamecons": ("Hameçons", "Hooks"), "materiaux": ("Matériaux de montage", "Fly tying materials"),
+    "billes": ("Billes et têtes", "Beads and heads"), "outils": ("Outils", "Tools"),
+    "vetements": ("Vêtements", "Clothing"), "rangement": ("Rangement", "Storage"),
+    "lunettes": ("Lunettes", "Sunglasses"), "generique": ("Autres produits", "Other products"),
+}
+
+
+def write_json(path, doc, results, tax, opt_rows):
+    """recategorisation.json : les décisions de la recatégorisation, typées, pour l'import du nouveau site.
+
+    Les faits (prix, stock, variantes, images, descriptions) restent dans catalogue.json : ce fichier ne porte
+    que les décisions, reliées par id PrestaShop. Contrat versionné (meta.schema_version), décrit dans README.md."""
+    by_id = {p["id"]: p for p in doc["products"]}
+    absorbes = defaultdict(list)
+    for f in doc.get("fusions", []):
+        absorbes[f["cible"]].append(f["produit"]["id"])
+
+    def lab(fr, en):
+        return {"fr": fr, "en": en}
+
+    categories = []
+    for cid, n in tax.nodes.items():
+        siblings = tax.nodes[n["parent"]]["enfants"] if n["parent"] else [c["id"] for c in tax.data["arbre"]]
+        categories.append({
+            "key": cid, "parent": n["parent"], "position": siblings.index(cid), "family": n["famille"],
+            "utility": n["utilitaire"], "name": lab(n["fr"], n["en"]),
+            "slug": lab(cid, slug(n["en"])), "path": lab(tax.url(cid, "fr"), tax.url(cid, "en")),
+        })
+
+    old_brand_ids = {norm(b["name"]).rstrip("."): b["id"] for b in doc["brands"]}
+    partners = set(tax.data["partenaires"]["marques"])
+    brands = []
+    for name in sorted({r["brand"] for r in results if r["brand"]} | partners, key=norm):
+        alias = [norm(name), *(norm(a) for a in tax.data["marques"].get(name, []))]
+        pid = next((old_brand_ids[a] for a in alias if a in old_brand_ids), None)
+        brands.append({"name": name, "slug": slug(name), "prestashop_id": pid, "partner": name in partners})
+
+    kinds = {"plage": "range", "bool": "bool", "nombre": "number", "couleur": "color"}
+    familles = {f["id"]: f for f in tax.couleurs["familles"]}
+    used = defaultdict(list)
+    for r in results:
+        for k, vals in r["facets"].items():
+            used[k] += [str(v) for v in vals]
+    for o in opt_rows:
+        for k, vals in o["facets"].items():
+            used[k] += vals
+
+    def tri(v):
+        try:
+            return (0, float(v), v)
+        except ValueError:
+            return (1, 0, v)
+
+    facets = []
+    for k, f in tax.data["facettes"].items():
+        if f.get("commune"):
+            continue
+        values = []
+        for v in sorted(set(used[k]), key=tri):
+            if k == "couleur" and v in familles:
+                values.append({"value": v, "label": lab(familles[v]["fr"], familles[v]["en"]), "hex": familles[v]["hex"]})
+            elif f.get("type") == "bool":
+                values.append({"value": v, "label": lab(v, {"Oui": "Yes", "Non": "No"}.get(v)), "hex": None})
+            else:
+                values.append({"value": v, "label": lab(v, None), "hex": None})
+        facets.append({"key": k, "kind": kinds.get(f.get("type"), "text"), "unit": f.get("unite"),
+                       "label": lab(f["fr"], f["en"]), "values": values})
+
+    # Une caractéristique « varie » dans une famille si au moins une option de variante d'un de ses produits
+    # la porte : c'est le choix proposé par défaut dans l'admin.
+    famille_produit = {r["id"]: r["famille"] for r in results}
+    produit_variante = {v["id"]: p["id"] for p in doc["products"] for v in p["variants"]}
+    varient = defaultdict(set)
+    for o in opt_rows:
+        fam = famille_produit.get(produit_variante.get(o["variant_id"]))
+        if fam:
+            varient[fam].update(o["facets"])
+    families = [{
+        "key": key, "position": position, "name": lab(*NOMS_FAMILLES[key]),
+        "facets": [{"key": k, "varies": k in varient[key], "required": k in FILTRES_REQUIS.get(key, [])}
+                   for k in keys],
+    } for position, (key, keys) in enumerate(tax.data["familles"].items())]
+
+    tags = [{"key": f"{k}:{x['id']}", "label": lab(x["fr"], x["en"])} for k in ("espece", "technique")
+            for x in tax.data["tags"][k]]
+    tags.append({"key": "milieu:eau-salee", "label": lab("Eau salée", "Saltwater")})
+    manuels = [b["id"] for b in tax.data["tags"]["badges_manuels"]]
+    badges = [{"key": b["id"], "label": lab(b["fr"], b["en"])} for b in tax.data["tags"]["badges_manuels"]]
+
+    products = []
+    for r in results:
+        p = by_id[r["id"]]
+        products.append({
+            "id": r["id"], "name": lab(t(p["name"]), t(p["name"], "en")),
+            "slug": lab(tax.product_slug(p, "fr"), tax.product_slug(p, "en")),
+            "slug_source": lab(tax.slug_of[(p["id"], "fr")][1], tax.slug_of[(p["id"], "en")][1]),
+            "category": r["cat"], "secondary_categories": r["second"], "brand": r["brand"] or None,
+            "facets": {k: [str(v) for v in vals] for k, vals in r["facets"].items()},
+            "tags": sorted(r["tags"]), "badges": [b for b in r["badges"] if b in manuels],
+            "variant_ids": [v["id"] for v in p["variants"]], "images": [i["url"] for i in p["images"]],
+            "absorbed": absorbes.get(r["id"], []), "confidence": r["confiance"], "review": r["raisons"],
+        })
+
+    out = {
+        "meta": {"schema_version": 2, "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+                 "source": doc["meta"]["source"], "mode": doc["meta"].get("mode"), "catalogue": "../catalogue.json",
+                 "catalogue_generated_at": doc["meta"]["generated_at"]},
+        "urls": {"product": tax.urls["produit"], "brand": tax.urls["marque"]},
+        "categories": categories, "brands": brands, "facets": facets, "families": families, "tags": tags,
+        "badges": badges,
+        "fusions": [{"absorbed": f["produit"]["id"], "kept": f["cible"]} for f in doc.get("fusions", [])],
+        "products": products, "variant_options": opt_rows,
+    }
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 BADGES_FILTRE = ("nouveau", "promo", "signature", "quebec", "debutant", "choix-equipe")

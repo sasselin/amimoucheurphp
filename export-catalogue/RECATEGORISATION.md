@@ -198,6 +198,7 @@ Dans `export-catalogue/out/local/recategorisation/` :
 | `caddy/redirections.csv` | Chaque ancienne URL, sa cible et la règle appliquée. |
 | `caddy/LISEZMOI.md` | La procédure du jour J. |
 | `rapport.md` | Avant/après chiffré, couverture des filtres, produits à réviser. |
+| `recategorisation.json` | Les décisions, typées, pour l'import du nouveau site : arbre, marques, facettes (valeurs et libellés fr/en), tags, badges manuels, fusions, et pour chaque produit ses noms, slugs, catégories, marque, facettes, tags, badges, variantes et images. Les facettes de chaque option de variante sont dans `variant_options`. Les faits (prix, stock, descriptions) restent dans `catalogue.json`. Contrat décrit dans README.md. |
 | `recategorisation.xlsx` | Les mêmes tableaux en onglets. |
 
 **Ajuster la proposition** : modifier `taxonomie.json` et relancer `recategorise.py`. Les possibilités :
