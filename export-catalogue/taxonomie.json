@@ -281,6 +281,9 @@
     "debutant_categories": ["ensembles", "kits-montage"],
     "debutant_mots": ["wrangler", "classic trout", "embrace", "ensemble de montage"]
   },
+  "photos_couleur": {
+    "_doc": "Photo d'une couleur quand PrestaShop ne la relie pas à la variante et que la photo devinée (photos_couleurs.py) est fausse ou absente : id produit -> {libellé de couleur affiché : id d'image (le nombre de l'URL /img/p/.../4305.jpg)}. null : aucune photo pour cette couleur. Les photos devinées sont listées dans photos_couleurs.csv."
+  },
   "partenaires": {
     "_doc": "Marques partenaires de la boutique, mises en avant dans le menu (à côté de Signature). Une marque n'est jamais une catégorie : l'entrée mène à la page marque.",
     "marques": ["Yeti"]

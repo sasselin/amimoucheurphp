@@ -998,9 +998,11 @@ function changesOf(p) {
   o.push(['Une adresse courte', shortUrl(p.nu)]);
   const colG = groupsOf(p).find(g => optionsOf(p, g).some(([, f]) => f));
   if (colG && optionsOf(p, colG).length > 1) {
-    const withPhoto = new Set(p.vs.filter(v => v.im).map(v => valOf(v, colG))).size, n = optionsOf(p, colG).length;
-    o.push(withPhoto >= n ? ['La photo suit la couleur', `Chacune des ${n} couleurs a sa photo`]
-      : ['À prévoir : une photo par couleur', withPhoto ? `${withPhoto} couleurs sur ${n} ont leur photo` : `Aucune des ${n} couleurs n'a sa propre photo`, 'todo']);
+    const has = src => new Set(p.vs.filter(v => v.im && (src == null || v.is === src)).map(v => valOf(v, colG))).size;
+    const n = optionsOf(p, colG).length, withPhoto = has(), auto = has('auto');
+    if (auto) o.push(['Photos associées automatiquement', `${auto} couleur${auto > 1 ? 's' : ''} sur ${n} : photo choisie d'après sa couleur, à confirmer`, 'todo']);
+    if (withPhoto >= n && !auto) o.push(['La photo suit la couleur', `Chacune des ${n} couleurs a sa photo`]);
+    else if (withPhoto < n) o.push(['À prévoir : une photo par couleur', withPhoto ? `${withPhoto} couleurs sur ${n} ont leur photo` : `Aucune des ${n} couleurs n'a sa propre photo`, 'todo']);
   }
   return o;
 }
@@ -1019,6 +1021,7 @@ function siteDemain(p) {
   const colG = groupsOf(p).find(g => optionsOf(p, g).some(([, f]) => f));
   const colSel = colG && FICHE.sel[colG], colFams = colSel ? (optionsOf(p, colG).find(([val]) => val === colSel) || [])[1] || [] : [];
   const noVarPhoto = colG && optionsOf(p, colG).length > 1 && !(v && v.im);
+  const guessed = v && v.im && ph === v.im && v.is === 'auto';
   const pr = v ? v.pr : p.pr, rp = v ? v.rp : p.rp, q = v ? v.q : p.st;
   const [sk, sl] = stockOf(q, p);
   const univ = chain(p.c)[0];
@@ -1060,7 +1063,9 @@ function siteDemain(p) {
     `<tr><th>${esc(FAC[k]?.fr || k)}</th><td>${esc(vs.map(x => labelOf(k, String(x))).join(', '))}</td></tr>`).join('');
   // Les suggestions suivent le numéro de soie choisi, pas toute la plage du produit
   const pickedSoie = groupsOf(p).map(g => (splitGroup(p, g)?.m.get(FICHE.sel[g]) || {})['Numéro de soie']).find(Boolean);
-  const pc = pickedSoie ? {...p, f: {...p.f, numero_soie: [String(parseFloat(pickedSoie.slice(1)))]}} : p;
+  // « #7–9 » est une plage : on garde 7, 8 et 9
+  const [lo, hi = lo] = pickedSoie ? (pickedSoie.match(/\d+/g) || []).map(Number) : [];
+  const pc = lo ? {...p, f: {...p.f, numero_soie: Array.from({length: hi - lo + 1}, (_, i) => String(lo + i))}} : p;
   const comp = (compatible(pc) || []).filter(([, l]) => l.length);
   const achats = boughtWith(p);
   return `<div class="site">
@@ -1072,6 +1077,7 @@ function siteDemain(p) {
       <div class="s-gal"><div class="s-photo">${ph ? `<img src="${esc(imgAt(ph, 'large'))}" alt="${esc(p.n)}">` : '<span class="noimg">Sans image</span>'}
           ${noVarPhoto ? `<span class="s-chosen"><span class="s-sw">${(colFams.length ? colFams : ['']).map(f => `<i style="background:${f ? swatchBg(f) : '#ddd'}"></i>`).join('')}</span>${esc(colSel)}</span>` : ''}</div>
         ${noVarPhoto ? `<p class="s-todo">Même photo pour toutes les couleurs : une photo par couleur reste à ajouter.</p>` : ''}
+        ${guessed ? `<p class="s-todo">Photo associée automatiquement d'après sa couleur : à confirmer, puis à relier dans PrestaShop.</p>` : ''}
         ${photos.length > 1 ? `<div class="s-thumbs">${photos.map((u, i) => `<button class="${u === ph ? 'on' : ''}" data-ph="${i}" aria-label="Photo ${i + 1}"><img loading="lazy" src="${esc(imgAt(u, 'small'))}" alt=""></button>`).join('')}</div>` : ''}</div>
       <div class="s-buy">
         ${p.b ? `<a href="#" class="s-brand" data-brand="${esc(p.b)}">${esc(p.b)}</a>` : ''}

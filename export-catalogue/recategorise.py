@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.9"
-# dependencies = ["openpyxl>=3.1"]
+# dependencies = ["openpyxl>=3.1", "pillow>=10"]
 # ///
 """Applique la nouvelle taxonomie (taxonomie.json) au catalogue extrait.
 
@@ -26,6 +26,7 @@ from openpyxl import Workbook
 
 sys.dont_write_bytecode = True  # pas de __pycache__ à côté de build.py
 from build import add_sheet, t, write_csv  # noqa: E402
+import photos_couleurs  # noqa: E402
 
 HERE = Path(__file__).parent
 
@@ -1016,6 +1017,53 @@ def apply_noms_fusions(doc, tax):
     doc["products"] = [p for p in doc["products"] if p["id"] not in absorbes]
 
 
+def photos_par_couleur(doc, tax):
+    """Photo de chaque couleur d'un produit : celle que PrestaShop relie à la variante, sinon celle que
+    photos_couleurs devine d'après la couleur de la photo (à confirmer), sinon taxonomie.json -> photos_couleur.
+
+    Retourne ({id produit: {libellé affiché: (url, source)}}, lignes du CSV des photos à relier)."""
+    manuel = {int(k): v for k, v in tax.data.get("photos_couleur", {}).items() if k != "_doc"}
+    hexf = {f["id"]: f["hex"] for f in tax.couleurs["familles"]}
+    todo = []
+    for p in doc["products"]:
+        options, liees = {}, {}
+        for v in p["variants"]:
+            for a in v["attributes"]:
+                g, val = t(a["group"]), t(a["value"])
+                if is_color_group(g):
+                    lib = libelle_couleur(val)
+                    options.setdefault(lib, color_families(val, tax)[0])
+                    if v.get("images"):
+                        liees.setdefault(lib, v["images"][0])
+        if len(options) >= 2 and len(p["images"]) >= 2 and len(liees) < len(options):
+            todo.append((p, options, liees))
+    labs = photos_couleurs.mesurer([i["url"] for p, _, _ in todo for i in p["images"]], HERE / ".cache" / "couleurs_photos.json")
+    out, rows = {}, []
+    for p, options, liees in todo:
+        photos = [i["url"] for i in p["images"]]
+        devine = photos_couleurs.associer(options, photos, labs, hexf)
+        res = {lib: (url, "prestashop") for lib, url in liees.items()}
+        for lib in options:
+            if lib in liees:
+                continue
+            forced = manuel.get(p["id"], {})
+            if lib in forced:  # id d'image choisi à la main, ou null : aucune photo pour cette couleur
+                url = next((u for u in photos if forced[lib] and u.rsplit("/", 1)[-1] == f"{forced[lib]}.jpg"), None)
+                if url:
+                    res[lib] = (url, "manuel")
+                rows.append({"produit_id": p["id"], "produit": t(p["name"]), "couleur": lib, "image_id": forced[lib] or "",
+                             "image_url": url or "", "source": "manuel", "ecart_couleur": ""})
+            elif lib in devine:
+                url, dist = devine[lib]
+                res[lib] = (url, "auto")
+                rows.append({"produit_id": p["id"], "produit": t(p["name"]), "couleur": lib,
+                             "image_id": url.rsplit("/", 1)[-1].removesuffix(".jpg"), "image_url": url,
+                             "source": "auto (à confirmer)", "ecart_couleur": dist})
+        if res:
+            out[p["id"]] = res
+    return out, rows
+
+
 def main():
     src, out = Path(sys.argv[1]), Path(sys.argv[2])
     doc = json.loads(src.read_text(encoding="utf-8"))
@@ -1193,20 +1241,24 @@ def main():
     write_csv(dest / "nouvelles_categories.csv", new_rows)
     write_csv(dest / "couleurs.csv", color_rows)
     write_csv(dest / "url_mapping.csv", url_rows)
+    photos, photo_rows = photos_par_couleur(doc, tax)
+    write_csv(dest / "photos_couleurs.csv", photo_rows)
     redir = write_redirections(dest / "caddy", doc, results, tax, old_rows)
     wb = Workbook()
     wb.remove(wb.active)
     for title, rows in (("Produits", prod_rows), ("Nouvelles categories", new_rows),
                         ("Anciennes categories", old_rows), ("Variantes", var_rows), ("Couleurs", color_rows),
-                        ("URL", url_rows)):
+                        ("URL", url_rows), ("Photos par couleur", photo_rows)):
         add_sheet(wb, title, rows)
     wb.save(dest / "recategorisation.xlsx")
 
     stats = compute_stats(doc, results, var_rows, tax, count, color_rows)
     (dest / "rapport.md").write_text(report(stats, results, prod_rows, tax, filtres), encoding="utf-8")
-    write_html(dest / "index.html", doc, results, tax, stats, old_rows, color_rows, redir, filtres)
+    write_html(dest / "index.html", doc, results, tax, stats, old_rows, color_rows, redir, filtres, photos)
+    auto = sum(1 for r in photo_rows if r["source"].startswith("auto"))
     print(f"Recatégorisation : {len(results)} produits -> {len(tax.nodes)} catégories ; "
-          f"{stats['a_reviser']} à réviser ; {len(redir)} redirections Caddy. Voir {dest}")
+          f"{stats['a_reviser']} à réviser ; {len(redir)} redirections Caddy ; "
+          f"{auto} photos de couleur devinées (photos_couleurs.csv). Voir {dest}")
 
 
 BADGES_FILTRE = ("nouveau", "promo", "signature", "quebec", "debutant", "choix-equipe")
@@ -1492,7 +1544,19 @@ def description_html(html, limit=6000):
     return out if len(out) <= limit else out[:limit].rsplit(" ", 1)[0] + " …"
 
 
-def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filtres):
+def variant_photo(v, photos):
+    """{"im": url, "is": source} pour la page : "" (PrestaShop), "auto" (devinée) ou "manuel"."""
+    if v.get("images"):
+        return {"im": v["images"][0], "is": ""}
+    for a in v["attributes"]:
+        if is_color_group(t(a["group"])):
+            url, src = photos.get(libelle_couleur(t(a["value"])), ("", ""))
+            if url:
+                return {"im": url, "is": "" if src == "prestashop" else src}
+    return {"im": "", "is": ""}
+
+
+def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filtres, photos):
     """Page autonome avant/après : gabarit view_recategorisation.html + données intégrées."""
     by_id = {r["id"]: r for r in results}
     prods = []
@@ -1515,7 +1579,8 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filt
                            color_families(t(a["value"]), tax)[0] if is_color_group(t(a["group"])) else None]
                           for a in v["attributes"]],
                     "pr": v["price"]["final"], "rp": v["price"]["regular"], "q": v["quantity"],
-                    "im": (v.get("images") or [""])[0]}
+                    # Photo de la variante : reliée dans PrestaShop, sinon celle de sa couleur (devinée ou choisie à la main)
+                    **variant_photo(v, photos.get(p["id"], {}))}
                    for v in p["variants"]],
             "c": r["cat"], "c2": r["second"], "b": r["brand"], "f": r["facets"], "sp": r["specs"][:40],
             "tg": r["tags"], "bd": r["badges"], "cf": r["confiance"], "rs": r["raisons"], "nu": r["new_url"]["fr"],

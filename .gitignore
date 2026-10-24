@@ -57,6 +57,9 @@ google*.html
 
 # Extractions du catalogue
 export-catalogue/out/
+# Couleurs mesurées des photos (photos_couleurs.py)
+export-catalogue/.cache/
+__pycache__/
 .playwright-mcp/
 # Clés (comptes de service, etc.)
 /deploy/*.json

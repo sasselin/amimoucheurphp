@@ -192,6 +192,7 @@ Dans `export-catalogue/out/local/recategorisation/` :
 | `correspondance_categories.csv` | Chaque ancienne catégorie : ce qu'elle devient, avec les redirections 301 en FR et en EN. |
 | `nouvelles_categories.csv` | L'arbre proposé, avec le nombre de produits, les filtres affichés, les filtres écartés (et pourquoi) et les URL. |
 | `couleurs.csv` | Chaque libellé de couleur, ses familles et la colonne `famille_a_assigner`. |
+| `photos_couleurs.csv` | Les photos associées à une couleur quand PrestaShop ne relie pas la photo à la variante. `photos_couleurs.py` mesure la couleur de chaque photo et la compare à la famille de chaque couleur. Il ne propose rien quand le produit a moins de photos que de couleurs (photos de groupe), quand la photo n'a pas de fond blanc (photo d'ambiance) ou quand deux couleurs se ressemblent trop. Sur les produits déjà reliés dans PrestaShop : 57 justes, 4 fausses. À confirmer, puis à relier dans PrestaShop ; une correction se met dans `taxonomie.json` → `photos_couleur`. |
 | `url_mapping.csv` | `url_mapping.csv` de l'extraction, avec la colonne `nouvelle_url` remplie. |
 | `caddy/redirections.caddy` | Les redirections 301 de toutes les anciennes URL (produits, catégories, marques), prêtes à importer dans Caddy au jour J. Elles sont testées dans Caddy à chaque `run.sh`. |
 | `caddy/redirections.csv` | Chaque ancienne URL, sa cible et la règle appliquée. |
