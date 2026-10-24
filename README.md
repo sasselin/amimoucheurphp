@@ -22,12 +22,7 @@ docker compose up -d          # site sur http://localhost, MySQL sur le port 330
 ```
 
 - `site/config/settings.inc.php` n'est pas versionné : il contient les accès à la BD et les clés de cookie propres à chaque environnement. Il n'est jamais écrasé par `sync-prod.sh` ni par `deploy.sh`.
-- La BD locale s'alimente à partir d'une sauvegarde de prod (voir « Restaurer » dans [deploy/README.md](deploy/README.md)) :
-  ```bash
-  ssh amimoucheur@143.198.43.249 /srv/amimoucheur/restore-db.sh latest --to-file /tmp/amimoucheur.sql
-  scp amimoucheur@143.198.43.249:/tmp/amimoucheur.sql . && ssh amimoucheur@143.198.43.249 rm /tmp/amimoucheur.sql
-  docker compose exec -T mysql mysql amimoucheur < amimoucheur.sql
-  ```
+- La BD locale s'alimente à partir d'une sauvegarde de prod (voir « Restaurer » dans [deploy/README.md](deploy/README.md)), toujours avec `./pull-prod-db.sh` (`--list` pour choisir un snapshot). Ne pas copier un dump de prod à la main : le script retire sur le serveur les données de `ps_ccofflinepayment` (numéros de cartes), qui ne doivent jamais arriver en local.
 - Après une modification de gabarit ou d'override, vider `site/cache/smarty/` et `site/cache/class_index.php` (le `sync-prod.sh` vide déjà le cache Smarty).
 
 ## Production
