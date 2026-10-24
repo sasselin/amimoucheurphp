@@ -58,7 +58,7 @@ if [[ $INFRA == 1 ]]; then
   echo "Infra (deploy/)..."
   cd "$ROOT/deploy"
   rsync -az --itemize-changes "${DRY_RUN[@]}" \
-    Dockerfile php-hardening.ini apache-site.conf apache-mpm.conf mysql-lowmem.cnf Caddyfile \
+    Dockerfile php-hardening.ini apache-site.conf apache-mpm.conf mysql-lowmem.cnf Caddyfile proto-auth.py \
     "$PROD_SSH:$PROD_DIR/"
   rsync -az --itemize-changes "${DRY_RUN[@]}" docker-compose.prod.yml "$PROD_SSH:$PROD_DIR/docker-compose.yml"
   rsync -az --chmod=F755 --itemize-changes "${DRY_RUN[@]}" cron-run.sh backup-db.sh restore-db.sh "$PROD_SSH:$PROD_DIR/"
@@ -68,6 +68,8 @@ fi
 if [[ ${#DRY_RUN[@]} -eq 0 ]]; then
   if [[ $INFRA == 1 ]]; then
     remote_compose up -d --build
+    # Le Caddyfile est un fichier monté : rsync le remplace, Caddy ne voit la nouvelle version qu'au redémarrage
+    remote_compose restart caddy
     # Remplace la crontab de l'usager amimoucheur
     ssh "$PROD_SSH" crontab "$PROD_DIR/crontab"
   fi

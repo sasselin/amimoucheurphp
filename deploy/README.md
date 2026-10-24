@@ -43,6 +43,17 @@ Fichiers présents seulement sur le serveur, jamais dans le dépôt :
 | `site/config/settings.inc.php` | Accès BD et clés de PrestaShop. |
 | `~amimoucheur/.config/rclone/rclone.conf` | Accès Google Drive (portée `drive.file`). |
 
+## proto.amimoucheur.com (page de revue pour le client)
+
+La page de recatégorisation (`index.html`) et le catalogue (`catalogue.html`), servis par Caddy depuis `/srv/amimoucheur/proto`. Publication : `./deploy-proto.sh` à la racine du dépôt (extraction de la base de prod puis envoi ; `--sans-export`, `--dry-run`).
+
+Accès par code envoyé par courriel (`proto-auth.py`, conteneur `proto-auth`, Python sans dépendance) : le visiteur tape son courriel, reçoit un code à 6 chiffres par Brevo (mêmes accès que `msmtprc`), et obtient une session de 30 jours. Caddy vérifie la session avant chaque fichier (`forward_auth`).
+
+- Liste des accès : `/srv/amimoucheur/proto-auth/courriels.txt`, une adresse par ligne ou `@domaine.com`. Relue à chaque requête : pas de redémarrage, et retirer une adresse coupe son accès tout de suite.
+- `/srv/amimoucheur/proto-auth/secret` signe les sessions ; le supprimer puis `docker compose restart proto-auth` déconnecte tout le monde.
+- Déconnexion : `https://proto.amimoucheur.com/deconnexion`.
+- DNS Cloudflare : `A proto → 143.198.43.249`, proxied.
+
 ## Courriels
 
 PrestaShop appelle `mail()`, qui passe par msmtp dans le conteneur, puis par Brevo (`smtp-relay.brevo.com:2525`, STARTTLS). DigitalOcean bloque les ports 25, 465 et 587, et le SwiftMailer de PrestaShop 1.6 ne gère pas STARTTLS. Les courriels entrants passent par Google Workspace.

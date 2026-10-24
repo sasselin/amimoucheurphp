@@ -12,3 +12,23 @@ www.amimoucheur.com {
 amimoucheur.com {
 	redir https://www.amimoucheur.com{uri} permanent
 }
+
+# Page de revue du catalogue pour le client (fichiers statiques, envoyés par deploy-proto.sh).
+# Accès par code envoyé par courriel : proto-auth.py (liste dans /srv/amimoucheur/proto-auth/courriels.txt).
+proto.amimoucheur.com {
+	encode gzip
+	header X-Robots-Tag "noindex, nofollow"
+	handle /connexion* {
+		reverse_proxy proto-auth:8080
+	}
+	handle /deconnexion {
+		reverse_proxy proto-auth:8080
+	}
+	handle {
+		forward_auth proto-auth:8080 {
+			uri /verifier
+		}
+		root * /srv/proto
+		file_server
+	}
+}

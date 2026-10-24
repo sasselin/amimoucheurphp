@@ -40,5 +40,17 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./proto:/srv/proto:ro
       - caddy-data:/data
       - caddy-config:/config
+
+  # Accès à proto.amimoucheur.com par code envoyé par courriel (voir proto-auth.py)
+  proto-auth:
+    image: python:3.12.7-alpine
+    restart: unless-stopped
+    mem_limit: 64m
+    command: python -u /app/proto-auth.py
+    volumes:
+      - ./proto-auth.py:/app/proto-auth.py:ro
+      - ./proto-auth:/data
+      - ./msmtprc:/etc/msmtprc:ro
