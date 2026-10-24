@@ -182,10 +182,146 @@ table.grid td.num { text-align: right; font-variant-numeric: tabular-nums; white
 .fam .sw { width: 30px; flex: none; cursor: inherit; }
 .fam b { display: block; font-size: 13px; }
 /* Fiche */
-dialog { border: 0; padding: 0; border-radius: 16px; width: min(1180px, 96vw); max-height: 92vh;
+/* Choix de la fiche affichée */
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; flex: none; }
+.seg button { border: 0; background: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+@media (max-width: 1000px) { .seg .seg-both { display: none; } }
+/* Ce qui change pour le client : une bande au-dessus des deux pages */
+/* Ce qui change pour le client : une colonne à droite de la fiche, ou une bande au-dessus des deux fiches */
+.fiche-grid { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; align-items: start; }
+.fiche-grid .changes { order: 2; position: sticky; top: 0; }
+.fiche-grid.g-both { grid-template-columns: minmax(0, 1fr); }
+.fiche-grid.g-both .changes { order: 0; position: static; }
+.changes h3 { font-size: 15px; margin: 2px 0 10px; }
+.changes ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.g-both .changes ol { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.changes li { background: var(--accent-soft); border-radius: 10px; padding: 9px 12px; font-size: 13px; }
+.changes b { display: block; color: var(--accent); }
+.changes span { color: var(--text); overflow-wrap: anywhere; }
+@media (max-width: 1000px) { .fiche-grid { grid-template-columns: minmax(0, 1fr); } .fiche-grid .changes { order: 0; position: static; } }
+@media (max-width: 640px) {
+  /* #dlg : passe devant les règles générales de la fiche, écrites plus bas */
+  #dlg .dlg-head { flex-wrap: wrap; padding: 12px 14px; gap: 10px; }
+  #dlg .dlg-head h2 { flex: 1 1 calc(100% - 50px); font-size: 16px; }
+  #dlg .dlg-head h2 small { display: none; }
+  #dlg .dlg-head .seg { order: 3; flex: 1 1 100%; }
+  #dlg .dlg-head .seg button { flex: 1; }
+  #dlg .dlg-body { padding: 12px 12px 20px; }
+  .changes ol { grid-template-columns: 1fr; }
+  .bw-dots { display: none; }
+}
+.fiche-views { display: grid; gap: 16px; }
+.fiche-views.v-today .pane-demain, .fiche-views.v-demain .pane-today { display: none; }
+.fiche-views.v-both { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.fiche-views.v-both .pane-today .bw { position: sticky; top: 0; }
+.pane { min-width: 0; }
+/* Cadre de navigateur : on regarde un site, pas un tableau */
+.bw { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.bw-bar { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.bw-dots { display: flex; gap: 6px; flex: none; }
+.bw-dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
+.bw-url { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; background: var(--surface); border-radius: 99px; padding: 5px 12px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bw-url svg { width: 12px; height: 12px; fill: currentColor; flex: none; }
+.bw-frame { position: relative; background: #fff; }
+.bw-wait { position: absolute; inset: 40px 0 auto; text-align: center; color: #6b726d; font-size: 13px; }
+.bw-today iframe { position: relative; display: block; width: 100%; height: 78vh; border: 0; background: transparent; }
+/* La boutique de demain */
+.site { --s-gap: 28px; padding: 0 0 32px; }
+.s-top { display: flex; align-items: center; gap: 18px; padding: 14px 28px; }
+.s-logo { flex: none; background: #fff; border-radius: 8px; padding: 2px 6px; line-height: 0; }
+.s-logo img { height: 46px; width: auto; }
+.s-search { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-cart { display: flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.s-cart svg { width: 22px; height: 22px; fill: currentColor; }
+.s-nav { display: flex; gap: 22px; padding: 10px 28px; border-block: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.s-nav span.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.s-crumbs { padding: 14px 28px 0; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; }
+.s-crumbs a { color: var(--muted); text-decoration: none; }
+.s-crumbs a:hover { color: var(--accent); text-decoration: underline; }
+.s-crumbs a:last-child { color: var(--text); font-weight: 600; }
+.s-main { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--s-gap); padding: 16px 28px 8px; }
+.s-photo { aspect-ratio: 1; background: #fff; border-radius: 14px; border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; }
+.s-photo img { width: 100%; height: 100%; object-fit: contain; }
+.s-thumbs { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; scrollbar-width: thin; }
+.s-thumbs button { flex: none; width: 64px; height: 64px; padding: 0; border: 1px solid var(--border); border-radius: 9px; background: #fff; cursor: pointer; overflow: hidden; }
+.s-thumbs button.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.s-thumbs img { width: 100%; height: 100%; object-fit: contain; }
+.s-brand { font-weight: 700; color: var(--accent); text-decoration: none; font-size: 14px; }
+.s-brand:hover { text-decoration: underline; }
+.s-buy h1 { font-size: 27px; line-height: 1.15; margin: 4px 0 10px; letter-spacing: -.015em; }
+.s-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.s-price { display: flex; align-items: baseline; gap: 10px; font-size: 26px; font-weight: 750; margin-bottom: 16px; font-variant-numeric: tabular-nums; }
+.s-price .promo { color: var(--promo); }
+.s-price s { font-size: 16px; color: var(--muted); font-weight: 500; }
+.s-pick { margin-bottom: 16px; }
+.s-pl { font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+.s-pl b { color: var(--text); }
+.s-chips { display: flex; flex-wrap: wrap; gap: 7px; max-height: 260px; overflow-y: auto; padding: 2px; }
+.s-chip { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 7px 11px; cursor: pointer; text-align: left; line-height: 1.25; }
+.s-chip small { color: var(--accent); font-weight: 600; font-size: 11.5px; }
+.s-chip.col { flex-direction: row; align-items: center; gap: 7px; padding: 5px 11px 5px 6px; border-radius: 99px; }
+.s-chip:hover { border-color: var(--text); }
+.s-chip.on { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.s-chip.out .s-cl { color: var(--muted); text-decoration: line-through; }
+.s-chip.far { border-style: dashed; color: var(--muted); }
+.s-maker { font-size: 13px; color: var(--muted); margin: -6px 0 16px; }
+.s-maker b { color: var(--text); font-weight: 600; }
+.s-chip:focus-visible, .s-card:focus-visible, .s-thumbs button:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.s-sw { display: flex; flex: none; }
+.s-sw i { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .15); }
+.s-sw i + i { margin-left: -7px; }
+.s-stock { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin: 4px 0 14px; }
+.s-stock i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+.s-stock.bas i, .s-stock.commande i { background: var(--warn); }
+.s-stock.bas, .s-stock.commande { color: var(--warn); }
+.s-stock.epuise { color: var(--muted); }
+.s-stock.epuise i { background: var(--muted); }
+.s-add { display: flex; gap: 10px; margin-bottom: 18px; }
+.s-qty { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; padding: 0 14px; font-weight: 600; }
+.s-qty b { color: var(--muted); font-weight: 500; }
+.s-cta { flex: 1; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; padding: 13px 18px; cursor: default; }
+.s-cta:disabled { background: var(--surface-2); color: var(--muted); }
+:root[data-theme="dark"] .s-cta { color: #0f1a15; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .s-cta { color: #0f1a15; } }
+.s-short, .s-desc { font-size: 14px; line-height: 1.6; color: var(--text); max-width: 68ch; }
+.s-short p, .s-desc p { margin: 0 0 .7em; }
+.s-desc table { border-collapse: collapse; font-size: 13px; margin: 6px 0; }
+.s-desc td, .s-desc th { border: 1px solid var(--border); padding: 3px 8px; }
+.s-desc h4 { font-size: 14px; margin: 1em 0 .3em; }
+.s-sec { padding: 26px 28px 0; margin-top: 18px; border-top: 1px solid var(--border); }
+.s-sec h2 { font-size: 19px; margin: 0 0 4px; letter-spacing: -.01em; }
+.s-sec h3 { font-size: 14px; margin: 16px 0 8px; color: var(--muted); font-weight: 600; }
+.s-why { margin: 0; color: var(--muted); font-size: 13px; }
+.s-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--s-gap); }
+.s-two h2 { margin-bottom: 12px; }
+.s-specs { width: 100%; border-collapse: collapse; font-size: 14px; }
+.s-specs th, .s-specs td { text-align: left; padding: 9px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.s-specs th { color: var(--muted); font-weight: 500; width: 45%; padding-right: 12px; }
+.s-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.s-card { display: flex; flex-direction: column; gap: 3px; text-align: left; border: 0; background: none; padding: 0; cursor: pointer; }
+.s-cimg { aspect-ratio: 1; background: #fff; border: 1px solid var(--border); border-radius: 12px; display: grid; place-items: center; overflow: hidden; margin-bottom: 5px; }
+.s-cimg img { width: 100%; height: 100%; object-fit: contain; }
+.s-card:hover .s-cn { text-decoration: underline; }
+.s-cb { font-size: 12px; color: var(--muted); }
+.s-cn { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+.s-cp { font-weight: 700; font-size: 14px; }
+/* Côte à côte, ou écran étroit : la boutique passe en une colonne, comme sur mobile */
+.v-both .s-main, .v-both .s-two { grid-template-columns: minmax(0, 1fr); }
+.v-both .s-search { display: none; }
+@media (max-width: 760px) {
+  .s-main, .s-two { grid-template-columns: minmax(0, 1fr); }
+  .s-top, .s-nav, .s-crumbs, .s-main, .s-sec { padding-left: 16px; padding-right: 16px; }
+  .s-search { display: none; }
+  .s-buy h1 { font-size: 23px; }
+}
+details.team { margin-top: 18px; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+details.team summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+details.team[open] summary { margin-bottom: 12px; }
+dialog { border: 0; padding: 0; border-radius: 16px; width: min(1440px, 97vw); max-height: 94vh;
   background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgb(0 0 0 / .3); }
 dialog::backdrop { background: rgb(10 15 12 / .55); }
-.dlg { display: flex; flex-direction: column; max-height: 92vh; }
+.dlg { display: flex; flex-direction: column; max-height: 94vh; }
 .dlg-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: center; }
 .dlg-head img { width: 64px; height: 64px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid var(--border); flex: none; }
 .dlg-head h2 { margin: 0; font-size: 18px; flex: 1; }
@@ -776,8 +912,212 @@ function compatible(p) {
     return [title, list];
   });
 }
+// ========== Fiche produit : la page d'aujourd'hui (le site en ligne) et celle de demain (maquette du futur site)
+const imgAt = (url, size) => url ? url.replace(/\.jpg$/, `-${size}_default.jpg`) : '';
+const FICHE = {p: null, sel: {}, photo: 0, vue: 'demain'};
+try { FICHE.vue = localStorage.getItem('fiche-vue') || 'demain'; } catch (e) { /* stockage indisponible */ }
+const groupsOf = p => [...new Set(p.vs.flatMap(v => v.a.map(a => a[0])))];
+const valOf = (v, g) => (v.a.find(x => x[0] === g) || [])[1];
+function optionsOf(p, g) {
+  const seen = new Map();
+  p.vs.forEach(v => { const a = v.a.find(x => x[0] === g); if (a && !seen.has(a[1])) seen.set(a[1], a[2]); });
+  return [...seen];
+}
+const chosen = p => p.vs.find(v => Object.entries(FICHE.sel).every(([g, val]) => valOf(v, g) === val)) || null;
+function stockOf(q, p) {
+  if (q > 2) return ['ok', 'En stock'];
+  if (q > 0) return ['bas', `Plus que ${q} en stock`];
+  return p.bd.includes('sur-commande') ? ['commande', 'Sur commande'] : ['epuise', 'Épuisé'];
+}
+// Valeur claire d'une option du fabricant (« 590-4 (9' # 5) » -> « #5 · 9'0" · 4 sections »)
+function clearOf(p, g, label) {
+  // La table des specs nomme parfois le groupe autrement (« Modèle » pour « R8 Core ») : le libellé suffit
+  const same = ([, sl]) => fold(sl) === fold(label);
+  const s = p.sp.find(x => x[0] === g && same(x)) || p.sp.find(same);
+  return s && s[2] && fold(s[2]) !== fold(label) && !/confirmer|réviser/.test(s[2]) ? s[2] : '';
+}
+// Une option du fabricant qui cache plusieurs caractéristiques (« 590-4 (9' # 5) ») devient des choix séparés
+const DIMS = [['Numéro de soie', x => /^#\s?\d/.test(x)], ['Longueur', x => /^\d+'\d+"$/.test(x)],
+  ['Sections', x => /sections?$/.test(x)], ['Talon de combat', x => /talon/.test(x)]];
+function dimsOf(clear) {
+  const o = {};
+  for (const x of clear.split(' · ').map(y => y.trim())) {
+    const d = DIMS.find(([, test]) => test(x)); if (!d) return null;
+    o[d[0]] = d[0] === 'Talon de combat' ? 'Oui' : x;
+  }
+  return o;
+}
+function splitGroup(p, g) {
+  const opts = optionsOf(p, g);
+  if (opts.length < 4 || opts.some(([, f]) => f)) return null;
+  const m = new Map();
+  for (const [val] of opts) { const c = clearOf(p, g, val), d = c && dimsOf(c); if (!d) return null; m.set(val, d); }
+  const names = DIMS.map(d => d[0]).filter(n => [...m.values()].some(d => d[n]));
+  m.forEach(d => names.forEach(n => { if (!d[n]) d[n] = n === 'Talon de combat' ? 'Non' : '—'; }));
+  const dims = names.filter(n => new Set([...m.values()].map(d => d[n])).size > 1);
+  return dims.length ? {m, dims} : null;
+}
+const dimKey = x => /^#/.test(x) ? parseFloat(x.slice(1)) : /'/.test(x) ? inches(x) : x === 'Non' ? 0 : x === 'Oui' ? 1 : parseFloat(x) || 0;
+const shortUrl = u => String(u || '').replace(/^https?:\/\/(www\.)?/, '');
+const browser = (url, inner, cls) => `<div class="bw ${cls}"><div class="bw-bar"><span class="bw-dots"><i></i><i></i><i></i></span>
+  <span class="bw-url"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 7V5a3 3 0 0 1 6 0v2h1v7H4V7zm1.5 0h3V5a1.5 1.5 0 0 0-3 0z"/></svg>${esc(shortUrl(url))}</span></div>${inner}</div>`;
+
+function changesOf(p) {
+  const o = [];
+  if (p.op && pathOf(p.c)) o.push(['Rangé là où on le cherche', `${pathOf(p.c)}, au lieu de ${p.op.replace(/ > /g, ' › ')}`]);
+  if (p.b) o.push([p.bo ? 'Marque cliquable' : 'La marque apparaît', p.bo ? `${p.b} mène à tous ses produits` : `${p.b} était absente de la fiche et des filtres`]);
+  const clear = p.sp.filter(([g, l]) => clearOf(p, g, l));
+  const split = groupsOf(p).map(g => splitGroup(p, g)).find(Boolean);
+  if (split) o.push(['Choisir comme on pense', `Par ${split.dims.join(', ').toLowerCase()}, au lieu de ${split.m.size} codes du fabricant ; le code reste affiché`]);
+  else if (clear.length) o.push(['Des options lisibles', `« ${clear[0][1]} » se lit aussi « ${clear[0][2]} », et ${clear.length > 1 ? `${clear.length} options trouvent` : 'l\'option trouve'} leur filtre`]);
+  if (p.vs.length > 1 && !split) o.push(['Des boutons, pas une liste déroulante', 'Toutes les options sont visibles d\'un coup ; celles qui sont épuisées sont barrées']);
+  if ((p.f.couleur || []).length) o.push(['Des pastilles de couleur', `Le filtre Couleur retrouve ce produit en ${p.f.couleur.map(c => COL[c]?.fr).filter(Boolean).slice(0, 4).join(', ')}`]);
+  const comp = (compatible(p) || []).reduce((n, [, l]) => n + l.length, 0), achats = boughtWith(p).length;
+  if (comp || achats) o.push(['Des suggestions utiles', [comp && `${comp} produits compatibles`, achats && `${achats} produits souvent achetés avec`].filter(Boolean).join(', ')]);
+  o.push(['Une adresse courte', shortUrl(p.nu)]);
+  return o;
+}
+function boughtWith(p) {
+  return DATA.lies.achats.filter(x => x[0] === p.id || x[1] === p.id).sort((a, b) => b[2] - a[2])
+    .map(x => byId.get(x[0] === p.id ? x[1] : x[0])).filter(Boolean).slice(0, 4);
+}
+const shopCard = q => `<button class="s-card" data-id="${q.id}"><span class="s-cimg">${q.img ? `<img loading="lazy" src="${esc(thumb(q.img))}" alt="">` : ''}</span>
+  <span class="s-cb">${esc(q.b || '')}</span><span class="s-cn">${esc(q.n)}</span><span class="s-cp">${q.mn != null && q.mx > q.mn ? 'dès ' + money(q.mn) : money(q.pr)}</span></button>`;
+
+function siteDemain(p) {
+  const v = chosen(p), photos = p.im.length ? p.im : (p.img ? [p.img] : []);
+  const vimg = v && v.im ? photos.indexOf(v.im) : -1;
+  const ph = photos[vimg >= 0 && FICHE.photoAuto ? vimg : FICHE.photo] || photos[0];
+  const pr = v ? v.pr : p.pr, rp = v ? v.rp : p.rp, q = v ? v.q : p.st;
+  const [sk, sl] = stockOf(q, p);
+  const univ = chain(p.c)[0];
+  const nav = DATA.tree.filter(n => !n.utilitaire).map(n => `<span class="${n.id === univ ? 'on' : ''}">${esc(n.fr)}</span>`).join('');
+  const crumbs = [`<a href="#" data-go="">Accueil</a>`, ...chain(p.c).map(c => `<a href="#" data-go="${c}">${esc(NODE.get(c).fr)}</a>`)].join('<span>/</span>');
+  const stockFor = (g, val) => {
+    const others = Object.entries(FICHE.sel).filter(([og]) => og !== g);
+    return p.vs.find(x => valOf(x, g) === val && others.every(([og, ov]) => valOf(x, og) === ov));
+  };
+  const pickers = groupsOf(p).map(g => {
+    const split = splitGroup(p, g);
+    if (split) {
+      const cur = split.m.get(FICHE.sel[g]) || split.m.values().next().value;
+      const rows = split.dims.map(n => {
+        const vals = [...new Set([...split.m.values()].map(d => d[n]))].sort((a, b) => dimKey(a) - dimKey(b));
+        const chips = vals.map(x => {
+          // L'option visée : même valeur ici, le plus possible des autres choix gardés
+          const cands = [...split.m].filter(([, d]) => d[n] === x)
+            .map(([val, d]) => [val, split.dims.filter(k => k !== n && d[k] === cur[k]).length]).sort((a, b) => b[1] - a[1]);
+          const [target, keep] = cands[0];
+          const exact = keep === split.dims.length - 1, vv = stockFor(g, target);
+          const on = cur[n] === x, out = exact && (!vv || vv.q <= 0);
+          return `<button class="s-chip ${on ? 'on' : ''} ${out ? 'out' : ''} ${exact ? '' : 'far'}" data-g="${esc(g)}" data-v="${esc(target)}" aria-pressed="${on}"${exact ? '' : ' title="Change aussi les autres choix"'}><span class="s-cl">${esc(x)}</span></button>`;
+        }).join('');
+        return `<div class="s-pick"><div class="s-pl">${esc(n)} : <b>${esc(cur[n])}</b></div><div class="s-chips">${chips}</div></div>`;
+      }).join('');
+      return rows + `<div class="s-maker">Modèle du fabricant : <b>${esc(FICHE.sel[g] || '')}</b></div>`;
+    }
+    const opts = optionsOf(p, g), isCol = opts.some(([, f]) => f);
+    const chips = opts.map(([val, fams]) => {
+      const vv = stockFor(g, val);
+      const out = !vv || vv.q <= 0, on = FICHE.sel[g] === val, clear = isCol ? '' : clearOf(p, g, val);
+      const sw = isCol ? `<span class="s-sw">${(fams && fams.length ? fams : ['']).map(f => `<i style="background:${f ? swatchBg(f) : 'repeating-linear-gradient(45deg,#ddd 0 3px,#fff 3px 6px)'}"></i>`).join('')}</span>` : '';
+      return `<button class="s-chip ${on ? 'on' : ''} ${out ? 'out' : ''} ${isCol ? 'col' : ''}" data-g="${esc(g)}" data-v="${esc(val)}" aria-pressed="${on}">${sw}<span class="s-cl">${esc(val)}</span>${clear ? `<small>${esc(clear)}</small>` : ''}</button>`;
+    }).join('');
+    return `<div class="s-pick"><div class="s-pl">${esc(g)}${FICHE.sel[g] ? ` : <b>${esc(FICHE.sel[g])}</b>` : ''}</div><div class="s-chips">${chips}</div></div>`;
+  }).join('');
+  const specs = Object.entries(p.f).filter(([k]) => k !== 'couleur').map(([k, vs]) =>
+    `<tr><th>${esc(FAC[k]?.fr || k)}</th><td>${esc(vs.map(x => labelOf(k, String(x))).join(', '))}</td></tr>`).join('');
+  // Les suggestions suivent le numéro de soie choisi, pas toute la plage du produit
+  const pickedSoie = groupsOf(p).map(g => (splitGroup(p, g)?.m.get(FICHE.sel[g]) || {})['Numéro de soie']).find(Boolean);
+  const pc = pickedSoie ? {...p, f: {...p.f, numero_soie: [String(parseFloat(pickedSoie.slice(1)))]}} : p;
+  const comp = (compatible(pc) || []).filter(([, l]) => l.length);
+  const achats = boughtWith(p);
+  return `<div class="site">
+    <div class="s-top"><span class="s-logo"><img src="https://www.amimoucheur.com/img/amimoucheur-logo-1460508349.jpg" alt="L'Ami du Moucheur"></span><span class="s-search">Rechercher une mouche, une soie, une marque…</span>
+      <span class="s-cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>Panier</span></div>
+    <nav class="s-nav">${nav}</nav>
+    <div class="s-crumbs">${crumbs}</div>
+    <div class="s-main">
+      <div class="s-gal"><div class="s-photo">${ph ? `<img src="${esc(imgAt(ph, 'large'))}" alt="${esc(p.n)}">` : '<span class="noimg">Sans image</span>'}</div>
+        ${photos.length > 1 ? `<div class="s-thumbs">${photos.map((u, i) => `<button class="${u === ph ? 'on' : ''}" data-ph="${i}" aria-label="Photo ${i + 1}"><img loading="lazy" src="${esc(imgAt(u, 'small'))}" alt=""></button>`).join('')}</div>` : ''}</div>
+      <div class="s-buy">
+        ${p.b ? `<a href="#" class="s-brand" data-brand="${esc(p.b)}">${esc(p.b)}</a>` : ''}
+        <h1>${esc(p.n)}</h1>
+        ${p.bd.filter(b => !['epuise', 'sur-commande', 'dernieres-unites'].includes(b)).length ? `<div class="s-badges">${p.bd.filter(b => !['epuise', 'sur-commande', 'dernieres-unites'].includes(b)).map(b => `<span class="badge bd-${b}">${esc(BADGE[b])}</span>`).join('')}</div>` : ''}
+        <div class="s-price"><span class="${pr < rp ? 'promo' : ''}">${money(pr)}</span>${pr < rp ? `<s>${money(rp)}</s>` : ''}</div>
+        ${pickers}
+        <div class="s-stock ${sk}"><i></i>${esc(sl)}</div>
+        <div class="s-add"><span class="s-qty"><b>−</b>1<b>+</b></span><button class="s-cta" ${sk === 'epuise' ? 'disabled' : ''}>${sk === 'epuise' ? 'Épuisé' : sk === 'commande' ? 'Commander' : 'Ajouter au panier'}</button></div>
+        ${p.ds ? `<div class="s-short">${p.ds}</div>` : ''}
+      </div>
+    </div>
+    ${comp.length ? `<section class="s-sec"><h2>Complète ton montage</h2><p class="s-why">Des produits pour une soie #${(pc.f.numero_soie || []).join(', #')}, quelle que soit la notation de la marque.</p>
+      ${comp.map(([t, l]) => `<h3>${esc(t)}</h3><div class="s-cards">${l.slice(0, 4).map(shopCard).join('')}</div>`).join('')}</section>` : ''}
+    ${specs || p.dl ? `<section class="s-sec s-two">${specs ? `<div><h2>Caractéristiques</h2><table class="s-specs">${p.b ? `<tr><th>Marque</th><td>${esc(p.b)}</td></tr>` : ''}${specs}</table></div>` : ''}
+      ${p.dl ? `<div><h2>Description</h2><div class="s-desc">${p.dl}</div></div>` : ''}</section>` : ''}
+    ${achats.length ? `<section class="s-sec"><h2>Souvent achetés avec</h2><div class="s-cards">${achats.map(shopCard).join('')}</div></section>` : ''}
+  </div>`;
+}
+
+function renderFiche() {
+  const p = FICHE.p, vue = FICHE.vue;
+  $('#dlgc').querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.vue === vue));
+  const views = $('#ficheViews');
+  views.className = `fiche-views v-${vue}`;
+  $('#ficheGrid').className = `fiche-grid g-${vue}`;
+  const today = views.querySelector('.pane-today'), demain = views.querySelector('.pane-demain');
+  // L'iframe n'est créée qu'une fois : changer d'option ne recharge pas le site actuel
+  if (vue !== 'demain' && !today.querySelector('iframe'))
+    today.innerHTML = browser(p.url, `<div class="bw-frame"><span class="bw-wait">Chargement de la page actuelle sur amimoucheur.com…</span><iframe src="${esc(p.url)}" title="Fiche actuelle sur amimoucheur.com" referrerpolicy="no-referrer"></iframe></div>`, 'bw-today');
+  demain.innerHTML = browser(p.nu, siteDemain(p), 'bw-demain');
+}
+
 function openProduct(id) {
   const p = byId.get(id); if (!p) return;
+  FICHE.p = p; FICHE.photo = 0; FICHE.photoAuto = true;
+  const first = p.vs.find(v => v.q > 0) || p.vs[0];
+  FICHE.sel = first ? Object.fromEntries(first.a.map(a => [a[0], a[1]])) : {};
+  const ch = changesOf(p);
+  $('#dlgc').innerHTML = `<div class="dlg-head">
+      <h2>${esc(p.n)}<small>La fiche produit telle que le client la voit</small></h2>
+      <div class="seg" role="group" aria-label="Fiche à afficher">
+        <button data-vue="today">Aujourd'hui</button><button data-vue="demain">Demain</button><button data-vue="both" class="seg-both">Côte à côte</button></div>
+      <button class="x" autofocus onclick="document.getElementById('dlg').close()" aria-label="Fermer">×</button></div>
+    <div class="dlg-body">
+      <div id="ficheGrid" class="fiche-grid">
+        <aside class="changes"><h3>Ce qui change pour le client</h3><ol>${ch.map(([t, d]) => `<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join('')}</ol></aside>
+        <div id="ficheViews" class="fiche-views"><div class="pane pane-today"></div><div class="pane pane-demain"></div></div>
+      </div>
+      <details class="team"><summary>Détails pour l'équipe : correspondance des catégories, filtres et variantes</summary>${teamDetails(p)}</details>
+    </div>`;
+  renderFiche();
+  const d = $('#dlg'); if (!d.open) d.showModal(); d.querySelector('.dlg-body').scrollTop = 0;
+}
+$('#dlgc').addEventListener('click', e => {
+  const b = e.target.closest('button, a'); if (!b || !FICHE.p) return;
+  if (b.dataset.vue) {
+    FICHE.vue = b.dataset.vue;
+    try { localStorage.setItem('fiche-vue', FICHE.vue); } catch (err) { /* stockage indisponible */ }
+    renderFiche();
+  } else if (b.dataset.g != null) {
+    FICHE.sel[b.dataset.g] = b.dataset.v;
+    if (!chosen(FICHE.p)) {  // combinaison inexistante : on prend la première variante qui a cette option
+      const v = FICHE.p.vs.find(x => valOf(x, b.dataset.g) === b.dataset.v);
+      if (v) FICHE.sel = Object.fromEntries(v.a.map(a => [a[0], a[1]]));
+    }
+    FICHE.photoAuto = true; renderFiche();
+  } else if (b.dataset.ph != null) {
+    FICHE.photo = +b.dataset.ph; FICHE.photoAuto = false; renderFiche();
+  } else if (b.dataset.id) {
+    e.preventDefault(); openProduct(+b.dataset.id);
+  } else if (b.dataset.go != null) {
+    e.preventDefault(); $('#dlg').close(); A.cat = b.dataset.go || null; A.f = {}; A.page = 0; renderApres(); $('#mega').scrollIntoView({block: 'start'});
+  } else if (b.dataset.brand) {
+    e.preventDefault(); $('#dlg').close(); A.cat = null; A.f = {marque: new Set([b.dataset.brand])}; A.page = 0; renderApres(); $('#mega').scrollIntoView({block: 'start'});
+  }
+});
+
+function teamDetails(p) {
   const oldCats = p.ocs.map(c => OC.get(c)?.path).filter(Boolean);
   const specs = p.sp.length ? `<table class="specs"><tr><th>Option</th><th>Libellé du fabricant (affiché)</th><th>Valeur de filtre</th></tr>${p.sp.slice(0, 25).map(([g, l, v]) =>
     `<tr><td class="small">${esc(g)}</td><td>${esc(l)}</td><td class="v">${esc(v || '—')}</td></tr>`).join('')}</table>${p.sp.length > 25 ? `<div class="small">… ${p.sp.length - 25} autres</div>` : ''}` : '';
@@ -802,14 +1142,7 @@ function openProduct(id) {
     ${p.vs.map(v => `<tr class="${v.q <= 0 ? 'oos' : ''}">${groups.map(cell(v)).join('')}
       <td class="num"><span class="price ${v.pr < v.rp ? 'promo' : ''}">${money(v.pr)}</span>${v.pr < v.rp ? `<span class="old">${money(v.rp)}</span>` : ''}</td>
       <td class="num">${v.q > 0 ? v.q : '<span class="small">rupture</span>'}</td></tr>`).join('')}</table></div></div>` : '';
-  const comp = compatible(p);
-  const compHtml = comp && comp.some(([, l]) => l.length) ? `<div class="compat"><h3>Complète ton montage</h3>
-    <div class="small">Suggestions calculées à partir du numéro de soie (#${(p.f.numero_soie || []).join(', #')}), quelle que soit la notation du fabricant.</div>
-    <div class="cgrid">${comp.map(([t, l]) => `<div><b class="small">${t} compatibles</b>${l.length ? l.map(q => `<div class="mini" data-id="${q.id}">${q.img ? `<img src="${esc(thumb(q.img))}" alt="">` : ''}<div class="t">${esc(q.n)}<small>${esc(q.b)} · ${money(q.mn ?? q.pr)} · #${(q.f.numero_soie || []).join('/')}</small></div></div>`).join('') : '<div class="small">Aucun.</div>'}</div>`).join('')}</div></div>` : '';
-  $('#dlgc').innerHTML = `<div class="dlg-head">${p.img ? `<img src="${esc(thumb(p.img))}" alt="">` : ''}
-      <h2>${esc(p.n)}<small>Produit ${p.id} · ${p.nv} variante(s) · <a href="${esc(p.url)}" target="_blank" rel="noopener">voir sur le site</a></small></h2>
-      <button class="x" onclick="document.getElementById('dlg').close()" aria-label="Fermer">×</button></div>
-    <div class="dlg-body"><div class="ba2">
+  return `<div class="ba2">
       <div class="col before"><h3>Avant</h3><dl class="kv">
         <dt>Catégorie</dt><dd>${esc(p.op || '—')}</dd>
         <dt>Toutes</dt><dd>${oldCats.map(esc).join('<br>') || '—'}</dd>
@@ -828,8 +1161,7 @@ function openProduct(id) {
         <dt>Nouvelle URL</dt><dd class="small">${esc(p.nu)}</dd></dl>
         ${specs}
         ${p.rs.length ? `<div class="warnbox">À réviser : ${esc(p.rs.join(' ; '))}</div>` : ''}</div>
-    </div>${variants}${compHtml}</div>`;
-  const d = $('#dlg'); if (!d.open) d.showModal(); d.querySelector('.dlg-body').scrollTop = 0;
+    </div>${variants}`;
 }
 $('#dlg').addEventListener('click', e => { if (e.target.id === 'dlg') e.target.close(); });
 

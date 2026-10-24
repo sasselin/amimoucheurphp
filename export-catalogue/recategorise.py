@@ -18,6 +18,8 @@ import unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from fractions import Fraction
+from html import escape
+from html.parser import HTMLParser
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -1450,6 +1452,46 @@ def related_links(doc, results, tax):
     return {"modeles": modeles, "achats": achats, "commandes": {i: cnt.get(i, 0) for i in ids}}
 
 
+class _Description(HTMLParser):
+    """Description du fabricant réduite à du texte mis en forme : aucune balise d'origine ni attribut ne passe."""
+    GARDE = {"p", "br", "strong", "b", "em", "ul", "ol", "li", "table", "tr", "td", "th"}
+    TITRES = {"h1", "h2", "h3", "h4", "h5", "h6"}
+    SAUTE = {"script", "style", "iframe", "video", "object"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.out, self.skip = [], 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SAUTE:
+            self.skip += 1
+        elif not self.skip and (tag in self.GARDE or tag in self.TITRES):
+            self.out.append("<h4>" if tag in self.TITRES else f"<{tag}>")
+
+    def handle_endtag(self, tag):
+        if tag in self.SAUTE:
+            self.skip = max(0, self.skip - 1)
+        elif not self.skip and tag != "br" and (tag in self.GARDE or tag in self.TITRES):
+            self.out.append("</h4>" if tag in self.TITRES else f"</{tag}>")
+
+    def handle_data(self, data):
+        if not self.skip:
+            self.out.append(escape(data, quote=False))
+
+
+def description_html(html, limit=6000):
+    """HTML sûr pour la maquette de fiche, ou "" si la description est vide."""
+    if not html:
+        return ""
+    d = _Description()
+    d.feed(html)
+    d.close()
+    out = re.sub(r"\s+", " ", re.sub(r"<p>\s*</p>", " ", "".join(d.out))).strip()
+    if not re.sub(r"<[^>]+>", "", out).strip():
+        return ""
+    return out if len(out) <= limit else out[:limit].rsplit(" ", 1)[0] + " …"
+
+
 def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filtres):
     """Page autonome avant/après : gabarit view_recategorisation.html + données intégrées."""
     by_id = {r["id"]: r for r in results}
@@ -1459,6 +1501,9 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filt
         prods.append({
             "id": p["id"], "n": t(p["name"]), "ne": t(p["name"], "en"), "bo": p["brand"] or "",
             "img": p["images"][0]["url"] if p["images"] else "", "pr": p["price"]["final"],
+            # Maquette de fiche : toutes les photos, et la description du fabricant nettoyée
+            "im": [i["url"] for i in p["images"]][:12],
+            "ds": description_html(t(p.get("description_short"))), "dl": description_html(t(p.get("description"))),
             "rp": p["price"]["regular"], "mn": p["price"].get("min"), "mx": p["price"].get("max"),
             "st": p["stock"]["quantity"], "url": p["seo"]["fr"]["url"],
             "oc": (p.get("default_category") or {}).get("id"), "ocs": [c["id"] for c in p["categories"]],
@@ -1469,7 +1514,8 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filt
             "vs": [{"a": [[t(a["group"]), libelle_couleur(t(a["value"])) if is_color_group(t(a["group"])) else t(a["value"]),
                            color_families(t(a["value"]), tax)[0] if is_color_group(t(a["group"])) else None]
                           for a in v["attributes"]],
-                    "pr": v["price"]["final"], "rp": v["price"]["regular"], "q": v["quantity"]}
+                    "pr": v["price"]["final"], "rp": v["price"]["regular"], "q": v["quantity"],
+                    "im": (v.get("images") or [""])[0]}
                    for v in p["variants"]],
             "c": r["cat"], "c2": r["second"], "b": r["brand"], "f": r["facets"], "sp": r["specs"][:40],
             "tg": r["tags"], "bd": r["badges"], "cf": r["confiance"], "rs": r["raisons"], "nu": r["new_url"]["fr"],

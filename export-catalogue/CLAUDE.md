@@ -11,6 +11,7 @@ Extraction du catalogue PrestaShop 1.6.1.4, recatégorisation proposée pour le 
 - `recategorise.py` importe `build.py` (pour `t`, `write_csv` et `add_sheet`).
 - `view_recategorisation.html` est le gabarit versionné de la page `out/.../recategorisation/index.html` (même principe que `view.html` pour `catalogue.html`). `write_html` y remplace `/*__DATA__*/` par les données. Toute la page (HTML, CSS, JS) se modifie dans le gabarit.
 - On ajuste la proposition dans `taxonomie.json`, jamais dans les CSV de sortie.
+- Fiche produit de la page (`openProduct`) : *Aujourd'hui* charge la page en ligne dans une iframe (le site actuel l'autorise), *Demain* est une maquette tirée des données. Les descriptions passent par `description_html` (recategorise.py), qui ne garde aucune balise ni aucun attribut d'origine.
 - Catégorie principale (`classify`) : la catégorie par défaut de PrestaShop l'emporte si c'est une feuille. Un parent fourre-tout (« Montage de mouches », « Accessoires ») cède à une sous-catégorie précise du produit.
 - Marques partenaires (`taxonomie.json` → `partenaires`, aujourd'hui Yeti) : une entrée du menu vers la page marque, jamais une catégorie.
 - Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de filtre. Seule exception : une couleur prend toujours une majuscule initiale (`libelle_couleur`).
