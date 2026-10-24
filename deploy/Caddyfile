@@ -1,7 +1,13 @@
-# Certificats Let's Encrypt obtenus et renouvelés automatiquement par Caddy
-# (challenge HTTP-01 via Cloudflare : le port 80 doit rester ouvert aux IPs Cloudflare).
+# Derrière le Caddy d'entrée du serveur (root), qui fait le TLS et renvoie les domaines de entree.caddy ici,
+# en http sur 127.0.0.1:8081. Ses en-têtes X-Forwarded-* sont repris tels quels : Apache voit HTTPS=on par
+# X-Forwarded-Proto.
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
 
-www.amimoucheur.com {
+http://www.amimoucheur.com {
 	encode gzip
 	request_body {
 		max_size 32MB
@@ -9,13 +15,13 @@ www.amimoucheur.com {
 	reverse_proxy apache:80
 }
 
-amimoucheur.com {
+http://amimoucheur.com {
 	redir https://www.amimoucheur.com{uri} permanent
 }
 
 # Page de revue du catalogue pour le client (fichiers statiques, envoyés par deploy-proto.sh).
 # Accès par code envoyé par courriel : proto-auth.py (liste dans /srv/amimoucheur/proto-auth/courriels.txt).
-proto.amimoucheur.com {
+http://proto.amimoucheur.com {
 	encode gzip
 	header X-Robots-Tag "noindex, nofollow"
 	handle /connexion* {

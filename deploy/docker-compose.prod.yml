@@ -35,9 +35,9 @@ services:
     restart: unless-stopped
     depends_on:
       - apache
+    # Derrière le Caddy d'entrée du serveur, qui seul écoute sur 80/443
     ports:
-      - "80:80"
-      - "443:443"
+      - "127.0.0.1:8081:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./proto:/srv/proto:ro

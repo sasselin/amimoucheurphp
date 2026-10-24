@@ -6,7 +6,8 @@ Hôte : droplet DigitalOcean `143.198.43.249` (Ubuntu 24.04, 1 vCPU, 1 Go de RAM
 
 ```
 Visiteur → Cloudflare → UFW (80/443 depuis les IP Cloudflare seulement)
-         → caddy (TLS Let's Encrypt) → apache (PHP 5.6, mod_php) → mysql 5.6
+         → Caddy d'entrée (root, TLS Let's Encrypt)
+         → caddy (Docker, 127.0.0.1:8081) → apache (PHP 5.6, mod_php) → mysql 5.6
 ```
 
 Tout est dans `/srv/amimoucheur`, sous l'usager `amimoucheur` (sans sudo, Docker rootless). Les comptes `sass` et `deploy` servent à l'administration ; la connexion SSH en root est désactivée.
@@ -18,7 +19,8 @@ Tout est dans `/srv/amimoucheur`, sous l'usager `amimoucheur` (sans sudo, Docker
 | `php-hardening.ini` | Atténuations php2shell, `disable_functions`, envoi des courriels par msmtp. |
 | `apache-site.conf` | Vraie IP client (`CF-Connecting-IP`), HTTPS vu par PrestaShop, blocage des POST multipart hors `/admin0181/`, pas de PHP dans les dossiers inscriptibles. |
 | `apache-mpm.conf`, `mysql-lowmem.cnf` | Réglages pour 1 Go de RAM. |
-| `Caddyfile` | Certificats automatiques, `amimoucheur.com` → `www`. |
+| `Caddyfile` | En http derrière le Caddy d'entrée, `amimoucheur.com` → `www`, proto. |
+| `entree.caddy`, `entree-root.sh` | Domaines de ce site dans le Caddy d'entrée du serveur, et sa mise en place (voir « Caddy d'entrée »). |
 | `crontab`, `cron-run.sh` | Crons PrestaShop (taux de change, sitemap, flux Google Shopping) avec courriel d'alerte en cas d'échec. |
 | `backup-db.sh`, `restore-db.sh` | Sauvegarde nocturne de la BD et restauration. |
 | `ufw-cloudflare.sh` | Pare-feu : SSH ouvert, 80/443 depuis Cloudflare seulement. À lancer en sudo, et à relancer si Cloudflare change ses plages. |
@@ -54,6 +56,37 @@ Accès par code envoyé par courriel (`proto-auth.py`, conteneur `proto-auth`, P
 - `/srv/amimoucheur/proto-auth/secret` signe les sessions ; le supprimer puis `docker compose restart proto-auth` déconnecte tout le monde.
 - Déconnexion : `https://proto.amimoucheur.com/deconnexion`.
 - DNS Cloudflare : `A proto → 143.198.43.249`, proxied.
+
+## Caddy d'entrée (un serveur, plusieurs sites)
+
+Le serveur héberge plusieurs sites, chacun sous son propre usager, sans accès aux fichiers des autres et sans
+dépendre d'eux. Seul le Caddy d'entrée, géré par root (paquet `caddy`), écoute sur 80/443 : il obtient les
+certificats et renvoie chaque domaine au Caddy de son site, sur 127.0.0.1.
+
+- `/etc/caddy/Caddyfile` n'a que `import /etc/caddy/sites/*.caddy`.
+- Chaque site fournit, dans son dépôt, le fichier de ses domaines, copié par root en
+  `/etc/caddy/sites/<usager>.caddy`, puis `systemctl reload caddy`. Ici : `deploy/entree.caddy` (`www`,
+  `amimoucheur.com`, `proto` → `127.0.0.1:8081`).
+- Le conteneur `caddy` de ce site est publié sur `127.0.0.1:8081` en http et reprend les en-têtes
+  `X-Forwarded-*` du Caddy d'entrée (`trusted_proxies`) : Apache voit toujours `HTTPS=on`, et la vraie IP par
+  `CF-Connecting-IP`.
+- `cron-run.sh` interroge toujours `https://www…` sur 127.0.0.1:443, c'est-à-dire le Caddy d'entrée.
+- Un nouveau site : un usager, des ports libres (tableau ci-dessous), un fichier dans `/etc/caddy/sites/`.
+
+| Usager | Domaines | Ports (127.0.0.1) |
+|---|---|---|
+| `amimoucheur` (ce dépôt, Docker rootless) | www, amimoucheur.com, proto | 8081 |
+| `amimoucheur-rust` (nouveau site) | admin, dev | 8090, 8091, 3000, 3001, 3010, 3011, 7700 |
+
+Mise en place, une fois, en root et à une heure creuse : `deploy/entree-root.sh` (mode d'emploi en tête du
+script). Il installe le paquet `caddy`, le `Caddyfile` d'entrée et `entree.caddy`, copie les certificats du
+conteneur, pose le nouveau `Caddyfile` et `docker-compose.yml` de ce site, recrée le conteneur `caddy` sur
+127.0.0.1:8081 et démarre le Caddy d'entrée : une à deux secondes de coupure.
+
+**Ne pas lancer `./deploy.sh --infra` avant cette mise en place** : il appliquerait le nouveau
+`docker-compose.yml` et retirerait 80/443 au site sans Caddy d'entrée pour les reprendre.
+
+Ensuite, `./deploy.sh --infra` reste le même.
 
 ## Courriels
 
@@ -105,4 +138,4 @@ Le `www-data` du conteneur correspond sur l'hôte à l'usager `ct-www-data` (UID
 
 ## Jour J (nouveau site)
 
-Les redirections 301 de l'ancien site sont produites par `export-catalogue/` et s'importent dans le bloc `www.amimoucheur.com` du `Caddyfile`, avant le `reverse_proxy`. La procédure est dans [export-catalogue/CLAUDE.md](../export-catalogue/CLAUDE.md). Le `Caddyfile` actuel n'est pas encore modifié.
+Les redirections 301 de l'ancien site sont produites par `export-catalogue/`. Au jour J, `www.amimoucheur.com` et `amimoucheur.com` passent de `deploy/entree.caddy` au fichier de domaines du nouveau site, et les redirections s'importent dans le Caddy du nouveau site, avant son `reverse_proxy`. La procédure est dans [export-catalogue/CLAUDE.md](../export-catalogue/CLAUDE.md). Le `Caddyfile` actuel n'est pas encore modifié.

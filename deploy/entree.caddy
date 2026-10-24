@@ -1,0 +1,7 @@
+# Domaines de ce projet dans le Caddy d'entrée du serveur (root) : /etc/caddy/sites/amimoucheur.caddy.
+# Le Caddy d'entrée fait le TLS (Let's Encrypt, HTTP-01 via Cloudflare) et renvoie au conteneur caddy
+# (usager amimoucheur, 127.0.0.1:8081), qui reprend ses en-têtes X-Forwarded-*. Voir deploy/README.md.
+# Mise à jour : root copie ce fichier, puis `systemctl reload caddy`.
+www.amimoucheur.com, amimoucheur.com, proto.amimoucheur.com {
+	reverse_proxy 127.0.0.1:8081
+}
