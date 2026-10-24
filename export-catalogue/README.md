@@ -54,14 +54,14 @@ Les CSV sont en UTF-8 avec BOM et séparateur virgule.
 uv run export-catalogue/recategorise.py export-catalogue/out/local/catalogue.json export-catalogue/out/local
 ```
 
-On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
+On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas particuliers par produit, notations de moulinet, couleurs), puis on relance le script. Le libellé du fabricant n'est jamais réécrit (sauf la majuscule initiale des couleurs) : chaque option reçoit une valeur de filtre, ou reste une option libre. Sur le catalogue actif, le script s'arrête dans trois cas : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
 
 ## Redirections du jour J
 
 `recategorise.py` produit aussi, à chaque run, les redirections 301 de toutes les anciennes URL vers le nouveau site, dans `recategorisation/caddy/`. Ensuite, `run.sh` les teste dans un vrai Caddy (`test_redirections.py`, image `caddy:2.8.4` comme en prod) : chaque ligne de la table, plus des URL piège. Un écart fait échouer le run.
 
 - Les anciennes URL sont reconnues par leur id, comme le fait PrestaShop. Le segment de catégorie, le slug, le suffixe EAN13, les filtres et la pagination n'ont pas d'importance, et les formes `index.php?id_product=` sont couvertes aussi.
-- Un produit actif redirige vers sa fiche. Un produit exclu (seulement avec `--tout`) redirige vers sa nouvelle catégorie. Une catégorie redirige vers sa cible, et une catégorie-marque ou une marque vers la page marque.
+- Un produit actif redirige vers sa fiche, une fiche fusionnée vers la fiche gardée. Un produit exclu (seulement avec `--tout`) redirige vers sa nouvelle catégorie. Une catégorie redirige vers sa cible, et une catégorie-marque ou une marque vers la page marque.
 - Pour le jour J, il faut **`./export-catalogue/run.sh --prod --tout`**. Sans `--tout`, les anciennes URL exclues tombent sur l'accueil.
 
 La procédure de mise en place est dans `recategorisation/caddy/LISEZMOI.md`.

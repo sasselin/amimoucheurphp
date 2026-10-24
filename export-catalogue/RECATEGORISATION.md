@@ -105,7 +105,7 @@ Les filtres propres à la famille passent avant les filtres communs. Le principe
 
 ## 6. Deux couches : le libellé du fabricant et la valeur de filtre
 
-Chaque marque a sa propre notation, et le site doit la respecter : c'est ce que le client lit dans le catalogue du fabricant. On ne réécrit donc **jamais** le libellé. On lui **associe** une valeur normalisée, qui ne sert qu'aux filtres et à la compatibilité.
+Chaque marque a sa propre notation, et le site doit la respecter : c'est ce que le client lit dans le catalogue du fabricant. On ne réécrit donc **jamais** le libellé. On lui **associe** une valeur normalisée, qui ne sert qu'aux filtres et à la compatibilité. Seule retouche : une couleur commence toujours par une majuscule (« earth » devient « Earth »).
 
 | Produit | Libellé affiché | Valeur de filtre |
 |---|---|---|

@@ -6,6 +6,7 @@
 
 Pour chaque produit : nouvelle catégorie, marque, filtres normalisés, tags et badges.
 Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de filtre.
+Seule exception : une couleur prend une majuscule initiale (« earth » -> « Earth »).
 
 Usage : uv run export-catalogue/recategorise.py <catalogue.json> <dossier_sortie>
 Sortie : <dossier_sortie>/recategorisation/ (index.html, CSV, XLSX, rapport.md, caddy/)
@@ -109,6 +110,12 @@ class Taxonomie:
                 name = t(p["name"], l)
                 if self.slugs.get(p["id"], {}).get(l):
                     out[(p["id"], l)] = (self.slugs[p["id"]][l], "surcharge")
+                elif l in p.get("renomme", ()):
+                    out[(p["id"], l)] = (slug(name), "nom (renommé)")
+                elif (l == "en" and p["seo"]["en"]["slug"] == p["seo"]["fr"]["slug"]
+                      and slug(name) != slug(t(p["name"], "fr"))):
+                    # nom anglais changé, mais l'URL anglaise est restée celle du français
+                    out[(p["id"], l)] = (slug(name), "nom (slug anglais resté en français)")
                 elif not p["seo"][l]["slug"] or slug_abime(p["seo"][l]["slug"], name):
                     out[(p["id"], l)] = (slug(name), "nom (slug abîmé)")
                 else:
@@ -145,7 +152,10 @@ class Taxonomie:
 # ---------------------------------------------------------------- marques
 
 def brand_of(p, tax, old_brands):
-    """(marque, source) : champ marque, puis préfixe du nom, puis ancienne catégorie-marque."""
+    """(marque, source) : choix manuel, puis champ marque, préfixe du nom, ancienne catégorie-marque."""
+    manual = tax.data["marques_produit"]
+    if str(p["id"]) in manual:  # None : sans marque, voulu
+        return manual[str(p["id"])], "manuel"
     if p["brand"]:
         b = tax.alias_map.get(norm(p["brand"]).rstrip("."))
         if b:
@@ -212,15 +222,21 @@ def is_color_group(g):
     return bool(COLOR_GROUP.search(g)) or norm(g) in COLOR_GROUPS
 
 
+def libelle_couleur(value):
+    """Libellé de couleur affiché : celui du fabricant, avec une majuscule initiale (« earth » -> « Earth »)."""
+    value = value.strip()
+    return value[:1].upper() + value[1:]
+
+
 def color_families(value, tax):
     """(familles, modificateurs, statut) d'un libellé de couleur."""
     v = norm(value)
-    v_clean = re.sub(r"[#(]?\s*#?\d{3,5}\)?", " ", v)  # retire les numéros de teinte (#6908)
+    v_clean = re.sub(r"\(?\s*#?\s*\d{3,5}\s*\)?", " ", v)  # retire les numéros de teinte (#6908, (# 3280))
     fams = []
     key = re.sub(r"\s*[-–]?\s*$", "", v_clean).strip(" .")
     manual = tax.couleurs["manuel"].get(v) or tax.couleurs["manuel"].get(v.rstrip(". ")) or tax.couleurs["manuel"].get(key)
-    if manual:
-        fams, statut = [manual], "manuel"
+    if manual:  # une famille, ou une liste (« UV Bourdon » : ["noir", "chartreuse"])
+        fams, statut = ([manual] if isinstance(manual, str) else list(manual)), "manuel"
     else:
         for f in tax.couleurs["familles"]:
             if any(has_word(v_clean, m) for m in f["mots"]):
@@ -373,9 +389,14 @@ def facets_for(p, cat, famille, tax, infos, brand):
             if v not in (None, "") and v not in F[key]:
                 F[key].append(v)
 
+    for k, vals in tax.data["filtres_produit"].get(str(p["id"]), {}).items():
+        if not k.startswith("_"):
+            add(k, vals)
+
     def row(v, a, facette, valeur, statut):
         rows.append({"produit_id": p["id"], "variante_id": v["id"], "sku": v["reference"] or "",
-                     "produit": t(p["name"]), "groupe": t(a["group"]), "libelle_fabricant": t(a["value"]),
+                     "produit": t(p["name"]), "groupe": t(a["group"]),
+                     "libelle_fabricant": libelle_couleur(t(a["value"])) if facette == "couleur" else t(a["value"]),
                      "facette": tax.data["facettes"].get(facette, {}).get("fr", facette) if facette else "",
                      "valeur_filtre": valeur, "statut": statut})
 
@@ -432,7 +453,9 @@ def facets_for(p, cat, famille, tax, infos, brand):
             if re.search(k, name):
                 add("usage_hamecon", lab)
         for model, usages in tax.data["hamecons_modeles"].get(brand, {}).items():
-            if re.search(r"(?<![0-9a-z])" + re.escape(model.lower()) + r"(?![0-9])", name):
+            # « 600 SP » sur la fiche pour le modèle 600SP : l'espace entre chiffres et lettres est facultatif
+            pat = re.sub(r"(?<=\d)(?=[a-z])", r"\\s?", re.escape(model.lower()))
+            if re.search(r"(?<![0-9a-z])" + pat + r"(?![0-9])", name):
                 add("usage_hamecon", usages)
         add("usage_hamecon", old_info.get("usage_hamecon"))
         add("sans_ardillon", "Oui" if re.search(r"barbless|sans ardillon|\bbl\b", name) else "Non")
@@ -455,6 +478,9 @@ def facets_for(p, cat, famille, tax, infos, brand):
             add("genre", "Homme")
         if any("genre:femme" in i.get("tags", []) for i in infos):
             add("genre", "Femme")
+    if famille == "moulinets":
+        # moulinet vendu sans variante de taille (Hardy Fortuna Regent 8000 : « Pour soie 7/8/9 »)
+        add("numero_soie", span(tax.data["moulinets"]["par_produit"].get(str(p["id"]), [])))
     if famille == "lunettes":
         add("materiau_verre", "Verre minéral" if re.search(r"\bverre\b|glass", name) else
             "Polycarbonate" if "poly" in name else None)
@@ -592,6 +618,11 @@ def facets_for(p, cat, famille, tax, infos, brand):
                 if "quantit" in gn:
                     add("quantite_paquet", vn)
                     row(v, a, "quantite_paquet", vn, "ok")
+                    continue
+                mm = inch_mm(vn) if famille == "hamecons" and gn.startswith("longueur") else None
+                if mm:  # tiges (shanks) : vendues en mm, sans numéro d'hameçon
+                    add("longueur_tige", f"{mm:g} mm")
+                    row(v, a, "longueur_tige", f"{mm:g} mm", "ok")
                     continue
                 if re.search(r"hame|grosseur", gn):
                     hs = hook_size(val)
@@ -746,7 +777,7 @@ def slug_abime(s, name):
 def write_redirections(dest, doc, results, tax, old_rows):
     """Table 301 ancienne URL -> nouvelle URL et directives Caddy prêtes à importer. Retourne la table.
 
-    Produit actif -> sa fiche. Produit exclu (extraction --tout) -> sa nouvelle catégorie, sinon celle de son
+    Produit actif -> sa fiche. Fiche fusionnée -> la fiche gardée. Produit exclu (extraction --tout) -> sa nouvelle catégorie, sinon celle de son
     ancienne catégorie par défaut, sinon l'accueil. Catégorie -> sa cible (page marque pour une catégorie-marque).
     Marque -> sa page marque. Une cible est toujours une page qui existera : catégorie ou marque avec des produits actifs.
     """
@@ -817,6 +848,13 @@ def write_redirections(dest, doc, results, tax, old_rows):
             cible["produit"][l][p["id"]] = to
             rows.append({"type": "produit", "id": p["id"], "langue": l, "nom": t(p["name"], l),
                          "ancienne_url": rel(p["seo"][l]["url"]), "cible": to, "regle": regle})
+    for f in doc.get("fusions", []):
+        p = f["produit"]
+        for l in langs:
+            to = cible["produit"][l][f["cible"]]
+            cible["produit"][l][p["id"]] = to
+            rows.append({"type": "produit", "id": p["id"], "langue": l, "nom": t(p["name"], l),
+                         "ancienne_url": rel(p["seo"][l]["url"]), "cible": to, "regle": "produit fusionné -> fiche gardée"})
     for b in doc.get("brands", []):
         canon = tax.alias_map.get(norm(b["name"]).rstrip(".")) or b["name"].strip(" .")
         for l in langs:
@@ -940,10 +978,46 @@ Le nouveau site doit servir chaque cible : fiches produit, catégories, pages ma
 
 # ---------------------------------------------------------------- principal
 
+def apply_noms_fusions(doc, tax):
+    """Noms corrigés (taxonomie.json -> noms_produit) et fiches fusionnées (-> fusions), avant tout le reste.
+
+    Un produit renommé reçoit un slug refait à partir du nouveau nom. Une fiche absorbée sort du catalogue :
+    ses variantes (avec leur prix et leur promo) et ses images rejoignent la fiche gardée, et son ancienne URL
+    redirige vers celle-ci (doc["fusions"], lu par write_redirections)."""
+    by_id = {p["id"]: p for p in doc["products"]}
+    for k, noms in tax.data["noms_produit"].items():
+        p = by_id.get(int(k)) if not k.startswith("_") else None
+        if p:
+            for l in ("fr", "en"):
+                if noms.get(l):
+                    p["name"][l] = noms[l]
+                    p.setdefault("renomme", []).append(l)
+    doc["fusions"] = []
+    for k, cible in tax.data["fusions"].items():
+        if k.startswith("_") or int(k) not in by_id:
+            continue
+        a, g = by_id[int(k)], by_id.get(int(cible))
+        if not g:
+            print(f"Avertissement — fusion {k} -> {cible} : la fiche gardée n'est pas dans l'extraction", file=sys.stderr)
+            continue
+        g["variants"] += [dict(v, default=False) for v in a["variants"]]
+        vus = {i["url"] for i in g["images"]}
+        g["images"] += [dict(i, cover=False) for i in a["images"] if i["url"] not in vus]
+        g["stock"]["quantity"] += a["stock"]["quantity"]
+        prix = [v["price"]["final"] for v in g["variants"]] or [g["price"]["final"]]
+        g["price"]["min"], g["price"]["max"] = min(prix), max(prix)
+        if any(v["price"].get("promo") for v in g["variants"]):
+            g["price"]["some_variants_on_promo"] = True
+        doc["fusions"].append({"produit": a, "cible": g["id"]})
+    absorbes = {f["produit"]["id"] for f in doc["fusions"]}
+    doc["products"] = [p for p in doc["products"] if p["id"] not in absorbes]
+
+
 def main():
     src, out = Path(sys.argv[1]), Path(sys.argv[2])
     doc = json.loads(src.read_text(encoding="utf-8"))
     tax = Taxonomie(json.loads((HERE / "taxonomie.json").read_text(encoding="utf-8")))
+    apply_noms_fusions(doc, tax)
     dest = out / "recategorisation"
     dest.mkdir(parents=True, exist_ok=True)
     base = doc["meta"]["base_url"]
@@ -975,13 +1049,15 @@ def main():
         if not cat:
             raisons.insert(0, "aucune catégorie")
         # Les matériaux en vrac emballés par la boutique n'ont pas de marque : ce n'est pas une erreur
-        if not brand and famille not in ("materiaux", "billes", "outils"):
+        if not brand and famille not in ("materiaux", "billes", "outils") and str(p["id"]) not in tax.data["marques_produit"]:
             raisons.append("marque inconnue")
         need = {"cannes": ["numero_soie", "longueur"], "moulinets": ["numero_soie"], "soies": ["numero_soie"],
                 "hamecons": ["taille_hamecon", "usage_hamecon"], "mouches": ["taille_hamecon"]}.get(famille, [])
         if cat in ("etuis-cannes", "etuis-moulinets", "entretien-soies", "flottants", "corde-reserve", "bobines",
                    "pointes", "running-lines"):
             need = []
+        if "Tige (shank)" in facets.get("usage_hamecon", []):
+            need = [k for k in need if k != "taille_hamecon"]
         miss = [fac_label[k] for k in need if not facets.get(k)
                 and not (k == "numero_soie" and famille == "soies" and facets.get("grains"))]
         if miss and p["variants"]:
@@ -1389,7 +1465,7 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filt
             "oa": uniq(f"{t(a['group'])} : {t(a['value'])}" for v in p["variants"] for a in v["attributes"])[:60],
             "nv": len(p["variants"]),
             # Variantes telles que vendues : libellés d'origine, prix, stock ; la famille de couleur sert à la pastille
-            "vs": [{"a": [[t(a["group"]), t(a["value"]),
+            "vs": [{"a": [[t(a["group"]), libelle_couleur(t(a["value"])) if is_color_group(t(a["group"])) else t(a["value"]),
                            color_families(t(a["value"]), tax)[0] if is_color_group(t(a["group"])) else None]
                           for a in v["attributes"]],
                     "pr": v["price"]["final"], "rp": v["price"]["regular"], "q": v["quantity"]}

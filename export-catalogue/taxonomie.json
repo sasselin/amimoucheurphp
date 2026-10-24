@@ -158,7 +158,7 @@
     "soies": ["numero_soie", "grains", "profil", "densite", "climat"],
     "avancons": ["diametre_x", "resistance_lb", "materiau_avancon", "longueur"],
     "mouches": ["type_mouche", "taille_hamecon", "couleur", "lestee"],
-    "hamecons": ["taille_hamecon", "usage_hamecon", "quantite_paquet", "sans_ardillon"],
+    "hamecons": ["taille_hamecon", "usage_hamecon", "longueur_tige", "quantite_paquet", "sans_ardillon"],
     "materiaux": ["couleur", "matiere", "taille"],
     "billes": ["materiau_bille", "diametre_mm", "couleur"],
     "outils": ["type_outil"],
@@ -191,6 +191,7 @@
     "taille_hamecon": {"fr": "Taille d'hameçon", "en": "Hook size"},
     "lestee": {"fr": "Lestée", "en": "Weighted", "type": "bool"},
     "usage_hamecon": {"fr": "Usage", "en": "Use"},
+    "longueur_tige": {"fr": "Longueur de tige", "en": "Shank length", "unite": "mm"},
     "quantite_paquet": {"fr": "Quantité par paquet", "en": "Pack size"},
     "sans_ardillon": {"fr": "Sans ardillon", "en": "Barbless", "type": "bool"},
     "couleur": {"fr": "Couleur", "en": "Colour", "type": "couleur"},
@@ -673,21 +674,56 @@
     "3108": {"cat": "waders", "note": "Patagonia Swiftcurrent Traverse femme : waders"},
     "3156": {"cat": "manteaux"}
   },
+  "noms_produit": {
+    "_doc": "Nom corrigé d'un produit : id -> {fr, en} (une langue suffit). Le slug est refait à partir du nouveau nom. Sert surtout aux copies de fiche dont le nom anglais est resté celui de l'original.",
+    "3230": {"fr": "Simms - Challenger Bibs pour homme 2026", "en": "Simms - Men's Challenger Bibs 2026"},
+    "3231": {"fr": "Simms - Challenger Jacket pour homme 2026", "en": "Simms - Men's Challenger Jacket 2026"},
+    "2948": {"en": "Maxima - Chameleon"},
+    "3233": {"en": "Patagonia - Men's Capilene Cool Sun Hoody - Fitz Roy Trout"},
+    "3255": {"en": "Neptune - Green Killer Whisker Bomber"},
+    "3058": {"en": "Fishpond - Lodgepole Fishing Satchel L'Ami du Moucheur"}
+  },
+  "fusions": {
+    "_doc": "Même modèle vendu sur plusieurs fiches : id absorbé -> id gardé. Les variantes et les images de la fiche absorbée rejoignent la fiche gardée ; son ancienne URL redirige vers celle-ci.",
+    "2831": 3016,
+    "2896": 2846,
+    "3027": 2863,
+    "2983": 3093
+  },
+  "marques_produit": {
+    "_doc": "Marque choisie à la main quand le champ, le nom et l'ancienne catégorie ne la donnent pas : id -> marque. null : sans marque, voulu (le produit n'est plus signalé).",
+    "613": "Gear Aid",
+    "1591": "Flip-Focal",
+    "2025": "New Zealand Strike Indicator",
+    "2036": "Air-Lock",
+    "2154": "Jacques Héroux",
+    "3094": "Jacques Héroux",
+    "2223": null,
+    "2913": null
+  },
+  "filtres_produit": {
+    "_doc": "Filtres ajoutés à un produit quand ses variantes ne les donnent pas : id -> {facette: [valeurs]}. '_source' : où l'information a été lue.",
+    "2682": {"longueur": ["9'9\""], "_source": "fiche : « Longueur de 9'9'' »"},
+    "2741": {"longueur": ["11'7\""], "_source": "fiche : « D'une longueur de 11'7'' »"},
+    "2917": {"longueur": ["9'0\""], "_source": "fiche : « Canne de 9' »"},
+    "3050": {"longueur": ["9'0\""], "_source": "fiche : « Canne d'action medium/fast de 9' »"},
+    "3101": {"longueur": ["9'0\""], "_source": "fiche : « Canne de 9' »"},
+    "3104": {"longueur": ["9'0\""], "_source": "contient la canne Liquid Max (3101), 9'"},
+    "3136": {"longueur": ["9'0\""], "_source": "fiche : « Série disponible en 9' »"},
+    "3162": {"longueur": ["9'0\""], "_source": "fiche : « Canne de 9' en 4 sections »"},
+    "730": {"taille_hamecon": ["8"], "_source": "fiche : « GROSSEUR # 8 »"}
+  },
   "moulinets": {
-    "_doc": "Notation de taille propre à chaque marque -> plage de numéros de soie [min, max]. Le libellé du fabricant reste affiché tel quel.",
-    "Lamson": {"- 3 +": [2, 4], "- 5 +": [4, 6], "- 7 +": [6, 8], "- 9 +": [8, 10], "- 11 +": [10, 12]},
+    "_doc": "Notation de taille propre à chaque marque -> plage de numéros de soie [min, max]. Le libellé du fabricant reste affiché tel quel. 'par_produit' : moulinet sans variante de taille, id -> plage. 'a_confirmer' : 'Marque|libellé' -> question, la variante reste « à confirmer ».",
+    "Lamson": {"- 3 +": [2, 4], "- 5 +": [4, 6], "- 7 +": [6, 8], "- 9 +": [8, 10], "- 11 +": [10, 12],
+               "#6": [5, 6], "# 8": [7, 8], "# 10": [9, 10], "# 12": [11, 12]},
     "Hardy": {"6000": [6, 8], "8000": [8, 10], "10000": [10, 12], "12000": [12, 14]},
-    "a_confirmer": {
-      "Lamson|#6": "Liquid Max / Litespeed M : #6, #8… est-ce un numéro de soie ou une taille de modèle ?",
-      "Lamson|# 8": "Liquid Max / Litespeed M / Centerfire / Hyperspeed : #8 est-il un numéro de soie ou une taille de modèle ?",
-      "Lamson|# 10": "Liquid Max / Litespeed M / Centerfire / Hyperspeed : #10 est-il un numéro de soie ou une taille de modèle ?",
-      "Lamson|# 12": "Liquid Max / Litespeed M / Centerfire / Hyperspeed : #12 est-il un numéro de soie ou une taille de modèle ?",
-      "Nautilus|# Silver King": "CCF X2 Silver King : # 10-12+ ?",
-      "Hardy|8000": "Fortuna Regent 8000 : plage à confirmer"
-    }
+    "Nautilus": {"# Silver King": [12, 14]},
+    "par_produit": {"2798": [7, 9]},
+    "a_confirmer": {}
   },
   "couleurs": {
-    "_doc": "Familles de couleur pour le filtre et la pastille. 'mots' : mots-clés FR/EN reconnus dans le libellé. 'manuel' : noms commerciaux classés à la main (le libellé reste affiché).",
+    "_doc": "Familles de couleur pour le filtre et la pastille. 'mots' : mots-clés FR/EN reconnus dans le libellé. 'manuel' : noms commerciaux classés à la main, une famille ou une liste de familles (le libellé reste affiché).",
     "familles": [
       {"id": "noir", "fr": "Noir", "en": "Black", "hex": "#1b1b1b", "mots": ["noir", "black", "blackout", "stealth", "night rider", "eclipse", "midnight"]},
       {
@@ -998,7 +1034,29 @@
       "june bug": "pourpre",
       "bullfrog": "vert",
       "la branchu": "orange",
-      "light mallow": "tan"
+      "light mallow": "tan",
+      "sea breeze": ["bleu", "vert"],
+      "sienna clay": "orange",
+      "pebble": ["gris", "vert"],
+      "uv daredevil": ["rouge", "blanc"],
+      "uv bourdon": ["chartreuse", "noir"],
+      "uv mickey": ["jaune", "rouge"],
+      "uv grenade": ["jaune", "chartreuse", "blanc", "barre"],
+      "fire": ["orange", "rouge", "blanc", "multi", "or", "jaune"],
+      "wind": ["or", "jaune"],
+      "earth": ["olive", "or", "jaune", "orange", "blanc"],
+      "selvedge": ["bleu", "gris"],
+      "dark elkhorn": ["gris", "brun"],
+      "willow/aspen": ["olive", "bleu"],
+      "tribute": "gris",
+      "pacific": "bleu",
+      "tortuga": "vert",
+      "original": "brun",
+      "native": "brun",
+      "grayling buffalo check": ["pourpre", "noir", "rose"],
+      "mirage": ["argent", "jaune", "bleu", "vert"],
+      "opal mirage (2033)": "perle",
+      "perche (# 3280)": ["jaune", "multi", "rouge", "vert"]
     }
   },
   "hamecons_modeles": {
@@ -1028,7 +1086,7 @@
       "9395": ["Streamer"],
       "800S": ["Eau salée"],
       "811S": ["Eau salée"],
-      "600SP": ["Eau salée"],
+      "600SP": ["Eau salée"], "700": ["Saumon", "Streamer", "Noyée"],
       "8089": ["Surface"],
       "7999": ["Saumon"]
     },

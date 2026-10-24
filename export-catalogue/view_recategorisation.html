@@ -536,7 +536,7 @@ function sortVals(k, vals, counts) {
     taille: (a, b) => (SIZE.indexOf(a) + 1 || 99) - (SIZE.indexOf(b) + 1 || 99) || a.localeCompare(b, 'fr', {numeric: true}),
     couleur: (a, b) => DATA.couleurs.findIndex(c => c.id === a) - DATA.couleurs.findIndex(c => c.id === b),
     sections: (a, b) => a - b, diametre_x: (a, b) => parseFloat(b) - parseFloat(a),
-    pointure: (a, b) => parseFloat(a) - parseFloat(b), diametre_mm: (a, b) => parseFloat(a) - parseFloat(b),
+    pointure: (a, b) => parseFloat(a) - parseFloat(b), diametre_mm: (a, b) => parseFloat(a) - parseFloat(b), longueur_tige: (a, b) => parseFloat(a) - parseFloat(b),
   }[k];
   return vals.sort(by || ((a, b) => counts[b] - counts[a] || String(a).localeCompare(String(b), 'fr')));
 }
