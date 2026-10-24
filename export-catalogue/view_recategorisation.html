@@ -136,6 +136,11 @@ aside.side { background: var(--surface); border: 1px solid var(--border); border
 .card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
 .card .img { aspect-ratio: 1; background: #fff; display: grid; place-items: center; position: relative; }
 .card .img img { width: 100%; height: 100%; object-fit: contain; }
+.cpick { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 6px; width: fit-content; max-width: calc(100% - 16px);
+  background: rgb(255 255 255 / .94); color: #1d2420; border: 1px solid #e2dfd6; border-radius: 99px; padding: 3px 9px 3px 4px; font-size: 12px; font-weight: 600; box-shadow: 0 1px 6px rgb(0 0 0 / .12); }
+.cpick > span:not(.s-sw) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cpick small { color: #6b726d; font-weight: 500; flex: none; }
+.cpick .s-sw i { width: 16px; height: 16px; }
 .noimg { color: #aaa; font-size: 12px; }
 .badges { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
 .badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: var(--surface-2); color: var(--text); }
@@ -625,8 +630,19 @@ $('#tabs').addEventListener('click', e => {
 });
 
 // ---------- Cartes
+// Avec le filtre Couleur, la carte et la fiche montrent la variante de cette couleur, et sa photo si PrestaShop en a une
+function colourMatch(p) {
+  const want = A.f.couleur; if (!want || !want.size) return null;
+  const col = v => v.a.find(a => a[2]);
+  const hit = p.vs.filter(v => (col(v)?.[2] || []).some(f => want.has(f)));
+  if (!hit.length) return null;
+  const v = hit.find(x => x.im && x.q > 0) || hit.find(x => x.im) || hit.find(x => x.q > 0) || hit[0];
+  return {v, n: new Set(hit.map(x => col(x)[1])).size, label: col(v)[1], fams: col(v)[2]};
+}
 function card(p, mode) {
   const promo = p.pr < p.rp;
+  const cm = mode === 'apres' ? colourMatch(p) : null, img = (cm && cm.v.im) || p.img;
+  const pick = cm ? `<span class="cpick"><span class="s-sw">${cm.fams.map(f => `<i style="background:${swatchBg(f)}"></i>`).join('')}</span><span>${esc(cm.label)}</span>${cm.n > 1 ? `<small>+${cm.n - 1}</small>` : ''}</span>` : '';
   const badges = mode === 'apres' ? [...p.bd].sort((x, y) => BPRIO.indexOf(x) - BPRIO.indexOf(y)).slice(0, 2)
     .map(b => `<span class="badge bd-${b}">${esc(BADGE[b])}</span>`).join('') :
     (promo ? '<span class="badge bd-promo">Promo</span>' : '') + (p.st <= 0 ? '<span class="badge bd-epuise">Rupture</span>' : '');
@@ -636,8 +652,8 @@ function card(p, mode) {
   const dots = mode === 'apres' && p.f.couleur ? `<div class="dots">${p.f.couleur.slice(0, 8).map(c => `<span class="dot" style="background:${swatchBg(c)}" title="${esc(COL[c]?.fr)}"></span>`).join('')}</div>` : '';
   const price = p.mn != null && p.mx != null && p.mn !== p.mx ? `<span class="small">dès</span> ${money(p.mn)}` : money(p.pr);
   return `<div class="card" data-id="${p.id}">
-    <div class="img">${p.img ? `<img loading="lazy" src="${esc(thumb(p.img))}" alt="">` : '<span class="noimg">Sans image</span>'}
-      <div class="badges">${badges}</div></div>
+    <div class="img">${img ? `<img loading="lazy" src="${esc(thumb(img))}" alt="">` : '<span class="noimg">Sans image</span>'}
+      <div class="badges">${badges}</div>${pick}</div>
     <div class="body">
       <div class="brand ${mode === 'avant' && !p.bo ? 'none' : ''}">${brand}</div>
       <div class="name">${esc(p.n)}</div>
@@ -1092,7 +1108,7 @@ function renderFiche() {
 function openProduct(id) {
   const p = byId.get(id); if (!p) return;
   FICHE.p = p; FICHE.photo = 0; FICHE.photoAuto = true;
-  const first = p.vs.find(v => v.q > 0) || p.vs[0];
+  const first = colourMatch(p)?.v || p.vs.find(v => v.q > 0) || p.vs[0];
   FICHE.sel = first ? Object.fromEntries(first.a.map(a => [a[0], a[1]])) : {};
   const ch = changesOf(p);
   $('#dlgc').innerHTML = `<div class="dlg-head">
