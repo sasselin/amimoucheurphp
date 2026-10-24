@@ -11,6 +11,8 @@ Extraction du catalogue PrestaShop 1.6.1.4, recatégorisation proposée pour le 
 - `recategorise.py` importe `build.py` (pour `t`, `write_csv` et `add_sheet`).
 - `view_recategorisation.html` est le gabarit versionné de la page `out/.../recategorisation/index.html` (même principe que `view.html` pour `catalogue.html`). `write_html` y remplace `/*__DATA__*/` par les données. Toute la page (HTML, CSS, JS) se modifie dans le gabarit.
 - On ajuste la proposition dans `taxonomie.json`, jamais dans les CSV de sortie.
+- Catégorie principale (`classify`) : la catégorie par défaut de PrestaShop l'emporte si c'est une feuille. Un parent fourre-tout (« Montage de mouches », « Accessoires ») cède à une sous-catégorie précise du produit.
+- Marques partenaires (`taxonomie.json` → `partenaires`, aujourd'hui Yeti) : une entrée du menu vers la page marque, jamais une catégorie.
 - Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de filtre. Seule exception : une couleur prend toujours une majuscule initiale (`libelle_couleur`).
 - Cas réglés à la main, par id de produit, dans `taxonomie.json` : `marques_produit` (`null` = sans marque, voulu), `filtres_produit` (filtre lu sur la fiche quand les variantes ne le donnent pas, avec `_source`), `moulinets.par_produit`, `noms_produit` (nom corrigé) et `fusions` (même modèle sur plusieurs fiches : variantes et images réunies sur la fiche gardée). Une couleur classée à la main (`couleurs.manuel`) peut recevoir une liste de familles.
 - Les filtres affichés par catégorie sont décidés par `filtres_categorie` (recategorise.py), seuils dans `taxonomie.json` → `filtres_affichage`. La page (`valuesOf`) et `filtres_categorie` doivent lire les mêmes valeurs.

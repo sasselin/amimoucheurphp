@@ -55,23 +55,27 @@ C'est là qu'on se démarque.
 5. **Marque = filtre + page marque.** Les 97 anciennes catégories-marques redirigent (301) vers la page marque, qui est indexable. Elles ne redirigent pas vers une URL filtrée, que Google conseille de ne pas indexer.
 6. **URL du nouveau site** (`taxonomie.json` → `urls`) : `/fr/produit/{slug}`, `/fr/{univers}/{categorie}`, `/fr/marques/{marque}`, et l'équivalent en `/en/`. La catégorie n'est pas dans l'URL du produit : l'URL reste stable si on recatégorise, et un produit n'a qu'une URL. Les raisons et les sources sont dans `CLAUDE.md`.
 
-## 4. Arborescence : 9 univers, 71 catégories
+## 4. Arborescence : 9 univers, 65 catégories
 
 Nombre de produits entre parenthèses, en comptant les catégories secondaires.
 
-- **Cannes** (65) : Cannes une main · Cannes Spey & Switch · Ensembles prêts-à-pêcher · Étuis à cannes
+- **Cannes** (65) : Cannes une main · Cannes Spey & Switch · Ensembles prêts-à-pêcher · Étuis & supports à cannes
 - **Moulinets** (40) : Moulinets · Bobines de rechange (22 moulinets vendus aussi en bobine) · Étuis à moulinet
-- **Soies & bas de ligne** (111) : Soies une main · Têtes & soies Spey · Running lines · Pointes & polyleaders · Bas de ligne · Avançons & matériel · Corde de réserve · Entretien & accessoires
+- **Soies & bas de ligne** (111) : Soies une main · Têtes & soies Spey · Running lines · Pointes & polyleaders · Bas de ligne · Avançons & matériel (dont les indicateurs de touche) · Corde de réserve · Entretien & accessoires
 - **Mouches** (197) : Sèches · Nymphes · Noyées · Streamers & tandems · Mouches à saumon · Surface & souris · Eau salée · Flottants & calants
 - **Montage** (478) :
   - Étaux · Outils · Hameçons · Fils de montage
   - Plumes · Poils & fourrures · Dubbing · Synthétiques : l'animal (coq, canard, faisan, lapin, renard…) ou le type (flash & fibres, chenille, corps, pattes, mousse) est un filtre **Matière**, pas un 3e niveau
-  - Billes, cônes & yeux · Tinsels, floss & fils métalliques · Colles, vernis & UV · Mouche-tube · Ensembles & kits · Rangement
+  - Billes, cônes & yeux · Tinsels, floss & fils métalliques · Colles, vernis & UV · Ensembles & kits. Les outils de mouche-tube et le rangement de l'établi sont dans Outils (filtre Type d'outil)
 - **Waders & bottes** (52) : Waders · Bottes de wading · Accessoires de wading (crampons, semelles, réparation, bâtons)
-- **Vêtements** (90) : Manteaux & pluie · Hauts & couches · Pantalons · Chapeaux, casquettes & tuques · Gants · Bas. Homme et Femme deviennent un filtre Genre.
-- **Sacs & rangement** (73) : Vestes de pêche · Sacs de poitrine, bandoulière & taille · Sacs à dos · Sacs d'équipement & duffels · Boîtes à mouches
-- **Accessoires** (65) : Pinces, coupe-fil & outils · Rétracteurs · Puises · Lunettes polarisées · Indicateurs de touche · Supports à cannes · Glacières & gourdes (Yeti) · Montage de cannes · Livres & guides · Divers
-- Utilitaires du menu : Nouveautés · Promos · Signature · Cartes-cadeaux · Marques · Par espèce
+- **Vêtements** (90) : Manteaux & pluie · Hauts & couches · Pantalons · Chapeaux, casquettes & tuques · Gants & bas (dont les bas de wading). Homme et Femme deviennent un filtre Genre.
+- **Sacs & rangement** (73) : Vestes, sacs de poitrine & de taille · Sacs à dos · Sacs d'équipement & duffels · Boîtes à mouches
+- **Accessoires** (65) : Pinces, coupe-fil & outils · Rétracteurs · Puises · Lunettes polarisées · Glacières, gourdes & camping · Montage de cannes · Livres & guides · Divers
+- Utilitaires du menu : Nouveautés · Promos · Signature · **Yeti** · Cartes-cadeaux · Marques · Par espèce
+
+Une catégorie de 1 ou 2 produits rejoint sa voisine la plus proche : elle allonge le menu sans aider à choisir.
+
+**Yeti, partenaire de la boutique.** Une marque n'est jamais une catégorie, mais un partenaire a sa place dans le menu. L'entrée « Yeti » mène à la page marque `/fr/marques/yeti`, qui réunit tous ses produits : glacières, gourdes, sacs et chaise. L'ancienne catégorie « Produits Yeti » y redirige déjà. Les partenaires se déclarent dans `taxonomie.json` → `partenaires`.
 
 ## 5. Filtres
 
@@ -156,7 +160,7 @@ Les espèces ne sont posées que là où le nom ou la catégorie le dit : 190 pr
 - Débuter à la mouche · Débuter le montage
 - Saumon atlantique, avec les livres de Jacques Héroux et les mouches de saumon
 - Signature L'Ami du Moucheur (Musquaro, Fiset, Galarneau…) · Fait au Québec (Capsize, Gaspé Fly, Hop La Mouche)
-- Cadeaux (moins de 50 $, moins de 100 $) · Yeti
+- Cadeaux (moins de 50 $, moins de 100 $) · Yeti (partenaire : entrée du menu et page marque)
 - Plus tard : Démonstrateurs/Usagés, Retour en inventaire
 
 ## 9. Pour aller plus loin que le marché
@@ -171,7 +175,7 @@ Les espèces ne sont posées que là où le nom ou la catégorie le dit : 190 pr
 
 1. **Tailles Lamson** `#6`, `#8`, `#10`, `#12` (Liquid Max, Litespeed M, Centerfire, Hyperspeed) : est-ce un numéro de soie ou une taille de modèle ? Même question pour Nautilus « Silver King » et Hardy Fortuna Regent 8000. Une fois tranché, une ligne dans `taxonomie.json` → `moulinets` suffit.
 2. **Espèces** : la liste vous convient-elle ? Faut-il distinguer omble de fontaine et truite, et ajouter doré et perchaude ?
-3. **Yeti et lifestyle** : on les range dans Accessoires > Glacières & gourdes avec une page marque. Préférez-vous un univers « Plein air » ?
+3. **Yeti** : réglé. Yeti est un partenaire, avec une entrée dans le menu et une page marque. Ses produits restent dans leur catégorie, surtout Accessoires > Glacières, gourdes & camping.
 4. **Fait au Québec** : quelles marques en plus de L'Ami du Moucheur, Capsize, Gaspé Fly et Hop La Mouche ? Les mouches Neptune sont-elles montées ici ?
 5. **Tag espèce des cannes et des soies** : le nom suffit rarement. Il faudra 30 minutes avec l'équipe pour taguer les modèles à la main, par exemple R8 Core = truite.
 6. **Les 15 couleurs à classer** et les 42 produits « à réviser » du rapport.

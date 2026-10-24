@@ -18,7 +18,7 @@
         {"id": "cannes-une-main", "fr": "Cannes une main", "en": "Single-hand rods"},
         {"id": "cannes-spey-switch", "fr": "Cannes Spey & Switch", "en": "Spey & switch rods"},
         {"id": "ensembles", "fr": "Ensembles prêts-à-pêcher", "en": "Ready-to-fish outfits"},
-        {"id": "etuis-cannes", "fr": "Étuis à cannes", "en": "Rod cases", "famille": "rangement"}
+        {"id": "etuis-cannes", "fr": "Étuis & supports à cannes", "en": "Rod cases & racks", "famille": "rangement"}
       ]
     },
     {
@@ -81,9 +81,7 @@
         {"id": "billes", "fr": "Billes, cônes & yeux", "en": "Beads, cones & eyes", "famille": "billes"},
         {"id": "tinsels", "fr": "Tinsels, floss & fils métalliques", "en": "Tinsel, floss & wire"},
         {"id": "colles", "fr": "Colles, vernis & UV", "en": "Glues, varnish & UV", "famille": "generique"},
-        {"id": "tubes", "fr": "Mouche-tube", "en": "Tube flies", "famille": "outils"},
-        {"id": "kits-montage", "fr": "Ensembles & kits", "en": "Kits", "famille": "generique"},
-        {"id": "rangement-montage", "fr": "Rangement", "en": "Storage", "famille": "generique"}
+        {"id": "kits-montage", "fr": "Ensembles & kits", "en": "Kits", "famille": "generique"}
       ]
     },
     {
@@ -107,8 +105,7 @@
         {"id": "hauts", "fr": "Hauts & couches", "en": "Tops & layers"},
         {"id": "pantalons", "fr": "Pantalons", "en": "Pants"},
         {"id": "chapeaux", "fr": "Chapeaux, casquettes & tuques", "en": "Hats, caps & beanies"},
-        {"id": "gants", "fr": "Gants", "en": "Gloves"},
-        {"id": "bas", "fr": "Bas", "en": "Socks"}
+        {"id": "gants-bas", "fr": "Gants & bas", "en": "Gloves & socks"}
       ]
     },
     {
@@ -117,8 +114,7 @@
       "en": "Bags & storage",
       "famille": "rangement",
       "enfants": [
-        {"id": "vestes-peche", "fr": "Vestes de pêche", "en": "Fishing vests"},
-        {"id": "sacs-portes", "fr": "Sacs de poitrine, bandoulière & taille", "en": "Chest, sling & hip packs"},
+        {"id": "sacs-portes", "fr": "Vestes, sacs de poitrine & de taille", "en": "Vests, chest & hip packs"},
         {"id": "sacs-a-dos", "fr": "Sacs à dos", "en": "Backpacks"},
         {"id": "sacs-voyage", "fr": "Sacs d'équipement & duffels", "en": "Gear bags & duffels"},
         {"id": "boites-mouches", "fr": "Boîtes à mouches", "en": "Fly boxes"}
@@ -134,9 +130,7 @@
         {"id": "retracteurs", "fr": "Rétracteurs", "en": "Retractors"},
         {"id": "puises", "fr": "Puises", "en": "Nets"},
         {"id": "lunettes", "fr": "Lunettes polarisées", "en": "Polarized sunglasses", "famille": "lunettes"},
-        {"id": "indicateurs", "fr": "Indicateurs de touche", "en": "Strike indicators"},
-        {"id": "supports-cannes", "fr": "Supports à cannes", "en": "Rod racks"},
-        {"id": "glacieres-gourdes", "fr": "Glacières & gourdes", "en": "Coolers & drinkware"},
+        {"id": "glacieres-gourdes", "fr": "Glacières, gourdes & camping", "en": "Coolers, drinkware & camp"},
         {"id": "montage-cannes", "fr": "Montage de cannes", "en": "Rod building"},
         {"id": "livres", "fr": "Livres & guides", "en": "Books & guides"},
         {"id": "divers", "fr": "Divers", "en": "Other"}
@@ -287,6 +281,10 @@
     "debutant_categories": ["ensembles", "kits-montage"],
     "debutant_mots": ["wrangler", "classic trout", "embrace", "ensemble de montage"]
   },
+  "partenaires": {
+    "_doc": "Marques partenaires de la boutique, mises en avant dans le menu (à côté de Signature). Une marque n'est jamais une catégorie : l'entrée mène à la page marque.",
+    "marques": ["Yeti"]
+  },
   "marques": {
     "Ahrex": ["ahrex"],
     "Airflo": ["airflo", "air flo", "air-flo"],
@@ -378,13 +376,13 @@
     "666": {"cat": "glacieres-gourdes", "marque": "Yeti"},
     "667": {"cat": "glacieres-gourdes", "marque": "Yeti"},
     "675": {"cat": "sacs-a-dos", "marque": "Yeti"},
-    "685": {"cat": "divers", "marque": "Yeti"},
+    "685": {"cat": "glacieres-gourdes", "marque": "Yeti"},
     "491": {"cat": "divers"},
     "612": {"cat": "divers"},
     "535": {"cat": "outils-riviere"},
     "609": {"cat": "outils-riviere"},
     "608": {"cat": "retracteurs"},
-    "611": {"cat": "supports-cannes"},
+    "611": {"cat": "etuis-cannes"},
     "511": {"cat": "montage-cannes"},
     "513": {"cat": "montage-cannes"},
     "542": {"cat": "montage-cannes", "marque": "Pacific Bay"},
@@ -392,8 +390,8 @@
     "412": {"cat": "livres"},
     "413": {"cat": "livres"},
     "355": {"cat": "hauts"},
-    "589": {"cat": "bas"},
-    "590": {"cat": "bas", "marque": "Simms"},
+    "589": {"cat": "gants-bas"},
+    "590": {"cat": "gants-bas", "marque": "Simms"},
     "361": {"cat": "bottes"},
     "498": {"cat": "bottes", "marque": "Korkers"},
     "622": {"cat": "bottes", "marque": "Guideline"},
@@ -408,9 +406,9 @@
     "567": {"cat": "hauts", "marque": "L'Ami du Moucheur"},
     "661": {"cat": "hauts", "marque": "Patagonia"},
     "697": {"cat": "hauts", "marque": "Capsize"},
-    "483": {"cat": "gants"},
-    "480": {"cat": "gants", "marque": "Simms"},
-    "607": {"cat": "gants", "marque": "Lamson"},
+    "483": {"cat": "gants-bas"},
+    "480": {"cat": "gants-bas", "marque": "Simms"},
+    "607": {"cat": "gants-bas", "marque": "Lamson"},
     "348": {"cat": "manteaux"},
     "472": {"cat": "manteaux", "marque": "Simms"},
     "662": {"cat": "manteaux", "marque": "Patagonia"},
@@ -527,7 +525,7 @@
     "689": {"cat": "synthetiques", "matiere": "Corps, laines & tubings"},
     "373": {"cat": "dubbing"},
     "595": {"cat": "dubbing"},
-    "468": {"cat": "rangement-montage"},
+    "468": {"cat": "outils", "type_outil": "Rangement"},
     "366": {"cat": "fils"},
     "368": {"cat": "fils", "marque": "UNI"},
     "370": {"cat": "fils", "marque": "Gordon Griffiths"},
@@ -549,8 +547,8 @@
     "405": {"cat": "outils", "type_outil": "Divers"},
     "492": {"cat": "outils", "type_outil": "Whip finisher"},
     "606": {"cat": "kits-montage", "type_outil": "Ensemble d'outils"},
-    "489": {"cat": "tubes"},
-    "490": {"cat": "tubes", "marque": "HMH"},
+    "489": {"cat": "outils", "type_outil": "Mouche-tube"},
+    "490": {"cat": "outils", "type_outil": "Mouche-tube", "marque": "HMH"},
     "372": {"cat": "plumes"},
     "377": {"cat": "plumes", "matiere": "Dinde"},
     "378": {"cat": "plumes", "matiere": "Canard"},
@@ -615,25 +613,25 @@
       {"motif": "\\b(é|e)tui\\b|reel case|neoprene", "si_cat": ["moulinets-mouche"], "cat": "etuis-moulinets"},
       {"motif": "rod (&|and) reel case|rod case", "si_cat": ["sacs-voyage", "sacs-portes"], "cat": "etuis-cannes"},
       {"motif": "reel case|reel bag|étui à moulinet", "si_cat": ["sacs-voyage", "sacs-portes"], "cat": "etuis-moulinets"},
-      {"motif": "\\bvest\\b", "si_cat": [], "cat": "vestes-peche"},
+      {"motif": "\\bvest\\b", "si_cat": [], "cat": "sacs-portes"},
       {"motif": "backpack|bacpack|daypack|sac à dos|roll-top pack|panga", "si_cat": [], "cat": "sacs-a-dos"},
       {"motif": "chest pack|sling|hip pack|lumbar|satchel|waistbag|guide pack|belt system|tech pack", "si_cat": [], "cat": "sacs-portes"},
       {
-        "motif": "semelle|cleat|stud|crampon|lacets|aqua ?seal|réparation de waders|baton de wading|bâton de wading|wading sock|bas néoprène|wader pouch|tippet tender",
+        "motif": "semelle|cleat|stud|crampon|lacets|aqua ?seal|réparation de waders|baton de wading|bâton de wading|wader pouch|tippet tender",
         "si_cat": [],
         "cat": "accessoires-wading"
       },
+      {"motif": "wading sock|bas néoprène", "si_cat": [], "cat": "gants-bas"},
       {"motif": "pantalon|\\bpants?\\b|joggers?", "si_cat": ["hauts"], "cat": "pantalons"},
       {"motif": "\\b(hat|cap|casquette|tuque|beanie|watchcap|trucker)\\b", "si_cat": [], "cat": "chapeaux"},
       {"motif": "^(?!.*sweater).*(jacket|manteau)", "si_cat": ["hauts"], "cat": "manteaux"},
       {"motif": "souris|mouse|\\brat\\b|popper|gurgler", "si_cat": ["seches", "streamers", "nymphes", "noyees"], "cat": "surface"},
       {"motif": "net release|aimant pour puise", "si_cat": ["divers"], "cat": "puises"},
       {"motif": "nipper|coupe.?fil|pince|release|flexistripper|redresseur", "si_cat": ["divers"], "cat": "outils-riviere"},
-      {"motif": "indicateur", "si_cat": ["divers"], "cat": "indicateurs"},
+      {"motif": "indicateur", "si_cat": ["divers"], "cat": "avancons"},
       {"motif": "mag crab", "si_cat": ["divers"], "cat": "boites-mouches"},
       {"motif": "mini guide", "si_cat": ["divers"], "cat": "livres"},
-      {"motif": "fil de plomb|fil d'acier", "si_cat": ["outils"], "cat": "tinsels"},
-      {"motif": "cabinet|étui à outils", "si_cat": ["outils"], "cat": "rangement-montage"}
+      {"motif": "fil de plomb|fil d'acier", "si_cat": ["outils"], "cat": "tinsels"}
     ]
   },
   "produits": {
@@ -658,14 +656,14 @@
     "2224": {"cat": "outils"},
     "1591": {"cat": "lunettes", "note": "Flip Focal : loupe à clipser"},
     "622": {"cat": "divers"},
-    "2740": {"cat": "divers"},
+    "2740": {"cat": "glacieres-gourdes", "note": "Yeti Trailhead Camp Chair"},
     "2885": {"cat": "livres"},
     "1384": {"cat": "seches"},
     "3083": {"cat": "streamers"},
     "675": {"cat": "entretien-soies"},
-    "1029": {"cat": "accessoires-wading"},
-    "2872": {"cat": "accessoires-wading"},
-    "2714": {"cat": "accessoires-wading"},
+    "1029": {"cat": "gants-bas"},
+    "2872": {"cat": "gants-bas"},
+    "2714": {"cat": "gants-bas"},
     "2869": {"cat": "waders", "note": "Wading pant"},
     "3235": {"cat": "waders", "note": "Wading pant"},
     "2701": {"cat": "chapeaux"},
@@ -1101,7 +1099,13 @@
       "7131": ["Saumon"],
       "2059": ["Saumon"],
       "2061": ["Saumon"],
-      "2062": ["Saumon"]
+      "2062": ["Saumon"],
+      "1550": ["Noyée", "Nymphe"],
+      "1770": ["Nymphe"],
+      "2050": ["Saumon"],
+      "2051": ["Saumon"],
+      "2052": ["Saumon"],
+      "2055": ["Saumon"]
     },
     "Kamasan": {"B160": ["Nymphe", "Noyée"], "B175": ["Nymphe", "Noyée"], "B401": ["Sèche"], "B405": ["Sèche"]},
     "Mustad": {"34007": ["Eau salée"], "34011": ["Eau salée"], "33903": ["Surface"]},

@@ -574,7 +574,9 @@ function renderMega() {
     top.map(n => `<button data-c="${n.id}" class="${cur[0] === n.id ? 'on' : ''}">${esc(n.fr)}</button>`).join('') +
     `<span class="sep"></span>` +
     `<button class="util" data-q="badge:nouveau">Nouveautés</button><button class="util" data-q="badge:promo">Promos</button>` +
-    `<button class="util" data-q="badge:signature">Signature</button><button class="util" data-c="cartes-cadeaux">Cartes-cadeaux</button>`;
+    `<button class="util" data-q="badge:signature">Signature</button>` +
+    DATA.partenaires.map(m => `<button class="util" data-q="marque:${esc(m)}">${esc(m)}</button>`).join('') +
+    `<button class="util" data-c="cartes-cadeaux">Cartes-cadeaux</button>`;
   let subs = '';
   if (cur[0] && NODE.get(cur[0]).kids.length) {
     subs = NODE.get(cur[0]).kids.map(id => `<button class="chipbtn ${cur[1] === id ? 'on' : ''}" data-c="${id}">${esc(NODE.get(id).fr)}<small>${count(id)}</small></button>`).join('');

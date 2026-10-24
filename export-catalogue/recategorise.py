@@ -192,8 +192,9 @@ def classify(p, tax, cats_old):
         return o["cat"], list(o.get("cat_secondaires", [])), "manuel", infos, old_brands
 
     cat, source = None, ""
-    cands = ([default] if default and (tax.old.get(default) or {}).get("cat") else []) + \
-        sorted((i for i in old_ids if (tax.old.get(i) or {}).get("cat")), key=lambda i: -cats_old[i]["depth"])
+    mapped = [i for i in uniq(([default] if default else []) + old_ids) if (tax.old.get(i) or {}).get("cat")]
+    # La catégorie par défaut l'emporte si c'est une feuille ; un parent fourre-tout (« Montage de mouches ») cède à une sous-catégorie précise
+    cands = sorted(mapped, key=lambda i: (cats_old[i]["has_children"], i != default, -cats_old[i]["depth"]))
     if cands:
         cat, source = tax.old[cands[0]]["cat"], "ancienne_categorie"
     provisional = cat
@@ -1482,6 +1483,7 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filt
         "old": [{"id": c["id"], "p": c["parent_id"], "n": t(c["name"]), "path": t(c["path"]),
                  "pos": c["position"], "d": c["depth"]} for c in doc["categories"]],
         "tree": tax.data["arbre"], "familles": tax.data["familles"], "filtres": filtres,
+        "partenaires": tax.data["partenaires"]["marques"],
         "filtres_cfg": {k: v for k, v in tax.data["filtres_affichage"].items() if k != "_doc"},
         "facettes": {k: {"fr": v["fr"], "type": v.get("type", "")} for k, v in tax.data["facettes"].items()},
         "tags": {k: [{"id": x["id"], "fr": x["fr"]} for x in tax.data["tags"][k]] for k in tax.data["tags"]},
