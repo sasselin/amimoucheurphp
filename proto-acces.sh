@@ -18,8 +18,10 @@ case "$action" in
       a="${a,,}"
       [[ $a =~ ^[a-z0-9._%+-]*@[a-z0-9.-]+\.[a-z]+$ ]] || { echo "Adresse invalide : $a" >&2; exit 2; }
       if [[ $action == ajouter ]]; then
-        ssh "$PROD_SSH" "grep -qxF '$a' '$LISTE' || echo '$a' >> '$LISTE'"
+        ssh "$PROD_SSH" "grep -qxF '$a' '$LISTE'" && echo "Déjà dans la liste : $a" \
+          || ssh "$PROD_SSH" "echo '$a' >> '$LISTE'"
       else
+        ssh "$PROD_SSH" "grep -qxF '$a' '$LISTE'" || { echo "Pas dans la liste (faute de frappe ?) : $a" >&2; exit 1; }
         ssh "$PROD_SSH" "grep -vxF '$a' '$LISTE' > '$LISTE.tmp'; cat '$LISTE.tmp' > '$LISTE'; rm '$LISTE.tmp'"
       fi
     done ;;
