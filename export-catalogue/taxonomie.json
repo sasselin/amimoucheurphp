@@ -144,6 +144,14 @@
     },
     {"id": "cartes-cadeaux", "fr": "Cartes-cadeaux", "en": "Gift cards", "famille": "generique", "utilitaire": true}
   ],
+  "filtres_affichage": {
+    "_doc": "Quels filtres une catégorie affiche (filtres_categorie dans recategorise.py). Candidats : les filtres communs, plus ceux des familles de ses produits. Un filtre est retenu s'il trie vraiment la liste : s'il est propre à une famille, cette famille fait au moins couverture_min des produits ; au moins valeurs_min valeurs utiles (une valeur est utile si elle garde au moins produits_par_valeur produits sans les garder tous ; une seule suffit pour une case à cocher : disponibilité, milieu, mise en avant, oui/non) ; sauf pour une case à cocher, une valeur renseignée sur au moins couverture_min des produits. Sous min_produits produits, la liste se lit d'un coup d'œil : aucun filtre. Les seuils sont des choix d'ingénierie, pas des chiffres tirés d'une étude.",
+    "min_produits": 8,
+    "couverture_min": 0.3,
+    "valeurs_min": 2,
+    "produits_par_valeur": 2,
+    "ordre_communs": ["marque", "espece", "technique", "milieu", "badge", "stock"]
+  },
   "familles": {
     "cannes": ["numero_soie", "longueur", "sections", "type_canne", "talon_combat"],
     "moulinets": ["numero_soie", "moulinet_bobine", "couleur"],

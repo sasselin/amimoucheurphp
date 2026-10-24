@@ -94,6 +94,15 @@ Nombre de produits entre parenthèses, en comptant les catégories secondaires.
 
 Ces 30 filtres remplacent les 144 groupes d'attributs.
 
+**Un filtre ne s'affiche que s'il aide à choisir.** Les listes ci-dessus sont des candidats. Chaque catégorie n'en garde que ceux qui trient vraiment ses produits (`filtres_categorie` dans `recategorise.py`, seuils dans `taxonomie.json` → `filtres_affichage`) :
+
+- moins de 8 produits : aucun filtre, la liste tient sur un écran ;
+- un filtre propre à une famille doit concerner au moins 30 % des produits affichés (pas de « Talon de combat » sur tout le catalogue) ;
+- l'information doit exister pour au moins 30 % des produits, sinon filtrer fait disparaître les autres (sauf pour les cases à cocher : disponibilité, eau salée, mise en avant, oui/non) ;
+- il faut au moins 2 choix qui gardent chacun 2 produits ou plus sans les garder tous : dans « Sèches », la marque (toutes Neptune), le type et la technique (toutes « Sèche ») ne retireraient rien.
+
+Les filtres propres à la famille passent avant les filtres communs. Le principe vient de Baymard : des filtres propres à la catégorie, aucun filtre hors sujet, les plus utiles en premier ([Macy's filtering](https://baymard.com/blog/macys-filtering-experience), [filtres et contenu des listes](https://baymard.com/blog/have-filters-for-list-item-info)). Les seuils sont un choix d'ingénierie, pas un chiffre d'étude. Le résultat par catégorie est dans `nouvelles_categories.csv` (colonnes `filtres` et `filtres_ecartes`) et dans le rapport ; la page le montre sous les filtres (« Filtres masqués dans cette catégorie »), avec la raison.
+
 ## 6. Deux couches : le libellé du fabricant et la valeur de filtre
 
 Chaque marque a sa propre notation, et le site doit la respecter : c'est ce que le client lit dans le catalogue du fabricant. On ne réécrit donc **jamais** le libellé. On lui **associe** une valeur normalisée, qui ne sert qu'aux filtres et à la compatibilité.
@@ -173,11 +182,11 @@ Dans `export-catalogue/out/local/recategorisation/` :
 
 | Fichier | Contenu |
 |---|---|
-| `index.html` | Page autonome. Onglets : **Après** (méga-menu, filtres par famille, badges, fiche avant/après, « Complète ton montage ») ; **Avant** (arbre actuel, filtre marque) ; correspondance des catégories ; familles de couleurs ; **Redirections (jour J)** : diagramme de flux des anciennes URL vers les nouvelles pages, test d'une ancienne URL, table filtrable. **Graphe** : vue en graphe à la Obsidian, en deux modes. *Redirections* relie les anciennes catégories à leur cible. *Arborescences avant / après* montre l'arbre actuel et la nouvelle taxonomie côte à côte, sans redirections. Les produits sont en option. *Produits liés* relie les produits par compatibilité (numéro de soie), même modèle ou gamme (déclinaisons vendues séparément, à fusionner en un produit à variantes), même marque et achats communs (au moins 3 commandes communes, d'après l'historique de PrestaShop). La page est générée à partir du gabarit `view_recategorisation.html`. |
+| `index.html` | Page autonome. Onglets : **Après** (méga-menu, filtres retenus pour la catégorie et filtres masqués avec leur raison, badges, fiche avant/après, « Complète ton montage ») ; **Avant** (arbre actuel, filtre marque) ; correspondance des catégories ; familles de couleurs ; **Redirections (jour J)** : diagramme de flux des anciennes URL vers les nouvelles pages, test d'une ancienne URL, table filtrable. **Graphe** : vue en graphe à la Obsidian, en deux modes. *Redirections* relie les anciennes catégories à leur cible. *Arborescences avant / après* montre l'arbre actuel et la nouvelle taxonomie côte à côte, sans redirections. Les produits sont en option. *Produits liés* relie les produits par compatibilité (numéro de soie), même modèle ou gamme (déclinaisons vendues séparément, à fusionner en un produit à variantes), même marque et achats communs (au moins 3 commandes communes, d'après l'historique de PrestaShop). La page est générée à partir du gabarit `view_recategorisation.html`. |
 | `mapping_produits.csv` | Une ligne par produit : ancienne et nouvelle catégorie, catégories secondaires, marque (et sa source), espèces, techniques, milieu, badges, filtres, confiance, raisons de révision, nouvelle URL. |
 | `mapping_variantes.csv` | Une ligne par option de variante : groupe, libellé du fabricant, filtre, valeur de filtre et statut (`ok`, `auto`, `manuel`, `partiel`, `à_classer`, `à_confirmer`, `option libre`). |
 | `correspondance_categories.csv` | Chaque ancienne catégorie : ce qu'elle devient, avec les redirections 301 en FR et en EN. |
-| `nouvelles_categories.csv` | L'arbre proposé, avec le nombre de produits, les filtres et les URL. |
+| `nouvelles_categories.csv` | L'arbre proposé, avec le nombre de produits, les filtres affichés, les filtres écartés (et pourquoi) et les URL. |
 | `couleurs.csv` | Chaque libellé de couleur, ses familles et la colonne `famille_a_assigner`. |
 | `url_mapping.csv` | `url_mapping.csv` de l'extraction, avec la colonne `nouvelle_url` remplie. |
 | `caddy/redirections.caddy` | Les redirections 301 de toutes les anciennes URL (produits, catégories, marques), prêtes à importer dans Caddy au jour J. Elles sont testées dans Caddy à chaque `run.sh`. |

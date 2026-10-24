@@ -12,6 +12,7 @@ Extraction du catalogue PrestaShop 1.6.1.4, recatégorisation proposée pour le 
 - `view_recategorisation.html` est le gabarit versionné de la page `out/.../recategorisation/index.html` (même principe que `view.html` pour `catalogue.html`). `write_html` y remplace `/*__DATA__*/` par les données. Toute la page (HTML, CSS, JS) se modifie dans le gabarit.
 - On ajuste la proposition dans `taxonomie.json`, jamais dans les CSV de sortie.
 - Le libellé du fabricant n'est jamais réécrit : on lui associe une valeur de filtre.
+- Les filtres affichés par catégorie sont décidés par `filtres_categorie` (recategorise.py), seuils dans `taxonomie.json` → `filtres_affichage`. La page (`valuesOf`) et `filtres_categorie` doivent lire les mêmes valeurs.
 - Arrêts bloquants sur le catalogue actif (de simples avertissements avec `--tout`) : un produit sans catégorie, une catégorie vide, une ancienne catégorie sans cible.
 
 ## Règle : tenir les redirections à jour

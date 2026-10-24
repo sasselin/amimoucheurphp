@@ -79,6 +79,11 @@ aside.side { background: var(--surface); border: 1px solid var(--border); border
   position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
 .facet { border-bottom: 1px solid var(--border); padding: 10px 0; }
 .facet:last-child { border-bottom: 0; }
+.ecartes { margin-top: 10px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 6px; font-size: 12px; color: var(--muted); }
+.ecartes summary { cursor: pointer; }
+.ecartes p { margin: 6px 0; }
+.ecartes ul { margin: 0; padding-left: 16px; }
+.ecartes li { margin: 3px 0; }
 .facet h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
   display: flex; justify-content: space-between; gap: 6px; }
 .facet h4 em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--accent); }
@@ -310,7 +315,7 @@ td.u { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1
 </header>
 <main>
   <section id="tab-apres">
-    <div class="intro"><b>Navigation proposée.</b> Neuf univers par type de produit, la marque en filtre, et des filtres propres à chaque famille (numéro de soie, longueur, taille d'hameçon, famille de couleur…). Cliquer un produit compare son classement avant et après.</div>
+    <div class="intro"><b>Navigation proposée.</b> Neuf univers par type de produit, la marque en filtre, et des filtres propres à chaque famille (numéro de soie, longueur, taille d'hameçon, famille de couleur…). Chaque catégorie n'affiche que les filtres qui trient vraiment sa liste ; les autres sont listés sous les filtres, avec la raison. Cliquer un produit compare son classement avant et après.</div>
     <div class="mega" id="mega"><div class="top" id="megaTop"></div><div class="subs" id="megaSubs"></div></div>
     <div class="layout">
       <aside class="side" id="facets"></aside>
@@ -499,7 +504,7 @@ document.addEventListener('click', e => {
 });
 
 // ========== APRÈS
-const A = {cat: null, q: '', sort: 'pert', page: 0, f: {}, more: new Set()};
+const A = {cat: null, q: '', sort: 'pert', page: 0, f: {}, more: new Set(), why: false};
 const COMMON = ['badge', 'marque', 'espece', 'technique', 'milieu', 'stock'];
 const LABEL = {badge: 'Mise en avant', marque: 'Marque', espece: 'Espèce', technique: 'Technique', milieu: 'Milieu', stock: 'Disponibilité'};
 function valuesOf(p, k) {
@@ -545,12 +550,21 @@ function passes(p, except) {
   }
   return true;
 }
-function facetKeys(base) {
-  const fams = new Set(base.map(p => p._fam));
-  const keys = [];
-  fams.forEach(f => (DATA.familles[f] || []).forEach(k => { if (!keys.includes(k)) keys.push(k); }));
-  // Hors catégorie, on limite aux filtres communs pour ne pas noyer la page
-  return A.cat ? keys : [];
+// Filtres de la catégorie décidés par recategorise.py (filtres_categorie) ; un filtre actif reste affiché pour pouvoir l'effacer
+const DECISION = () => DATA.filtres[A.cat || ''];
+function facetKeys() {
+  const keys = [...DECISION().retenus];
+  Object.keys(A.f).forEach(k => { if (!keys.includes(k)) keys.push(k); });
+  return keys;
+}
+function renderEcartes() {
+  const d = DECISION(), cfg = DATA.filtres_cfg;
+  if (!d.ecartes.length) return '';
+  const lead = d.n < cfg.min_produits
+    ? `Seulement ${d.n} produits : ils tiennent sur un écran, des filtres ne serviraient à rien.`
+    : `On n'affiche un filtre que s'il aide vraiment à choisir. Ceux-ci ont été masqués :`;
+  return `<details class="ecartes" ${A.why ? 'open' : ''}><summary>Filtres masqués dans cette catégorie (${d.ecartes.length})</summary>
+    <p>${lead}</p><ul>${d.ecartes.map(([k, why]) => `<li><b>${esc(LABEL[k] || FAC[k]?.fr || k)}</b> : ${esc(why)}</li>`).join('')}</ul></details>`;
 }
 function renderMega() {
   const top = DATA.tree.filter(n => !n.utilitaire);
@@ -582,7 +596,7 @@ $('#mega').addEventListener('click', e => {
   A.page = 0; renderApres();
 });
 function renderFacets(base) {
-  const keys = [...COMMON, ...facetKeys(base)];
+  const keys = facetKeys();
   const html = keys.map(k => {
     const pool = base.filter(p => passes(p, k));
     const counts = {};
@@ -605,8 +619,9 @@ function renderFacets(base) {
     }
     return `<div class="facet"><h4>${esc(title)}${reset}</h4>${body}</div>`;
   }).join('');
-  $('#facets').innerHTML = html || '<div class="small" style="padding:10px 0">Aucun filtre.</div>';
+  $('#facets').innerHTML = (html || '<div class="small" style="padding:10px 0">Aucun filtre.</div>') + renderEcartes();
 }
+$('#facets').addEventListener('toggle', e => { if (e.target.matches('details.ecartes')) A.why = e.target.open; }, true);
 $('#facets').addEventListener('click', e => {
   const r = e.target.closest('[data-reset]'); if (r) { delete A.f[r.dataset.reset]; A.page = 0; renderApres(); return; }
   const m = e.target.closest('[data-more]'); if (m) { A.more.has(m.dataset.more) ? A.more.delete(m.dataset.more) : A.more.add(m.dataset.more); renderApres(); return; }

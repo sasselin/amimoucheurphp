@@ -1067,12 +1067,14 @@ def main():
     redirect = {(r["ancienne_id"], "fr"): r["redirection_301_fr"] for r in old_rows}
     redirect.update({(r["ancienne_id"], "en"): r["redirection_301_en"] for r in old_rows})
 
+    filtres = filtres_categorie(doc, results, tax)
     new_rows = []
     for cid, n in tax.nodes.items():
         new_rows.append({
             "id": cid, "chemin_fr": tax.path(cid), "chemin_en": tax.path(cid, "en"), "niveau": n["depth"],
             "famille": n["famille"], "nb_produits_principale": count[cid], "nb_produits_total": count_all[cid],
-            "filtres": ", ".join(fac_label[k] for k in tax.data["familles"][n["famille"]]),
+            "filtres": ", ".join(libelle_filtre(k, tax) for k in filtres[cid]["retenus"]),
+            "filtres_ecartes": " ; ".join(f"{libelle_filtre(k, tax)} : {why}" for k, why in filtres[cid]["ecartes"]),
             "url_fr": f"{base}/fr/{tax.url(cid, 'fr')}", "url_en": f"{base}/en/{tax.url(cid, 'en')}",
         })
 
@@ -1122,10 +1124,89 @@ def main():
     wb.save(dest / "recategorisation.xlsx")
 
     stats = compute_stats(doc, results, var_rows, tax, count, color_rows)
-    (dest / "rapport.md").write_text(report(stats, results, prod_rows, tax), encoding="utf-8")
-    write_html(dest / "index.html", doc, results, tax, stats, old_rows, color_rows, redir)
+    (dest / "rapport.md").write_text(report(stats, results, prod_rows, tax, filtres), encoding="utf-8")
+    write_html(dest / "index.html", doc, results, tax, stats, old_rows, color_rows, redir, filtres)
     print(f"Recatégorisation : {len(results)} produits -> {len(tax.nodes)} catégories ; "
           f"{stats['a_reviser']} à réviser ; {len(redir)} redirections Caddy. Voir {dest}")
+
+
+BADGES_FILTRE = ("nouveau", "promo", "signature", "quebec", "debutant", "choix-equipe")
+LIBELLES_COMMUNS = {"badge": "Mise en avant", "marque": "Marque", "espece": "Espèce", "technique": "Technique",
+                    "milieu": "Milieu", "stock": "Disponibilité"}
+
+
+def filtres_categorie(doc, results, tax):
+    """Filtres affichés par catégorie ('' = tout le catalogue), avec les filtres écartés et leur raison.
+
+    Retourne {cat: {"n": nb produits, "retenus": [clé], "ecartes": [[clé, raison]]}}.
+    Les valeurs sont celles de la page (valuesOf) : garder les deux en accord."""
+    cfg = tax.data["filtres_affichage"]
+    stock = {p["id"]: p["stock"]["quantity"] for p in doc["products"]}
+
+    def valeurs(r, k):
+        if k == "badge":
+            return [b for b in r["badges"] if b in BADGES_FILTRE]
+        if k == "marque":
+            return [r["brand"]] if r["brand"] else []
+        if k in ("espece", "technique", "milieu"):
+            return [x for x in r["tags"] if x.startswith(k + ":")]
+        if k == "stock":
+            return ["en-stock"] if stock[r["id"]] > 0 else []
+        return [str(v) for v in r["facets"].get(k, [])]
+
+    pct = lambda x: f"{round(100 * x)} %"
+    cats = {r["id"]: {x for c in [r["cat"]] + r["second"] if c for x in tax.chain(c)} for r in results}
+    out = {}
+    for cid in ["", *tax.nodes]:
+        base = [r for r in results if not cid or cid in cats[r["id"]]]
+        n = len(base)
+        propres = uniq(k for f in uniq(r["famille"] for r in base) for k in tax.data["familles"][f])
+        retenus, ecartes = [], []
+        # Les filtres propres à la famille d'abord : ce sont eux qui distinguent la catégorie
+        for k in [*propres, *cfg["ordre_communs"]]:
+            cnt = Counter(v for r in base for v in set(valeurs(r, k)))
+            if not cnt:
+                continue
+            if n < cfg["min_produits"]:
+                ecartes.append([k, f"seulement {n} produits, pas besoin de filtrer"])
+                continue
+            # Disponibilité, eau salée, mise en avant : des cases à cocher, utiles même sur une partie de la liste
+            oui_non = k in ("stock", "milieu", "badge") or tax.data["facettes"].get(k, {}).get("type") == "bool"
+            utiles = [v for v, c in cnt.items() if cfg["produits_par_valeur"] <= c < n]
+            concerne = sum(1 for r in base if k in tax.data["familles"][r["famille"]]) / n if k in propres else 1
+            couverture = sum(1 for r in base if valeurs(r, k)) / n
+            if concerne < cfg["couverture_min"]:
+                ecartes.append([k, f"ne concerne que {pct(concerne)} des produits ici"])
+            elif not oui_non and couverture < cfg["couverture_min"]:
+                ecartes.append([k, f"l'information n'existe que pour {pct(couverture)} des produits : "
+                                   "les autres disparaîtraient de la liste"])
+            elif len(cnt) == 1 and not oui_non:
+                qui = "tous les produits" if couverture == 1 else "tous les produits renseignés"
+                ecartes.append([k, f"{qui} sont « {label_valeur(k, next(iter(cnt)), tax)} », il ne retirerait rien"])
+            elif oui_non and not utiles:
+                ecartes.append([k, "même réponse pour tous les produits, il ne retirerait rien"])
+            elif len(utiles) < (1 if oui_non else cfg["valeurs_min"]):
+                ecartes.append([k, "aucun choix ne réduit vraiment la liste (chaque option garde tous les produits, ou un seul)"])
+            else:
+                retenus.append(k)
+        out[cid] = {"n": n, "retenus": retenus, "ecartes": ecartes}
+    return out
+
+
+def libelle_filtre(k, tax):
+    return LIBELLES_COMMUNS.get(k) or tax.data["facettes"][k]["fr"]
+
+
+def label_valeur(k, v, tax):
+    if k in ("espece", "technique"):
+        return next((x["fr"] for x in tax.data["tags"][k] if f"{k}:{x['id']}" == v), v)
+    if k == "milieu":
+        return "Eau salée"
+    if k == "couleur":
+        return next((f["fr"] for f in tax.couleurs["familles"] if f["id"] == v), v)
+    if k == "badge":
+        return next((b["fr"] for g in ("badges_auto", "badges_manuels") for b in tax.data["tags"][g] if b["id"] == v), v)
+    return v
 
 
 def compute_stats(doc, results, var_rows, tax, count, color_rows):
@@ -1163,7 +1244,7 @@ def compute_stats(doc, results, var_rows, tax, count, color_rows):
     }
 
 
-def report(s, results, prod_rows, tax):
+def report(s, results, prod_rows, tax, filtres):
     pct = lambda a, b: f"{a}/{b} ({100 * a // max(b, 1)} %)"
     L = ["# Rapport de recatégorisation", "",
          f"{s['produits']} produits, {s['variantes']} variantes.", "",
@@ -1197,6 +1278,16 @@ def report(s, results, prod_rows, tax):
     L += ["", "## Nouvelle arborescence", "", "| Catégorie | Produits (principale) |", "|---|---|"]
     for cid, n in tax.nodes.items():
         L.append(f"| {'  ' * (n['depth'] - 1)}{'**' if n['depth'] == 1 else ''}{n['fr']}{'**' if n['depth'] == 1 else ''} | {s['count'].get(cid, 0)} |")
+    cfg = tax.data["filtres_affichage"]
+    L += ["", "## Filtres affichés par catégorie", "",
+          f"Un filtre n'est affiché que s'il trie vraiment la liste (règles et seuils : `taxonomie.json` → `filtres_affichage`). "
+          f"Sous {cfg['min_produits']} produits, aucun filtre.", "",
+          "| Catégorie | Produits | Filtres affichés | Écartés |", "|---|---|---|---|"]
+    for cid in ["", *tax.nodes]:
+        f = filtres[cid]
+        nom = "Tout le catalogue" if not cid else "  " * (tax.nodes[cid]["depth"] - 1) + tax.nodes[cid]["fr"]
+        L.append(f"| {nom} | {f['n']} | {', '.join(libelle_filtre(k, tax) for k in f['retenus']) or '—'} | "
+                 f"{', '.join(libelle_filtre(k, tax) for k, _ in f['ecartes']) or '—'} |")
     src = Counter(r[f"source_slug_{l}"] for r in prod_rows for l in ("fr", "en"))
     L += ["", "## Nouvelles URL de produit", "",
           f"Gabarit : `/fr/{tax.urls['produit']['fr']}/{{slug}}`, `/en/{tax.urls['produit']['en']}/{{slug}}`. "
@@ -1282,7 +1373,7 @@ def related_links(doc, results, tax):
     return {"modeles": modeles, "achats": achats, "commandes": {i: cnt.get(i, 0) for i in ids}}
 
 
-def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir):
+def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir, filtres):
     """Page autonome avant/après : gabarit view_recategorisation.html + données intégrées."""
     by_id = {r["id"]: r for r in results}
     prods = []
@@ -1314,7 +1405,8 @@ def write_html(path, doc, results, tax, stats, old_rows, color_rows, redir):
             "couleurs": dict(stats["couleurs"]), "sources": dict(stats["sources"]), "brand_src": dict(stats["brand_src"])},
         "old": [{"id": c["id"], "p": c["parent_id"], "n": t(c["name"]), "path": t(c["path"]),
                  "pos": c["position"], "d": c["depth"]} for c in doc["categories"]],
-        "tree": tax.data["arbre"], "familles": tax.data["familles"],
+        "tree": tax.data["arbre"], "familles": tax.data["familles"], "filtres": filtres,
+        "filtres_cfg": {k: v for k, v in tax.data["filtres_affichage"].items() if k != "_doc"},
         "facettes": {k: {"fr": v["fr"], "type": v.get("type", "")} for k, v in tax.data["facettes"].items()},
         "tags": {k: [{"id": x["id"], "fr": x["fr"]} for x in tax.data["tags"][k]] for k in tax.data["tags"]},
         "couleurs": [{"id": f["id"], "fr": f["fr"], "hex": f["hex"]} for f in tax.couleurs["familles"]],
