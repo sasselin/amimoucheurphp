@@ -49,6 +49,7 @@ La page de recatégorisation (`index.html`) et le catalogue (`catalogue.html`), 
 
 Accès par code envoyé par courriel (`proto-auth.py`, conteneur `proto-auth`, Python sans dépendance) : le visiteur tape son courriel, reçoit un code à 6 chiffres par Brevo (mêmes accès que `msmtprc`), et obtient une session de 30 jours. Caddy vérifie la session avant chaque fichier (`forward_auth`).
 
+- Gérer les accès : `./proto-acces.sh` (liste), `./proto-acces.sh ajouter a@b.com @client.com`, `./proto-acces.sh retirer a@b.com`.
 - Liste des accès : `/srv/amimoucheur/proto-auth/courriels.txt`, une adresse par ligne ou `@domaine.com`. Relue à chaque requête : pas de redémarrage, et retirer une adresse coupe son accès tout de suite.
 - `/srv/amimoucheur/proto-auth/secret` signe les sessions ; le supprimer puis `docker compose restart proto-auth` déconnecte tout le monde.
 - Déconnexion : `https://proto.amimoucheur.com/deconnexion`.
