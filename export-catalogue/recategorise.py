@@ -794,7 +794,9 @@ def write_redirections(dest, doc, results, tax, old_rows):
 
     Produit actif -> sa fiche. Fiche fusionnée -> la fiche gardée. Produit exclu (extraction --tout) -> sa nouvelle catégorie, sinon celle de son
     ancienne catégorie par défaut, sinon l'accueil. Catégorie -> sa cible (page marque pour une catégorie-marque).
-    Marque -> sa page marque. Une cible est toujours une page qui existera : catégorie ou marque avec des produits actifs.
+    Marque -> sa page marque. Page de compte (mon compte, historique, connexion…) -> la page de compte du nouveau site
+    (taxonomie.json -> urls.pages_compte). Une cible est toujours une page qui existera : catégorie ou marque avec des
+    produits actifs, ou page de compte.
     """
     dest.mkdir(parents=True, exist_ok=True)
     base = doc["meta"]["base_url"]
@@ -817,7 +819,7 @@ def write_redirections(dest, doc, results, tax, old_rows):
         return url[len(base):] if url.startswith(base) else url
 
     # -------- cibles
-    rows, cible = [], {k: {l: {} for l in langs} for k in ANCIENNES_URL}
+    rows, cible = [], {k: {l: {} for l in langs} for k in [*ANCIENNES_URL, "page"]}
     cat_target = {}
     parent = {c["id"]: c["parent_id"] for c in doc["categories"]}
     old_cible = {r["ancienne_id"]: r["nouvelle_categorie_id"] for r in old_rows}
@@ -880,6 +882,18 @@ def write_redirections(dest, doc, results, tax, old_rows):
             cible["marque"][l][b["id"]] = to
             rows.append({"type": "marque", "id": b["id"], "langue": l, "nom": b["name"],
                          "ancienne_url": rel(b["seo"][l]["url"]), "cible": to, "regle": regle})
+    # Pages de compte : leurs anciennes URL (slug de ps_meta_lang), avec ou sans préfixe /fr/, vers les nouvelles
+    pages = {k: v for k, v in tax.urls.get("pages_compte", {}).items() if not k.startswith("_")}
+    for key, pc in pages.items():
+        for page in pc["prestashop"]:
+            for l in langs:
+                old = doc.get("pages", {}).get(page, {}).get(l)
+                if not old:
+                    continue
+                cible["page"][l][page] = pc[l]
+                for u in [old] + ([old[3:]] if l == "fr" and old.startswith("/fr/") else []):
+                    rows.append({"type": "page", "id": page, "langue": l, "nom": key, "ancienne_url": u,
+                                 "cible": pc[l], "regle": "page de compte"})
     rows.insert(0, {"type": "racine", "id": "", "langue": "fr", "nom": "Racine du site", "ancienne_url": "/",
                     "cible": "/fr/", "regle": "racine"})
     rows = [r for r in rows if r["ancienne_url"] != r["cible"]]  # l'accueil /fr/ reste /fr/ : pas de 301 sur soi-même
@@ -887,7 +901,8 @@ def write_redirections(dest, doc, results, tax, old_rows):
     # -------- garde-fous
     new_paths = ({home[l] for l in langs} | {tax.product_path(p, l) for p in actifs for l in langs}
                  | {tax.cat_path(c, l) for c in live_cats for l in langs}
-                 | {tax.brand_path(b, l) for b in live_brands | {""} for l in langs})
+                 | {tax.brand_path(b, l) for b in live_brands | {""} for l in langs}
+                 | {pc[l] for pc in pages.values() for l in langs})
     rx = [re.compile(x) for v in ANCIENNES_URL.values() for x in v.values()]
     dup = defaultdict(list)
     for p in actifs:
@@ -934,6 +949,19 @@ def write_redirections(dest, doc, results, tax, old_rows):
                 L.append(f"map {src} {{redir_{k}_{l}{suffix}}} {{")
                 L += [f"\t{i} {to}" for i, to in sorted(cible[k][l].items())]
                 L += [f"\tdefault {home[l]}", "}"]
+    # Pages de compte : un map chemin -> cible (et controller -> cible pour index.php) ; "" = pas une page de compte
+    L.append("map {path} {redir_page} {")
+    L += [f"\t{r['ancienne_url']} {r['cible']}" for r in rows if r["type"] == "page"]
+    L += ['\tdefault ""', "}"]
+    for l in langs:
+        L.append(f"map {{query.controller}} {{redir_page_{l}_q}} {{")
+        L += [f"\t{page} {to}" for page, to in sorted(cible["page"][l].items())]
+        L += ['\tdefault ""', "}"]
+    L += ["@page {", '\tnot vars {redir_page} ""', "}",
+          "@page_en_q {", "\tpath /index.php", "\tquery isolang=en", '\tnot vars {redir_page_en_q} ""', "}",
+          "@page_en_q2 {", "\tpath /index.php", f"\tquery id_lang={ANCIEN_ID_LANG['en']}", "\tnot query isolang=fr",
+          '\tnot vars {redir_page_en_q} ""', "}",
+          "@page_fr_q {", "\tpath /index.php", '\tnot vars {redir_page_fr_q} ""', "}"]
     # Dans un route, l'ordre écrit est l'ordre d'exécution, et redir termine la requête :
     # le produit avant la catégorie (le .html les distingue), l'anglais avant le français (sans préfixe = fr)
     L += ["@racine path /", "route {", "\tredir @racine /fr/ 301"]
@@ -942,6 +970,8 @@ def write_redirections(dest, doc, results, tax, old_rows):
     for k in ANCIENNES_URL:
         L += [f"\tredir @{k}_en_q {{redir_{k}_en_q}} 301", f"\tredir @{k}_en_q2 {{redir_{k}_en_q}} 301",
               f"\tredir @{k}_fr_q {{redir_{k}_fr_q}} 301"]
+    L += ["\tredir @page {redir_page} 301", "\tredir @page_en_q {redir_page_en_q} 301",
+          "\tredir @page_en_q2 {redir_page_en_q} 301", "\tredir @page_fr_q {redir_page_fr_q} 301"]
     L += ["}", ""]
     (dest / "redirections.caddy").write_text("\n".join(L), encoding="utf-8")
     (dest / "LISEZMOI.md").write_text(LISEZMOI, encoding="utf-8")
@@ -966,6 +996,7 @@ Les cibles sont des chemins relatifs : la redirection reste sur le même domaine
 - Les catégories, par id, filtres du blocklayered compris : `/fr/491-x`, `/fr/491-x/couleur-rouge`. Les paramètres `?p=`, `?orderby=`, `utm_*` et `gmc_currency` sont abandonnés.
 - Les marques : `/fr/12_simms`.
 - Les formes non réécrites : `/index.php?controller=product&id_product=480`, avec `id_category` et `id_manufacturer`. La langue vient de `isolang`, puis de `id_lang` (1 = en, 2 = fr), sinon fr.
+- Les pages de compte de PrestaShop (`/fr/mon-compte`, `/fr/historique-des-commandes`, `/fr/connexion`, `/en/my-account`…, et `/index.php?controller=my-account`) redirigent vers les pages de compte du nouveau site (`taxonomie.json` → `urls.pages_compte`). Les clients migrés par `export-clients/` gardent ainsi leurs favoris.
 - La racine `/` redirige vers `/fr/`.
 - Un id inconnu redirige vers l'accueil de la langue.
 
@@ -987,7 +1018,7 @@ Les cibles sont des chemins relatifs : la redirection reste sur le même domaine
 6. Pointer le flux Google Merchant Center vers les nouvelles URL de produit, et soumettre le nouveau sitemap dans Search Console.
 7. Garder ces redirections au moins un an (recommandation de Google), idéalement pour toujours.
 
-Le nouveau site doit servir chaque cible : fiches produit, catégories, pages marque et la liste des marques (`/fr/marques`, `/en/brands`).
+Le nouveau site doit servir chaque cible : fiches produit, catégories, pages marque, la liste des marques (`/fr/marques`, `/en/brands`) et les pages de compte.
 """
 
 

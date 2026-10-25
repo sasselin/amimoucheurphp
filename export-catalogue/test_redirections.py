@@ -4,8 +4,8 @@
 """Teste le snippet Caddy des redirections dans un vrai Caddy (même image que la prod).
 
 Chaque ligne de redirections.csv doit donner un 301 vers sa cible. On ajoute des URL piège : segment de catégorie
-différent, sans préfixe de langue, suffixe EAN13, filtres du blocklayered, pagination, utm, formes index.php, page CMS
-et nouvelles URL (qui ne doivent pas être redirigées).
+différent, sans préfixe de langue, suffixe EAN13, filtres du blocklayered, pagination, utm, formes index.php (produit,
+catégorie, marque, page de compte), page CMS et nouvelles URL (qui ne doivent pas être redirigées).
 
 Usage : uv run export-catalogue/test_redirections.py <dossier_sortie>   (ex. export-catalogue/out/local_tout)
 Code de sortie ≠ 0 au moindre écart.
@@ -42,7 +42,22 @@ def pieges(rows):
     pid, cat, brand = prod["id"], by[("categorie", "fr")][-1]["id"], by[("marque", "fr")][0]["id"]
     pf, pe = cible[("produit", "fr", pid)], cible[("produit", "en", pid)]
     cf, ce = cible[("categorie", "fr", cat)], cible[("categorie", "en", cat)]
-    return [
+    # Pages de compte : formes index.php (la langue suit les mêmes règles), avec une requête ignorée
+    page_cases = []
+    if ("page", "fr") in by and ("page", "en") in by:
+        pg = by[("page", "fr")][0]["id"]
+        en = next(r["cible"] for r in by[("page", "en")] if r["id"] == pg)
+        fr = by[("page", "fr")][0]["cible"]
+        page_cases = [
+            (f"/index.php?controller={pg}", 301, fr),
+            (f"/index.php?controller={pg}&isolang=en", 301, en),
+            (f"/index.php?controller={pg}&id_lang=1", 301, en),
+            (f"{by[('page', 'fr')][0]['ancienne_url']}?back=history", 301, fr),
+            ("/index.php?controller=search&search_query=mouche", 404, None),
+            (fr, 404, None),
+            (en, 404, None),
+        ]
+    return page_cases + [
         (f"/fr/autre-categorie/{pid}-slug-modifie.html", 301, pf),
         (f"/fr/{pid}-x.html", 301, pf),
         (f"/{pid}-x-0123456789012.html", 301, pf),

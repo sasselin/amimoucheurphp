@@ -6,6 +6,14 @@
     "marque": {"fr": "marques", "en": "brands"},
     "slugs": {
       "_doc": "Surcharge du slug d'un produit : id -> {fr, en} (une langue suffit). Sert à régler une collision ou un slug abîmé."
+    },
+    "pages_compte": {
+      "_doc": "Pages de compte du nouveau site (proposées le 2026-10-24, à confirmer selon les routes du site), et les anciennes pages PrestaShop (ps_meta.page) qui y redirigent. Les clients migrés (export-clients/) gardent ainsi leurs favoris « Mon compte » et « Historique ».",
+      "compte": {"fr": "/fr/compte", "en": "/en/account", "prestashop": ["my-account", "identity", "discount", "order-follow", "order-slip"]},
+      "commandes": {"fr": "/fr/compte/commandes", "en": "/en/account/orders", "prestashop": ["history", "guest-tracking"]},
+      "adresses": {"fr": "/fr/compte/adresses", "en": "/en/account/addresses", "prestashop": ["addresses", "address"]},
+      "connexion": {"fr": "/fr/connexion", "en": "/en/login", "prestashop": ["authentication"]},
+      "mot_de_passe": {"fr": "/fr/mot-de-passe-oublie", "en": "/en/forgot-password", "prestashop": ["password"]}
     }
   },
   "arbre": [

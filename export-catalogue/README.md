@@ -75,6 +75,7 @@ On ajuste la proposition dans `taxonomie.json` (arbre, règles sur le nom, cas p
 
 - Les anciennes URL sont reconnues par leur id, comme le fait PrestaShop. Le segment de catégorie, le slug, le suffixe EAN13, les filtres et la pagination n'ont pas d'importance, et les formes `index.php?id_product=` sont couvertes aussi.
 - Un produit actif redirige vers sa fiche, une fiche fusionnée vers la fiche gardée. Un produit exclu (seulement avec `--tout`) redirige vers sa nouvelle catégorie. Une catégorie redirige vers sa cible, et une catégorie-marque ou une marque vers la page marque.
+- Les pages de compte de PrestaShop (`/fr/mon-compte`, `/fr/historique-des-commandes`, `/en/my-account`, `index.php?controller=history`…) redirigent vers les pages de compte du nouveau site, définies dans `taxonomie.json` → `urls.pages_compte`. Leurs slugs viennent de `ps_meta_lang` (`pages` dans `catalogue.json`). Une page dont l'URL ne change pas (`/fr/connexion`, `/en/login`) n'est pas redirigée. Les comptes et les commandes eux-mêmes sont extraits par `export-clients/`.
 - Pour le jour J, il faut **`./export-catalogue/run.sh --prod --tout`**. Sans `--tout`, les anciennes URL exclues tombent sur l'accueil.
 
 La procédure de mise en place est dans `recategorisation/caddy/LISEZMOI.md`.

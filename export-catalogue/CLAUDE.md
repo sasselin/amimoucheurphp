@@ -72,16 +72,17 @@ L'ancien site utilise les routes par défaut de PrestaShop 1.6 (vérifié dans `
 | Marque | `/{lang}/{id}_{slug}` |
 | Non réécrite | `/index.php?…&id_product=` / `id_category=` / `id_manufacturer=`. Langue : `isolang`, sinon `id_lang` (1 = en, 2 = fr), sinon fr |
 | Sans préfixe de langue | fr (langue par défaut) |
+| Page de compte | `/{lang}/{url_rewrite}` de `ps_meta_lang` (`/fr/mon-compte`, `/en/order-history`), et `/index.php?controller={page}` |
 | Page CMS | `/{lang}/content/{id}-…` : non redirigée (hors catalogue) |
 
 Les regex sont dans `ANCIENNES_URL` (syntaxe commune à RE2 et à Python) : on les modifie là, pas dans le fichier Caddy.
 
-- Cibles : produit actif → sa fiche ; fiche fusionnée (`taxonomie.json` → `fusions`) → la fiche gardée ; produit exclu (`--tout`) → sa nouvelle catégorie, sinon la cible de son ancienne catégorie par défaut, sinon l'accueil. Catégorie sans cible → cible de son ancien parent. Marque sans produit actif → liste des marques. Id inconnu → accueil de la langue. Une cible est toujours une page qui existera.
+- Cibles : produit actif → sa fiche ; fiche fusionnée (`taxonomie.json` → `fusions`) → la fiche gardée ; produit exclu (`--tout`) → sa nouvelle catégorie, sinon la cible de son ancienne catégorie par défaut, sinon l'accueil. Catégorie sans cible → cible de son ancien parent. Marque sans produit actif → liste des marques. Page de compte → page de compte du nouveau site (`taxonomie.json` → `urls.pages_compte`, proposées, à confirmer selon les routes du site Rust ; une URL qui ne change pas n'est pas redirigée). Id inconnu → accueil de la langue. Une cible est toujours une page qui existera.
 - Garde-fous bloquants : deux produits actifs avec la même URL ; une nouvelle URL qui ressemble à une ancienne (boucle de redirection) ; une cible absente du nouveau site.
-- Format Caddy : un fichier de directives (et non un snippet) importé dans le bloc du site. Pour chaque type et langue, un `map` id → cible. Les `redir` sont dans un `route`, où l'ordre écrit est l'ordre d'exécution : le produit avant la catégorie (le `.html` les distingue), et l'anglais avant le français, puisqu'une URL sans préfixe est en fr. Les cibles sont des chemins relatifs, et la requête d'origine (utm…) est abandonnée.
+- Format Caddy : un fichier de directives (et non un snippet) importé dans le bloc du site. Pour chaque type et langue, un `map` id → cible. Les `redir` sont dans un `route`, où l'ordre écrit est l'ordre d'exécution : le produit avant la catégorie (le `.html` les distingue), et l'anglais avant le français, puisqu'une URL sans préfixe est en fr. Les pages de compte passent en dernier, par un `map` chemin → cible (valeur `""` = pas une page de compte). Les cibles sont des chemins relatifs, et la requête d'origine (utm…) est abandonnée.
 - `test_redirections.py` lance `caddy:2.8.4` dans Docker (`caddy validate`, puis une requête par ligne de la table et des URL piège).
 
-**Jour J** : `./export-catalogue/run.sh --prod --tout`, puis on suit `out/prod_tout/recategorisation/caddy/LISEZMOI.md`. On importe `redirections.caddy` dans le bloc `www.amimoucheur.com` de `deploy/Caddyfile`, avant le `reverse_proxy` vers le nouveau site. Le `deploy/Caddyfile` actuel n'est pas encore modifié.
+**Jour J** : `./export-catalogue/run.sh --prod --tout`, puis on suit `out/prod_tout/recategorisation/caddy/LISEZMOI.md`. On importe `redirections.caddy` dans le bloc `www.amimoucheur.com` de `deploy/Caddyfile`, avant le `reverse_proxy` vers le nouveau site. Le `deploy/Caddyfile` actuel n'est pas encore modifié. Les comptes et les commandes suivent avec `./export-clients/run.sh --prod` (voir `export-clients/README.md`).
 
 ## Pour le nouveau site (rien à coder ici)
 

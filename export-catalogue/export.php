@@ -214,6 +214,17 @@ foreach (rows('SELECT id_manufacturer, name, active FROM '.$p.'manufacturer ORDE
     $brands_out[] = array('id' => $mid, 'name' => $r['name'], 'active' => (bool)$r['active'], 'seo' => $seo);
 }
 
+// Pages fixes (mon compte, historique, connexion…) : leur slug par langue (ps_meta_lang), pour les redirections
+// des pages de compte. Format des liens de PrestaShop 1.6 : /{lang}/{url_rewrite}
+$pages = array();
+foreach (rows('SELECT m.page, ml.id_lang, ml.url_rewrite FROM '.$p.'meta m
+        JOIN '.$p.'meta_lang ml ON ml.id_meta = m.id_meta AND ml.id_shop = '.$id_shop.'
+        WHERE ml.url_rewrite <> \'\' ORDER BY m.page') as $r) {
+    if (isset($langs[(int)$r['id_lang']])) {
+        $pages[$r['page']][$langs[(int)$r['id_lang']]] = '/'.($multi_lang ? $langs[(int)$r['id_lang']].'/' : '').$r['url_rewrite'];
+    }
+}
+
 $prod_cats = array();
 foreach (rows('SELECT id_product, id_category FROM '.$p.'category_product ORDER BY id_product, id_category') as $r) {
     $prod_cats[(int)$r['id_product']][] = (int)$r['id_category'];
@@ -598,6 +609,7 @@ $doc = array(
     ),
     'categories' => $categories_out,
     'brands' => $brands_out,
+    'pages' => $pages,
     'products' => $out_products,
     'bought_together' => array('min_orders' => 3, 'orders_by_product' => $order_count, 'pairs' => $pairs),
 );
