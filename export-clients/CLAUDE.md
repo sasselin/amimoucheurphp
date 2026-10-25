@@ -11,6 +11,6 @@ Extraction des comptes clients et des commandes de PrestaShop 1.6.1.4, mis en fo
 - Mots de passe : `argon2id(md5hex)` avec les paramètres de `amimoucheur-rust/src/password.rs` (m = 19456, t = 2, p = 1). PrestaShop fait un `trim` sur le mot de passe à la connexion.
 - Taxes (`order_taxes`) : le total TTC - HT de la commande fait foi ; le détail de PrestaShop (`ps_order_detail_tax`, avant rabais, souvent faux) ne sert qu'au prorata.
 - Paniers (`account_cart`) : comme `Cart::lastNoneOrderedCart` (PS_CART_FOLLOWING), le plus récent des paniers non commandés des fiches de compte, même vide ; gardé s'il date de moins de `--paniers-depuis` (défaut un an). Lignes reliées au catalogue par `load_catalogue` : variante par son id, produit simple par son id.
-- Statuts : `statuts.json`. Un statut PrestaShop absent arrête le run.
+- Statuts : `statuts.json`. Un statut PrestaShop absent arrête le run. `fermeture_auto` : une commande ouverte passée plus de 6 mois avant l'extraction est fermée dans la migration (`shipped` si facturée et payée, sinon `cancelled`, `status_inferred` = true). Ne jamais proposer de fermer en masse dans PrestaShop : « Envoyé » et « Annulé » envoient un courriel au client ; « Envoyé (sans notification) » (16) et « Livré » (5) n'en envoient pas.
 - Rapprochement bloquant : commandes et total TTC par année et devise, et nombre de lignes, comparés à MySQL.
 - Tests : `uv run export-clients/test_build.py` (données synthétiques). Les redirections des pages de compte sont dans export-catalogue (`taxonomie.json` → `urls.pages_compte`).

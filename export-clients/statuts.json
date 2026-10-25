@@ -7,5 +7,11 @@
     "pending_payment": {"fr": "En attente du paiement", "en": "Awaiting payment", "prestashop": [1, 10, 11, 13, 15], "_doc": "En attente du chèque, du virement, de PayPal, du paiement par carte, du paiement à la livraison"},
     "processing": {"fr": "En préparation", "en": "Processing", "prestashop": [2, 3, 9, 12, 14], "_doc": "Paiement accepté, En traitement, Rupture d'inventaire (9 et 14), Paiement à distance accepté"}
   },
-  "ouverts": ["pending_payment", "processing"]
+  "ouverts": ["pending_payment", "processing"],
+  "fermeture_auto": {
+    "_doc": "Une commande encore ouverte, passée plus de « apres_mois » mois avant l'extraction, est fermée dans la migration (PrestaShop n'est pas touché, aucun courriel ne part) : « payee » si elle a une facture et un paiement encaissé, sinon « non_payee ». Elle garde son prestashop_status et porte status_inferred = true. Les plus récentes restent ouvertes : à traiter dans PrestaShop avant le jour J.",
+    "apres_mois": 6,
+    "payee": "shipped",
+    "non_payee": "cancelled"
+  }
 }

@@ -47,6 +47,11 @@ Le catalogue de la même source doit être extrait avant : les lignes de command
   - Les produits qui ne sont plus vendus en sont retirés. Les quantités d'une même variante (PrestaShop fait une ligne par adresse de livraison) sont additionnées.
   - Pas de prix : un panier n'a pas de montant figé, le prix est celui du nouveau site. Les bons de réduction appliqués au panier ne suivent pas.
 - **Statuts** : les 16 statuts de PrestaShop sont réduits à 5, dans `statuts.json`. Un statut inconnu arrête le run.
+- **Vieilles commandes restées ouvertes** (`statuts.json` → `fermeture_auto`) : une commande « en attente » ou « en préparation » passée plus de 6 mois avant l'extraction est fermée par la migration.
+  - Avec une facture et un paiement encaissé, elle devient `shipped` ; sinon, `cancelled`. En prod, cela touche 660 commandes, surtout de 2020-2021, quand les statuts n'étaient plus mis à jour.
+  - `prestashop_status` garde le statut d'origine, et `status_inferred` vaut `true`.
+  - PrestaShop n'est pas modifié : un changement de statut y envoie un courriel au client (« Envoyé », « Annulé »).
+  - La limite est calculée à partir de la date de l'extraction : une commande récente laissée ouverte sera fermée de la même façon si le jour J arrive plus de 6 mois après elle.
 - **Montants en cents, figés tels que vendus** :
   - le nom de la ligne est celui de la facture, variante comprise (« Ahrex - SA270 - Grosseur d'Hameçons : 4/0 ») ;
   - les prix sont HT, comme le catalogue ;
@@ -65,7 +70,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 - `schema_version`, `generated_at`, `source` (`local` | `prod`) ;
 - `catalogue_generated_at` : l'extraction du catalogue à laquelle les lignes sont reliées. Elle doit être celle qui a été importée ;
-- `comptes_depuis`, `paniers_depuis`, `password_scheme` ;
+- `comptes_depuis`, `paniers_depuis`, `fermeture_auto_avant` (les commandes ouvertes passées avant cette date ont été fermées), `password_scheme` ;
 - `statuses` : libellés fr/en des 5 statuts ;
 - `counts`.
 
@@ -85,7 +90,8 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 - `prestashop_id`, `reference` (les 9 lettres que voit le client), `invoice_number` (`#IN018149`, ou `null` si aucune facture n'a été émise), `invoice_date`, `placed_at` ;
 - `account` : le courriel du compte, ou `null` ;
 - `email` : celui de la fiche d'origine, `null` si la fiche n'existe plus ;
-- `locale`, `status` (`shipped`, `cancelled`, `refunded`, `pending_payment`, `processing`), `prestashop_status` (le libellé d'origine).
+- `locale`, `status` (`shipped`, `cancelled`, `refunded`, `pending_payment`, `processing`), `prestashop_status` (le libellé d'origine) ;
+- `status_inferred` : `true` si le statut a été déduit par la fermeture automatique, et non lu dans PrestaShop.
 
 **Montants** (cents, dans la devise de la commande)
 - `currency` (`CAD`, `EUR`, `USD`) ;
@@ -131,7 +137,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 **Une seule table de commandes.** Une commande Stripe et une commande migrée ont la même forme : montants figés, adresses copiées, lignes nommées. `prestashop_id` et `invoice_number` identifient les anciennes. Les nouvelles factures peuvent continuer la numérotation (le dernier n° est dans le rapport) ou prendre un autre préfixe.
 
-**Commandes ouvertes.** Le rapport liste celles qui sont « en attente » ou « en préparation ». Les plus anciennes (2020-2021) ont sans doute été traitées sans changer de statut : il faut les fermer dans PrestaShop avec le client avant l'extraction du jour J.
+**Commandes ouvertes.** Les vieilles sont fermées par la migration (voir plus haut). Le rapport liste les récentes, encore ouvertes (25 en prod au 2026-10-24) : le client les traite dans PrestaShop avant le jour J. Une commande partie passe à **« Envoyé (sans notification) »**, statut qui n'envoie aucun courriel, ou à « Envoyé » pour prévenir le client. « Annulé » envoie toujours un courriel. Le nouveau site peut afficher `status_inferred` dans l'admin (« statut déduit à la migration »).
 
 **Pages de compte.** Les anciennes URL de compte redirigent vers `/fr/compte`, `/fr/compte/commandes`, `/fr/compte/adresses`, `/fr/connexion` et `/fr/mot-de-passe-oublie` (et `/en/…`). Ces chemins sont proposés dans `export-catalogue/taxonomie.json` → `urls.pages_compte`, à ajuster selon les routes du site.
 
@@ -139,7 +145,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 ## Jour J
 
-1. La veille : traiter ou fermer dans PrestaShop les commandes ouvertes que liste `rapport.md`.
+1. La veille : traiter dans PrestaShop les commandes récentes encore ouvertes que liste `rapport.md` (les vieilles sont fermées par la migration).
 2. Mettre PrestaShop en maintenance, pour qu'aucune commande n'arrive entre l'extraction et la bascule.
 3. Lancer `./export-catalogue/run.sh --prod` (le catalogue importé, lu par export-clients), `./export-catalogue/run.sh --prod --tout` (les redirections, dans `out/prod_tout/`), puis `./export-clients/run.sh --prod`. `--tout` n'écrit pas dans `out/prod/` : sans le premier run, les lignes seraient reliées à un catalogue périmé.
 4. Importer dans le nouveau site `export-catalogue/out/prod/` et `export-clients/out/prod/clients.json`, avec `_COOKIE_KEY_` comme secret.

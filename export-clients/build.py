@@ -11,6 +11,7 @@ md5 des mots de passe. Dans clients.json, chaque empreinte est enveloppée dans 
 Usage : <export.php> | uv run export-clients/build.py - <dossier_sortie> <recategorisation.json>
             [--comptes-depuis=AAAA-MM-JJ] [--paniers-depuis=AAAA-MM-JJ]
 """
+import calendar
 import csv
 import json
 import os
@@ -122,6 +123,12 @@ def order_taxes(o, taxes):
     return [t for t in out if t["amount"]], exact
 
 
+def months_before(d, months):
+    """La date (AAAA-MM-JJ) « months » mois avant d, ramenée au dernier jour du mois au besoin."""
+    y, m = divmod(d.year * 12 + d.month - 1 - months, 12)
+    return date(y, m + 1, min(d.day, calendar.monthrange(y, m + 1)[1])).isoformat()
+
+
 def load_catalogue(path):
     """Fonction (produit, variante PrestaShop) -> id de la fiche du nouveau catalogue (après fusion), ou None.
 
@@ -177,8 +184,11 @@ def build(raw, since, rec_path, carts_since=None):
     statuts = json.loads((DIR / "statuts.json").read_text(encoding="utf-8"))
     status_of = {ps: k for k, s in statuts["statuts"].items() for ps in s["prestashop"]}
     find, rec_meta = load_catalogue(rec_path)
+    extracted = date.fromisoformat(raw["meta"]["generated_at"][:10])
     if carts_since is None:
-        carts_since = (date.fromisoformat(raw["meta"]["generated_at"][:10]) - timedelta(days=PANIERS_JOURS)).isoformat()
+        carts_since = (extracted - timedelta(days=PANIERS_JOURS)).isoformat()
+    auto = statuts["fermeture_auto"]
+    close_before = months_before(extracted, auto["apres_mois"])
     n = Counter()
 
     # -------- comptes : un par courriel, fiches fusionnées
@@ -278,6 +288,7 @@ def build(raw, since, rec_path, carts_since=None):
     # -------- commandes
     out_orders, tax_ko, ht_ko = [], [], []
     by_status, open_orders, totals = Counter(), [], defaultdict(lambda: [0, 0])
+    auto_closed = Counter()
     lines_total = lines_reorder = 0
     for o in raw["orders"]:
         if o["state"] not in status_of:
@@ -321,6 +332,12 @@ def build(raw, since, rec_path, carts_since=None):
             lines_total += 1
             lines_reorder += owner is not None
         inv = f"{raw['meta']['invoice_prefix'] or ''}{o['invoice_number']:06d}" if o["invoice_number"] else None
+        paid = cents(o["total_paid_real"])
+        # Vieille commande restée ouverte : fermée ici, sans toucher PrestaShop (un changement de statut y envoie un courriel)
+        inferred = status in statuts["ouverts"] and o["placed_at"] < close_before
+        if inferred:
+            status = auto["payee"] if inv and paid > 0 else auto["non_payee"]
+            auto_closed[(o["placed_at"][:4], status)] += 1
         out_orders.append({
             "prestashop_id": o["id"],
             "reference": o["reference"],
@@ -332,6 +349,7 @@ def build(raw, since, rec_path, carts_since=None):
             "locale": o["lang"] if o["lang"] in ("fr", "en") else "fr",
             "status": status,
             "prestashop_status": o["state_name"] or "(aucun statut)",
+            "status_inferred": inferred,
             "currency": o["currency"],
             "subtotal": sub,
             "discount": disc,
@@ -339,7 +357,7 @@ def build(raw, since, rec_path, carts_since=None):
             "wrapping": wrap,
             "tax": total - total_ht,
             "total": total,
-            "paid": cents(o["total_paid_real"]),
+            "paid": paid,
             "taxes": taxes,
             "taxes_exact": exact,
             "payment": o["payment"],
@@ -351,9 +369,9 @@ def build(raw, since, rec_path, carts_since=None):
                              "free_shipping": r["free_shipping"]} for r in o["cart_rules"]],
             "notes": [{**m, "text": mask_cards(m["text"], n)} for m in o["messages"]],
         })
-        by_status[(status, o["state_name"] or "(aucun statut)")] += 1
+        by_status[(status, (o["state_name"] or "(aucun statut)") + (" (fermée par la migration)" if inferred else ""))] += 1
         if status in statuts["ouverts"]:
-            open_orders.append((o["placed_at"], o["id"], o["state_name"]))
+            open_orders.append((o["placed_at"], o["id"], o["state_name"], total, o["currency"], bool(inv)))
         t = totals[(o["placed_at"][:4], o["currency"])]
         t[0] += 1
         t[1] += total
@@ -387,6 +405,7 @@ def build(raw, since, rec_path, carts_since=None):
             "source": raw["meta"]["source"],
             "catalogue_generated_at": rec_meta.get("catalogue_generated_at"),
             "comptes_depuis": since,
+            "fermeture_auto_avant": close_before,
             "paniers_depuis": carts_since,
             "password_scheme": PASSWORD_SCHEME,
             "amounts": "cents ; prix des lignes, sous-total, rabais et livraison HT ; tax et total TTC ; devise de la commande",
@@ -402,7 +421,7 @@ def build(raw, since, rec_path, carts_since=None):
     stats = {
         "n": n, "created_by_year": created_by_year, "dormant_by_year": dormant_by_year, "by_status": by_status,
         "carts_by_month": carts_by_year,
-        "open_orders": sorted(open_orders), "totals": totals, "tax_ko": tax_ko, "ht_ko": ht_ko,
+        "open_orders": sorted(open_orders), "auto_closed": auto_closed, "totals": totals, "tax_ko": tax_ko, "ht_ko": ht_ko,
         "lines_total": lines_total, "lines_reorder": lines_reorder, "raw_counts": raw["meta"]["counts"],
         "accounts": accounts, "subscribers": subscribers,
     }
@@ -427,6 +446,7 @@ def money(c):
 
 def write_report(path, doc, stats):
     n, m = stats["n"], doc["meta"]
+    auto = json.loads((DIR / "statuts.json").read_text(encoding="utf-8"))["fermeture_auto"]
     acc = stats["accounts"]
     L = [
         "# Comptes clients et commandes : ce qui passe au nouveau site",
@@ -446,8 +466,10 @@ def write_report(path, doc, stats):
         f"plus {len(stats['subscribers'])} abonnés sans compte.",
         f"- **{m['counts']['carts']} paniers en cours** sont redonnés à leur compte, comme PrestaShop le fait à la "
         f"connexion (paniers modifiés depuis le {m['paniers_depuis']}, option `--paniers-depuis`).",
-        f"- {len(stats['open_orders'])} commandes sont encore ouvertes (en attente ou en préparation) : "
-        "à traiter ou fermer dans PrestaShop avant le jour J.",
+        f"- {sum(stats['auto_closed'].values())} vieilles commandes restées ouvertes (passées avant le "
+        f"{m['fermeture_auto_avant']}) sont fermées par la migration, sans courriel au client.",
+        f"- **{len(stats['open_orders'])} commandes récentes sont encore ouvertes** (en attente ou en préparation) : "
+        "à traiter dans PrestaShop avant le jour J. Liste plus bas.",
         "",
         "## Comptes",
         "",
@@ -482,12 +504,21 @@ def write_report(path, doc, stats):
           "une fois le courriel confirmé.", "", "| Nouveau statut | Statut PrestaShop | Commandes |", "|---|---|---:|"]
     for (s, ps), v in sorted(stats["by_status"].items(), key=lambda x: (x[0][0], -x[1])):
         L.append(f"| {m['statuses'][s]['fr']} | {ps} | {v} |")
-    L += ["", "### Commandes ouvertes, par année", "", "| Année | Commandes |", "|---|---:|"]
-    for y, v in sorted(Counter(d[:4] for d, _, _ in stats["open_orders"]).items()):
-        L.append(f"| {y} | {v} |")
-    recent = [o for o in stats["open_orders"] if o[0] >= "2026-01-01"]
-    if recent:
-        L += ["", "Ouvertes en 2026 (n° de commande PrestaShop) : " + ", ".join(f"{i} ({s})" for _, i, s in recent)]
+    st = m["statuses"]
+    L += ["", "### Vieilles commandes fermées par la migration", "",
+          f"Passées avant le {m['fermeture_auto_avant']} et jamais passées à « Envoyé » ou « Annulé » dans PrestaShop. "
+          "Avec une facture et un paiement encaissé, la commande devient « Expédiée » ; sans facture, « Annulée ». "
+          "PrestaShop n'est pas modifié, donc aucun courriel ne part. Le statut d'origine reste visible "
+          "(`prestashop_status`, `status_inferred`).", "",
+          f"| Année | {st[auto['payee']]['fr']} | {st[auto['non_payee']]['fr']} |", "|---|---:|---:|"]
+    for y in sorted({y for y, _ in stats["auto_closed"]}):
+        L.append(f"| {y} | {stats['auto_closed'][(y, auto['payee'])]} | {stats['auto_closed'][(y, auto['non_payee'])]} |")
+    L += ["", "### Commandes encore ouvertes : à traiter avant le jour J", "",
+          "Dans PrestaShop, une commande partie passe à **« Envoyé (sans notification) »** (ou « Envoyé » pour prévenir le "
+          "client par courriel). Attention : « Annulé » envoie toujours un courriel au client.", "",
+          "| N° | Date | Statut PrestaShop | Total | Facture |", "|---:|---|---|---:|---|"]
+    for d, i, s, tot, cur, inv in stats["open_orders"]:
+        L.append(f"| {i} | {d[:10]} | {s} | {money(tot)} {cur} | {'oui' if inv else 'non'} |")
     L += ["", "### Totaux par année et devise (TTC)", "",
           "Identiques au calcul direct de MySQL : sinon l'extraction s'arrête.", "",
           "| Année | Devise | Commandes | Total |", "|---|---|---:|---:|"]

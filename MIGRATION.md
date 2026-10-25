@@ -44,7 +44,7 @@ Tous les liens passent par les **id PrestaShop**, la clé d'idempotence des impo
 Le détail et les raisons sont dans les README. En bref :
 
 - **Mots de passe** ([export-clients/README.md](export-clients/README.md#recommandations-pour-le-nouveau-site)) : schéma `prestashop_md5+argon2id`. À la connexion, faire `md5(_COOKIE_KEY_ . trim(saisie))`, le vérifier contre le hash argon2, puis réécrire un argon2id normal. Une réimportation ne doit pas écraser un hash déjà réécrit.
-- **Commandes** : une seule table pour les commandes migrées et les nouvelles. Montants en cents, figés tels que vendus. `taxes[]` est toujours égal à `tax`. Les adresses sont copiées dans la commande.
+- **Commandes** : une seule table pour les commandes migrées et les nouvelles. `status_inferred` signale un statut déduit à la migration (vieille commande restée ouverte). Montants en cents, figés tels que vendus. `taxes[]` est toujours égal à `tax`. Les adresses sont copiées dans la commande.
 - **Commandes d'invités** : rattachées au compte de même courriel, seulement une fois ce courriel confirmé.
 - **Paniers** : à l'import, créer le panier seulement si le compte n'en a pas déjà un. À la connexion, si le panier de la session est vide, reprendre celui du compte, comme PrestaShop. Le prix et le stock sont ceux du nouveau site.
 - **Pages de compte** : servir les chemins de `urls.pages_compte`, ou les y corriger.
@@ -61,12 +61,12 @@ Le détail et les raisons sont dans les README. En bref :
 |---|---|---|
 | `recategorisation.json` | 1 | Première version |
 | `recategorisation.json` | 2 | `families[]` ajouté |
-| `clients.json` | 1 | Première version : comptes, commandes, abonnés, paniers (`accounts[].cart`) |
+| `clients.json` | 1 | Première version : comptes, commandes, abonnés, paniers (`accounts[].cart`), `orders[].status_inferred` |
 | `catalogue.json` | — | Ajout de `pages` (slugs des pages PrestaShop, pour les redirections de compte) |
 
 ## Jour J (ordre complet)
 
-1. **La veille** : fermer dans PrestaShop les commandes ouvertes que liste `export-clients/out/prod/rapport.md`.
+1. **La veille** : traiter dans PrestaShop les commandes récentes encore ouvertes que liste `export-clients/out/prod/rapport.md`, avec « Envoyé (sans notification) » pour ne pas envoyer de courriel. Les commandes ouvertes depuis plus de 6 mois sont fermées par la migration (`status_inferred`).
 2. **Maintenance** : mettre PrestaShop en maintenance, pour qu'aucune commande ni aucun compte n'arrive après l'extraction.
 3. **Extractions**, dans cet ordre :
    ```bash
@@ -90,6 +90,7 @@ Le détail et les raisons sont dans les README. En bref :
 |---|---|---|
 | Date des comptes sans commande gardés (défaut 2023-01-01) | client | `export-clients/run.sh --comptes-depuis=` |
 | Ancienneté des paniers redonnés (défaut un an) | client | `export-clients/run.sh --paniers-depuis=` |
+| Délai de fermeture automatique des commandes ouvertes (défaut 6 mois) et traitement des 25 récentes | client | `export-clients/statuts.json` → `fermeture_auto` ; PrestaShop |
 | Chemins des pages de compte | projet Rust | `export-catalogue/taxonomie.json` → `urls.pages_compte` |
 | Liste d'infolettre qui fait foi (PrestaShop ou Mailchimp) | client | comparer `newsletter` et `newsletter_subscribers[]` à Mailchimp |
 | Numérotation des nouvelles factures (suite de `#IN…` ou nouveau préfixe) | client et projet Rust | dernier n° dans `rapport.md` |

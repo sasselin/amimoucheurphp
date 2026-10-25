@@ -29,14 +29,15 @@ def customer(id, email, guest=False, created="2020-01-01 00:00:00", updated=None
             "created_at": created, "updated_at": updated or created, **kw}
 
 
-def order(id, customer_id, placed="2024-05-01 10:00:00", state=4, lines=None, **amounts):
+def order(id, customer_id, placed="2024-05-01 10:00:00", state=4, lines=None, invoice_number=0, **amounts):
     base = {"total_products": "100.00", "total_discounts_tax_excl": "0", "total_discounts_tax_incl": "0",
             "total_shipping_tax_excl": "10.00", "total_shipping_tax_incl": "11.50", "total_wrapping_tax_excl": "0",
             "total_paid_tax_excl": "110.00", "total_paid_tax_incl": "126.47", "total_paid_real": "126.47"}
     base.update(amounts)
     return {"id": id, "reference": f"REF{id}", "customer_id": customer_id, "lang": "fr", "currency": "CAD", "state": state,
             "state_name": "Envoyé", "valid": True, "module": "cheque", "payment": "Chèque", "carrier": "Poste Canada",
-            "address_delivery_id": 1, "address_invoice_id": 1, "invoice_number": id, "invoice_date": placed,
+            "address_delivery_id": 1, "address_invoice_id": 1,
+            "invoice_number": id if invoice_number == 0 else invoice_number, "invoice_date": placed,
             "delivery_date": None, "placed_at": placed, **base,
             "lines": lines if lines is not None else [
                 {"product_id": 10, "variant_id": 100, "name": "Mouche - Taille : 12", "sku": "M12", "ean13": None,
@@ -76,6 +77,10 @@ def raw():
         order(6, 2, lines=[{"product_id": 11, "variant_id": None, "name": "Vieux produit", "sku": None, "ean13": None,
                             "quantity": 1, "unit_price_tax_excl": "100.00", "total_price_tax_excl": "100.00",
                             "total_price_tax_incl": "114.98", "taxes": []}]),
+        # Restées ouvertes : vieille et payée, vieille sans facture, récente
+        order(7, 2, placed="2021-04-01 10:00:00", state=3),
+        order(8, 2, placed="2021-04-02 10:00:00", state=13, invoice_number=None, total_paid_real="0"),
+        order(9, 2, placed="2026-09-01 10:00:00", state=3),
     ]
     for o in orders:
         o["messages"] = []
@@ -177,6 +182,15 @@ def main():
     assert accounts["nouveau@exemple.ca"]["cart"] is None
     assert accounts["ancien-panier@exemple.ca"]["cart"] is None and stats["n"]["paniers trop anciens (non migrés)"] == 1
     assert doc["meta"]["counts"]["carts"] == 1
+
+    # Vieilles commandes ouvertes (plus de 6 mois) : fermées par la migration, statut d'origine gardé
+    assert doc["meta"]["fermeture_auto_avant"] == "2026-04-24"
+    assert (orders[7]["status"], orders[7]["status_inferred"]) == ("shipped", True), orders[7]["status"]
+    assert (orders[8]["status"], orders[8]["status_inferred"]) == ("cancelled", True), orders[8]["status"]
+    assert orders[8]["prestashop_status"] == "Envoyé"
+    assert (orders[9]["status"], orders[9]["status_inferred"]) == ("processing", False)
+    assert not orders[1]["status_inferred"]
+    assert [o[1] for o in stats["open_orders"]] == [9]
 
     # Carte tapée dans un message : masquée, le téléphone reste
     assert orders[2]["notes"][0]["text"] == f"Ma carte : {build.CARD_MASK}, appelez-moi au 418 555 1234"
