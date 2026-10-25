@@ -57,6 +57,8 @@ google*.html
 
 # Extractions du catalogue
 export-catalogue/out/
+# Extractions des clients et commandes : données personnelles
+export-clients/out/
 # Couleurs mesurées des photos (photos_couleurs.py)
 export-catalogue/.cache/
 __pycache__/

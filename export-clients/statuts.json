@@ -1,0 +1,11 @@
+{
+  "_doc": "Statut PrestaShop (id de ps_order_state) -> statut du nouveau site. Les 16 statuts de PrestaShop se réduisent à 5. Un statut absent de cette table arrête build.py.",
+  "statuts": {
+    "shipped": {"fr": "Expédiée", "en": "Shipped", "prestashop": [4, 5, 16], "_doc": "Envoyé, Livré, Envoyé (sans notification)"},
+    "cancelled": {"fr": "Annulée", "en": "Cancelled", "prestashop": [0, 6, 8], "_doc": "0 = aucun statut (commande interrompue), Annulé, Erreur de paiement"},
+    "refunded": {"fr": "Remboursée", "en": "Refunded", "prestashop": [7], "_doc": "Remboursé"},
+    "pending_payment": {"fr": "En attente du paiement", "en": "Awaiting payment", "prestashop": [1, 10, 11, 13, 15], "_doc": "En attente du chèque, du virement, de PayPal, du paiement par carte, du paiement à la livraison"},
+    "processing": {"fr": "En préparation", "en": "Processing", "prestashop": [2, 3, 9, 12, 14], "_doc": "Paiement accepté, En traitement, Rupture d'inventaire (9 et 14), Paiement à distance accepté"}
+  },
+  "ouverts": ["pending_payment", "processing"]
+}
