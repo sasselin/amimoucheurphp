@@ -7,7 +7,8 @@
 #         ./export-clients/run.sh --paniers-depuis=2025-01-01   redonne les paniers modifiés depuis cette date (défaut : un an)
 # Exige l'extraction du catalogue de la même source (export-catalogue/run.sh [--prod]) : les lignes de commande
 # sont reliées au nouveau catalogue pour le bouton « Recommander ».
-# Jour J : ./export-catalogue/run.sh --prod --tout && ./export-clients/run.sh --prod
+# Jour J : ./export-catalogue/run.sh --prod && ./export-clients/run.sh --prod
+#          (--prod --tout, pour les redirections, écrit dans out/prod_tout : il ne remplace pas le run sans --tout)
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"

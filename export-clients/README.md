@@ -2,13 +2,13 @@
 
 Prépare, pour l'import du nouveau site (dépôt `amimoucheur-rust`), les comptes clients et tout l'historique des commandes de PrestaShop. La structure est pensée pour ce dont la boutique a besoin, sans recopier les 40 tables de PrestaShop. Les clients se connectent avec le même courriel et le même mot de passe. Ils retrouvent leur panier en cours et leurs commandes, et peuvent les recommander, et la boutique retrouve une ancienne commande pour le service après-vente ou la comptabilité.
 
-Ce dépôt ne fait que préparer les données. L'import, les tables et l'affichage sont dans `amimoucheur-rust`. Ce qu'il doit faire est décrit plus bas, sous forme de recommandations.
+Ce dépôt ne fait que préparer les données. L'import, les tables et l'affichage sont dans `amimoucheur-rust`. Ce qu'il doit faire est décrit plus bas, sous forme de recommandations. Vue d'ensemble de la migration (tous les fichiers lus par le nouveau site, liens, jour J) : [MIGRATION.md](../MIGRATION.md).
 
 ```bash
 ./export-catalogue/run.sh && ./export-clients/run.sh            # base locale (docker compose up requis)
 ./export-clients/run.sh --comptes-depuis=2022-01-01             # garde plus de comptes sans commande
 ./export-clients/run.sh --paniers-depuis=2025-01-01             # redonne des paniers plus anciens (défaut : un an)
-./export-catalogue/run.sh --prod --tout && ./export-clients/run.sh --prod   # jour J
+./export-catalogue/run.sh --prod && ./export-clients/run.sh --prod          # jour J (et --prod --tout pour les redirections)
 uv run export-clients/test_build.py                              # tests sur des données synthétiques
 ```
 
@@ -141,7 +141,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 1. La veille : traiter ou fermer dans PrestaShop les commandes ouvertes que liste `rapport.md`.
 2. Mettre PrestaShop en maintenance, pour qu'aucune commande n'arrive entre l'extraction et la bascule.
-3. Lancer `./export-catalogue/run.sh --prod --tout`, puis `./export-clients/run.sh --prod`.
+3. Lancer `./export-catalogue/run.sh --prod` (le catalogue importé, lu par export-clients), `./export-catalogue/run.sh --prod --tout` (les redirections, dans `out/prod_tout/`), puis `./export-clients/run.sh --prod`. `--tout` n'écrit pas dans `out/prod/` : sans le premier run, les lignes seraient reliées à un catalogue périmé.
 4. Importer dans le nouveau site `export-catalogue/out/prod/` et `export-clients/out/prod/clients.json`, avec `_COOKIE_KEY_` comme secret.
 5. Supprimer `export-clients/out/`.
 6. Vider ensuite `ps_ccofflinepayment` et les anciennes sauvegardes qui la contiennent (restic, Google Drive, base locale).

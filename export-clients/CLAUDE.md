@@ -2,7 +2,7 @@
 
 Extraction des comptes clients et des commandes de PrestaShop 1.6.1.4, mis en forme pour l'import du nouveau site. Le détail (contrat, recommandations, jour J) est dans README.md.
 
-- **Ici on prépare les données, on ne touche pas à `amimoucheur-rust`.** Ce que le site doit faire s'écrit comme recommandation dans README.md.
+- **Ici on prépare les données, on ne touche pas à `amimoucheur-rust`.** Ce que le site doit faire s'écrit comme recommandation dans README.md. Le projet Rust vient lire ici : tout changement de contrat, de chemin ou de procédure se reporte aussi dans `../MIGRATION.md`.
 - Pipeline (`run.sh`) : `export.php`, passé par l'entrée standard au conteneur apache (local ou prod par SSH, comme export-catalogue), puis `build.py` **par un tuyau**. L'extraction brute contient les empreintes md5 : elle n'est jamais écrite sur disque.
 - `build.py` lit `export-catalogue/out/<source>/recategorisation/recategorisation.json` (catalogue actif) pour `reorderable` et les paniers : extraire le catalogue d'abord.
 - `clients.json` est le contrat lu par l'import du nouveau site : changer sa forme incrémente `meta.schema_version` et se décrit dans README.md.

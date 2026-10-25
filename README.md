@@ -9,6 +9,8 @@ Boutique en ligne d'articles de pêche à la mouche, sous PrestaShop 1.6.1.4 (PH
 | `site/` | Le code PrestaShop, même arborescence qu'en prod (`/srv/amimoucheur/site`). Admin : `/admin0181/`. Thème : `themes/pos_rossi*`. |
 | `deploy/` | L'infrastructure de prod : image Docker PHP 5.6, Caddy, crons, sauvegardes de la BD. Voir [deploy/README.md](deploy/README.md). |
 | `export-catalogue/` | L'extraction du catalogue, la recatégorisation proposée pour le nouveau site et les redirections 301 du jour J. Voir [export-catalogue/README.md](export-catalogue/README.md) et [RECATEGORISATION.md](export-catalogue/RECATEGORISATION.md). |
+| `export-clients/` | Les comptes clients, toutes les commandes et les paniers en cours, mis en forme pour l'import du nouveau site. Voir [export-clients/README.md](export-clients/README.md). |
+| `MIGRATION.md` | Le point d'entrée pour le nouveau site : quels fichiers lire, comment ils se relient, l'ordre du jour J. |
 | `docker-compose.yml` | L'environnement local (MySQL 5.6 et `prestashop/base:5.6-apache`). |
 | `deploy.sh` | Envoie `site/` (et avec `--infra`, `deploy/`) en production. |
 | `sync-prod.sh` | Ramène les fichiers de prod dans `site/`. |
@@ -39,4 +41,7 @@ DigitalOcean (droplet `143.198.43.249`, Ubuntu 24.04, 1 Go), derrière Cloudflar
 
 ## Migration vers le nouveau site
 
-`export-catalogue/run.sh` extrait le catalogue (local ou `--prod`), propose la nouvelle arborescence à partir de `export-catalogue/taxonomie.json` et produit les redirections 301 au format Caddy, testées dans Docker. Le schéma des nouvelles URL et la procédure du jour J sont dans [export-catalogue/CLAUDE.md](export-catalogue/CLAUDE.md).
+Ce dépôt prépare les données, le nouveau site (`amimoucheur-rust`) les importe. Tout ce qu'il lit ici est décrit dans [MIGRATION.md](MIGRATION.md) : fichiers et contrats, liens entre eux, recommandations, ordre du jour J.
+
+- `export-catalogue/run.sh` extrait le catalogue (local ou `--prod`), propose la nouvelle arborescence à partir de `export-catalogue/taxonomie.json` et produit les redirections 301 au format Caddy, testées dans Docker. Le schéma des nouvelles URL est dans [export-catalogue/CLAUDE.md](export-catalogue/CLAUDE.md).
+- `export-clients/run.sh` extrait les comptes, les commandes et les paniers dans `clients.json`.
