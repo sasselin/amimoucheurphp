@@ -61,6 +61,7 @@ def raw():
         customer(3, "marie@exemple.ca", guest=True, created="2022-01-01 00:00:00"),
         customer(4, "dormant@exemple.ca", created="2019-06-01 00:00:00"),
         customer(5, "nouveau@exemple.ca", created="2025-06-01 00:00:00"),
+        customer(9, "panier@exemple.ca", created="2018-01-01 00:00:00", newsletter=True, newsletter_at="2018-01-01 00:00:00"),
         customer(6, "invite@exemple.ca", guest=True, newsletter=True, newsletter_at="2023-03-03 00:00:00"),
         customer(7, "parti@exemple.ca", deleted=True),
         customer(8, "ancien-panier@exemple.ca", created="2025-01-01 00:00:00"),
@@ -115,6 +116,8 @@ def raw():
             cart(20, 5, "2026-06-01 00:00:00", [(10, 100, 1)]),
             cart(21, 5, "2026-07-01 00:00:00", []),
             cart(30, 8, "2025-05-01 00:00:00", [(10, 100, 1)]),
+            # Vieux compte sans commande, mais avec un panier en cours : gardé
+            cart(40, 9, "2026-10-01 00:00:00", [(10, 100, 2)]),
         ],
         "newsletter": [{"email": "Dormant@exemple.ca", "at": "2020-01-01 00:00:00"},
                        {"email": "seul@exemple.ca", "at": "2020-01-01 00:00:00"}],
@@ -127,13 +130,13 @@ def main():
         rec = Path(tmp) / "recategorisation.json"
         rec.write_text(json.dumps({"meta": {"catalogue_generated_at": "x"}, "products": [{"id": 10, "variant_ids": [100]},
                                                                                          {"id": 12, "variant_ids": []}]}))
-        doc, archive, stats = build.build(raw(), "2023-01-01", rec)
+        doc, archive, stats = build.build(raw(), rec)
     build.check_forbidden(doc)
     accounts = {a["email"]: a for a in doc["accounts"]}
     orders = {o["prestashop_id"]: o for o in doc["orders"]}
 
     # Fusion : un compte par courriel, la fiche la plus récente l'emporte, la fiche invitée suit
-    assert set(accounts) == {"marie@exemple.ca", "nouveau@exemple.ca", "ancien-panier@exemple.ca"}, accounts.keys()
+    assert set(accounts) == {"marie@exemple.ca", "panier@exemple.ca"}, accounts.keys()
     marie = accounts["marie@exemple.ca"]
     assert marie["prestashop_ids"] == [1, 2, 3]
     assert marie["created_at"] == "2018-01-01 00:00:00"
@@ -151,8 +154,12 @@ def main():
         assert "VerifyMismatch" in type(e).__name__, e
     assert md5("recent") not in json.dumps(doc), "aucune empreinte md5 brute dans la sortie"
 
-    # Sélection : dormant écarté, invité seul et fiche supprimée sans compte mais commandes gardées
-    assert stats["n"]["comptes dormants écartés"] == 1
+    # Sélection : sans commande, gardé seulement avec un panier en cours (même vieux compte) ; sans commande ni panier
+    # (jamais rien, panier vidé, panier trop ancien) écarté. Invité seul et fiche supprimée : pas de compte, commandes gardées
+    assert stats["n"]["comptes sans commande ni panier écartés"] == 3
+    assert stats["n"]["comptes sans commande gardés pour leur panier"] == 1
+    assert accounts["panier@exemple.ca"]["cart"]["lines"][0]["quantity"] == 2
+    assert accounts["panier@exemple.ca"]["newsletter"]["consent"]
     assert orders[3]["account"] is None and orders[3]["email"] == "invite@exemple.ca"
     assert orders[4]["account"] is None and orders[4]["status"] == "cancelled"
     subs = {s["email"]: s["source"] for s in doc["newsletter_subscribers"]}
@@ -179,9 +186,8 @@ def main():
     assert mc["prestashop_id"] == 10, mc
     assert [(li["product_id"], li["prestashop_variant_id"], li["quantity"]) for li in mc["lines"]] == [(10, 100, 3), (12, None, 1)]
     assert stats["n"]["lignes de panier retirées (produit plus vendu)"] == 1
-    assert accounts["nouveau@exemple.ca"]["cart"] is None
-    assert accounts["ancien-panier@exemple.ca"]["cart"] is None and stats["n"]["paniers trop anciens (non migrés)"] == 1
-    assert doc["meta"]["counts"]["carts"] == 1
+    assert stats["n"]["paniers trop anciens (non migrés)"] == 1
+    assert doc["meta"]["counts"]["carts"] == 2
 
     # Vieilles commandes ouvertes (plus de 6 mois) : fermées par la migration, statut d'origine gardé
     assert doc["meta"]["fermeture_auto_avant"] == "2026-04-24"

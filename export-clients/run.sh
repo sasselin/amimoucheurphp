@@ -3,7 +3,6 @@
 # Le dossier est vidé et réécrit à chaque extraction : même chemin, il suffit de rafraîchir.
 # Usage : ./export-clients/run.sh                          base locale (conteneur apache du docker-compose.yml)
 #         ./export-clients/run.sh --prod                   base de prod via SSH (rien n'est écrit sur le serveur)
-#         ./export-clients/run.sh --comptes-depuis=2022-01-01   garde aussi les comptes sans commande créés depuis cette date
 #         ./export-clients/run.sh --paniers-depuis=2025-01-01   redonne les paniers modifiés depuis cette date (défaut : un an)
 # Exige l'extraction du catalogue de la même source (export-catalogue/run.sh [--prod]) : les lignes de commande
 # sont reliées au nouveau catalogue pour le bouton « Recommander ».
@@ -22,7 +21,7 @@ BUILD_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --prod) SOURCE=prod ;;
-    --comptes-depuis=*|--paniers-depuis=*) BUILD_ARGS+=("$1") ;;
+    --paniers-depuis=*) BUILD_ARGS+=("$1") ;;
     *) echo "Option inconnue : $1" >&2; exit 2 ;;
   esac
   shift

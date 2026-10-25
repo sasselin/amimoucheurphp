@@ -6,7 +6,6 @@ Ce dépôt ne fait que préparer les données. L'import, les tables et l'afficha
 
 ```bash
 ./export-catalogue/run.sh && ./export-clients/run.sh            # base locale (docker compose up requis)
-./export-clients/run.sh --comptes-depuis=2022-01-01             # garde plus de comptes sans commande
 ./export-clients/run.sh --paniers-depuis=2025-01-01             # redonne des paniers plus anciens (défaut : un an)
 ./export-catalogue/run.sh --prod && ./export-clients/run.sh --prod          # jour J (et --prod --tout pour les redirections)
 uv run export-clients/test_build.py                              # tests sur des données synthétiques
@@ -38,7 +37,8 @@ Le catalogue de la même source doit être extrait avant : les lignes de command
   - les id d'origine sont dans `prestashop_ids`.
 - **Comptes gardés** :
   - tous les comptes qui ont au moins une commande ;
-  - les comptes sans commande créés depuis `--comptes-depuis` (défaut 2023-01-01). Les autres, des comptes dormants, sont écartés : c'est la minimisation des données personnelles demandée par la Loi 25. Ils pourront se réinscrire.
+  - les comptes sans commande qui ont un panier en cours (voir plus bas) ;
+  - les autres, qui n'ont jamais commandé et n'ont pas de panier, sont écartés : c'est la minimisation des données personnelles demandée par la Loi 25. Ils pourront se réinscrire. S'ils avaient accepté l'infolettre, leur courriel passe dans `newsletter_subscribers[]` (source `compte écarté`).
   - Les fiches supprimées et les comptes désactivés ne passent pas.
 - **Toutes les commandes passent**, même sans compte (invité, fiche supprimée) : la comptabilité a besoin de l'historique complet. Elles gardent leur courriel.
 - **Paniers en cours** : chaque compte retrouve son dernier panier non commandé, comme PrestaShop le fait aujourd'hui à la connexion (`PS_CART_FOLLOWING` est activé, `Cart::lastNoneOrderedCart`).
@@ -70,7 +70,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 - `schema_version`, `generated_at`, `source` (`local` | `prod`) ;
 - `catalogue_generated_at` : l'extraction du catalogue à laquelle les lignes sont reliées. Elle doit être celle qui a été importée ;
-- `comptes_depuis`, `paniers_depuis`, `fermeture_auto_avant` (les commandes ouvertes passées avant cette date ont été fermées), `password_scheme` ;
+- `paniers_depuis`, `fermeture_auto_avant` (les commandes ouvertes passées avant cette date ont été fermées), `password_scheme` ;
 - `statuses` : libellés fr/en des 5 statuts ;
 - `counts`.
 
@@ -117,7 +117,7 @@ Un changement incompatible incrémente `meta.schema_version` (aujourd'hui 1) et 
 
 ### `newsletter_subscribers[]`
 
-`{email, at, source}` : les abonnés qui n'ont pas de compte migré (bloc infolettre, ou case cochée lors d'un achat en invité). Les modules Mailchimp sont actifs : la liste Mailchimp fait peut-être foi, à comparer avant de s'en servir.
+`{email, at, source}` : les abonnés qui n'ont pas de compte migré. `source` vaut `formulaire` (bloc infolettre), `commande invité` (case cochée lors d'un achat en invité) ou `compte écarté` (compte sans commande ni panier, case cochée). Les modules Mailchimp sont actifs : la liste Mailchimp fait peut-être foi, à comparer avant de s'en servir.
 
 ## Recommandations pour le nouveau site
 

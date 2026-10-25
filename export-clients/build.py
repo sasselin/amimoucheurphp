@@ -9,7 +9,7 @@ L'extraction brute arrive par l'entrée standard et n'est jamais écrite sur dis
 md5 des mots de passe. Dans clients.json, chaque empreinte est enveloppée dans argon2id (voir README.md).
 
 Usage : <export.php> | uv run export-clients/build.py - <dossier_sortie> <recategorisation.json>
-            [--comptes-depuis=AAAA-MM-JJ] [--paniers-depuis=AAAA-MM-JJ]
+            [--paniers-depuis=AAAA-MM-JJ]
 """
 import calendar
 import csv
@@ -27,7 +27,6 @@ from argon2 import PasswordHasher, Type
 
 DIR = Path(__file__).resolve().parent
 SCHEMA_VERSION = 1
-COMPTES_DEPUIS = "2023-01-01"
 PANIERS_JOURS = 365  # défaut de --paniers-depuis : un an avant l'extraction
 # Mêmes paramètres que le nouveau site (argon2 0.6, Params::default : m = 19 MiB, t = 2, p = 1) :
 # le hash final, après la première connexion, a la même forme
@@ -180,7 +179,7 @@ def account_cart(carts, since, find, n):
     return {"prestashop_id": cart["id"], "updated_at": cart["updated_at"], "currency": cart["currency"], "lines": lines}
 
 
-def build(raw, since, rec_path, carts_since=None):
+def build(raw, rec_path, carts_since=None):
     statuts = json.loads((DIR / "statuts.json").read_text(encoding="utf-8"))
     status_of = {ps: k for k, s in statuts["statuts"].items() for ps in s["prestashop"]}
     find, rec_meta = load_catalogue(rec_path)
@@ -226,9 +225,12 @@ def build(raw, since, rec_path, carts_since=None):
             continue
         main = max(regs, key=lambda c: (c["updated_at"] or "", c["id"]))
         created = min(c["created_at"] or "9999" for c in regs)
-        if not has_orders and created < since:
+        # Seulement les fiches de compte : un invité ne se reconnecte jamais, PrestaShop ne lui redonne rien
+        cart = account_cart([k for c in regs for k in carts_by_customer[c["id"]]], carts_since, find, n)
+        # Un compte qui n'a jamais commandé et n'a pas de panier en cours n'apporte rien : écarté (minimisation, Loi 25)
+        if not has_orders and not cart:
             dormant_by_year[created[:4]] += 1
-            n["comptes dormants écartés"] += 1
+            n["comptes sans commande ni panier écartés"] += 1
             continue
         for c in rows:
             account_of[c["id"]] = email
@@ -242,8 +244,8 @@ def build(raw, since, rec_path, carts_since=None):
                     seen.add(sig)
                     book.append({"label": a["alias"], **ad, "prestashop_id": a["id"]})
         news = [c for c in rows if c["newsletter"]]
-        # Seulement les fiches de compte : un invité ne se reconnecte jamais, PrestaShop ne lui redonne rien
-        cart = account_cart([k for c in regs for k in carts_by_customer[c["id"]]], carts_since, find, n)
+        if not has_orders:
+            n["comptes sans commande gardés pour leur panier"] += 1
         if cart:
             carts_by_year[cart["updated_at"][:7]] += 1
         md5 = (main["passwd"] or "").lower()
@@ -283,7 +285,8 @@ def build(raw, since, rec_path, carts_since=None):
         if e not in by_email:
             for c in rows:
                 if c["newsletter"]:
-                    subscribers.setdefault(e, {"email": e, "at": c["newsletter_at"], "source": "commande invité"})
+                    subscribers.setdefault(e, {"email": e, "at": c["newsletter_at"],
+                                               "source": "commande invité" if c["guest"] else "compte écarté"})
 
     # -------- commandes
     out_orders, tax_ko, ht_ko = [], [], []
@@ -404,7 +407,6 @@ def build(raw, since, rec_path, carts_since=None):
             "generated_at": raw["meta"]["generated_at"],
             "source": raw["meta"]["source"],
             "catalogue_generated_at": rec_meta.get("catalogue_generated_at"),
-            "comptes_depuis": since,
             "fermeture_auto_avant": close_before,
             "paniers_depuis": carts_since,
             "password_scheme": PASSWORD_SCHEME,
@@ -451,8 +453,8 @@ def write_report(path, doc, stats):
     L = [
         "# Comptes clients et commandes : ce qui passe au nouveau site",
         "",
-        f"Extraction `{m['source']}` du {m['generated_at']}. Comptes sans commande gardés s'ils ont été créés depuis le "
-        f"{m['comptes_depuis']} (option `--comptes-depuis`). Aucun nom ni courriel dans ce rapport.",
+        f"Extraction `{m['source']}` du {m['generated_at']}. Un compte passe s'il a au moins une commande ou un panier en "
+        "cours ; les autres sont écartés. Aucun nom ni courriel dans ce rapport.",
         "",
         "## En bref",
         "",
@@ -479,7 +481,7 @@ def write_report(path, doc, stats):
     for k, v in sorted(n.items()):
         if not k.startswith(("commandes", "paniers", "lignes de panier")) and k != "cartes masquées":
             L.append(f"| {k} | {v} |")
-    L += ["", "Par année de création :", "", "| Année | Gardés | Dormants écartés (jamais commandé) |", "|---|---:|---:|"]
+    L += ["", "Par année de création :", "", "| Année | Gardés | Écartés (ni commande ni panier) |", "|---|---:|---:|"]
     for y in sorted(set(stats["created_by_year"]) | set(stats["dormant_by_year"])):
         L.append(f"| {y} | {stats['created_by_year'][y]} | {stats['dormant_by_year'][y]} |")
     carts = [a["cart"] for a in acc if a["cart"]]
@@ -555,7 +557,6 @@ def private_open(path):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opt = {a.split("=", 1)[0]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--") and "=" in a}
-    since = opt.get("--comptes-depuis", COMPTES_DEPUIS)
     carts_since = opt.get("--paniers-depuis")
     if len(args) != 3:
         sys.exit(__doc__)
@@ -565,7 +566,7 @@ def main():
     dest.mkdir(parents=True, exist_ok=True)
     dest.chmod(0o700)
 
-    doc, archive, stats = build(raw, since, rec, carts_since)
+    doc, archive, stats = build(raw, rec, carts_since)
     check_forbidden(doc)
     with private_open(dest / "clients.json") as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)

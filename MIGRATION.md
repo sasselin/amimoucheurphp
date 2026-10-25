@@ -88,8 +88,7 @@ Le détail et les raisons sont dans les README. En bref :
 
 | Décision | Qui | Où ça se règle |
 |---|---|---|
-| Date des comptes sans commande gardés (défaut 2023-01-01) | client | `export-clients/run.sh --comptes-depuis=` |
-| Ancienneté des paniers redonnés (défaut un an) | client | `export-clients/run.sh --paniers-depuis=` |
+| Ancienneté des paniers redonnés (défaut un an), qui décide aussi des comptes sans commande gardés | client | `export-clients/run.sh --paniers-depuis=` |
 | Délai de fermeture automatique des commandes ouvertes (défaut 6 mois) et traitement des 25 récentes | client | `export-clients/statuts.json` → `fermeture_auto` ; PrestaShop |
 | Chemins des pages de compte | projet Rust | `export-catalogue/taxonomie.json` → `urls.pages_compte` |
 | Liste d'infolettre qui fait foi (PrestaShop ou Mailchimp) | client | comparer `newsletter` et `newsletter_subscribers[]` à Mailchimp |
