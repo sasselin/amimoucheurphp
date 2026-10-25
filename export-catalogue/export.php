@@ -8,7 +8,7 @@
  *
  * Usage (CLI seulement, JSON sur stdout, progression sur stderr) :
  *   php export-catalogue/export.php [--base-url=https://www.amimoucheur.com] [--source=local]
- *                                   [--abandon-avant=2023-01-01] [--tout]
+ *                                   [--abandon-avant=2025-01-01] [--tout]
  *
  * Exclus par défaut : produits non affichés, variantes à 0 $, produits abandonnés (stock à 0 et
  * aucune vente ni création depuis --abandon-avant), catégories masquées ou sans produit.
@@ -37,7 +37,7 @@ $opts = getopt('', array('base-url::', 'source::', 'abandon-avant::', 'tout'));
 $base_url = rtrim(isset($opts['base-url']) && $opts['base-url'] ? $opts['base-url'] : 'https://www.amimoucheur.com', '/');
 $source = isset($opts['source']) && $opts['source'] ? $opts['source'] : 'local';
 $keep_all = isset($opts['tout']);
-$abandon_before = isset($opts['abandon-avant']) && $opts['abandon-avant'] ? $opts['abandon-avant'] : '2023-01-01';
+$abandon_before = isset($opts['abandon-avant']) && $opts['abandon-avant'] ? $opts['abandon-avant'] : '2025-01-01';
 
 // config.inc.php s'attend à un contexte HTTP
 $_SERVER['REQUEST_METHOD'] = 'GET';

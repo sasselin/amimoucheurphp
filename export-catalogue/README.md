@@ -21,7 +21,7 @@ En local, `docker-compose.yml` monte ce dossier en lecture seule dans `/var/www/
 |---|---|
 | Produits non affichés | Inactifs, masqués, ou présents dans aucune catégorie affichée. |
 | Variantes à 0 $ | Elles ne sont pas vendables. |
-| Produits abandonnés | Stock à 0, sans vente ni création depuis le 2023-01-01. |
+| Produits abandonnés | Stock à 0, sans vente ni création depuis le 2025-01-01. |
 | Catégories masquées ou vides | Aucune catégorie active ne contient de produit exporté. |
 | Orphelins | Les 462 restes de la migration de 2016, dont les produits démo de PrestaShop. Ils ne sont rattachés à aucune boutique. |
 

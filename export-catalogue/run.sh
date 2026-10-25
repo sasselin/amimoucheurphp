@@ -8,7 +8,7 @@
 #         ./export-catalogue/run.sh --sans-test ne teste pas les redirections Caddy (testées par défaut si Docker répond)
 #         Jour J : ./export-catalogue/run.sh --prod --tout (redirections de toutes les anciennes URL)
 #         Options combinables. --sample N limite la vérification à N produits.
-#         ABANDON_AVANT=2024-01-01 change la date limite des produits abandonnés (défaut 2023-01-01).
+#         ABANDON_AVANT=2024-01-01 change la date limite des produits abandonnés (défaut 2025-01-01).
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -39,7 +39,7 @@ mkdir -p "$OUT"
 # On vide le contenu sans supprimer le dossier : une fenêtre ou un onglet déjà ouverts restent valides
 find "$OUT" -mindepth 1 -delete
 JSON="$OUT/catalogue.json"
-PHP_ARGS="--base-url=$BASE_URL --source=$SOURCE --abandon-avant=${ABANDON_AVANT:-2023-01-01}$TOUT"
+PHP_ARGS="--base-url=$BASE_URL --source=$SOURCE --abandon-avant=${ABANDON_AVANT:-2025-01-01}$TOUT"
 
 echo "Extraction ($SOURCE)..."
 if [[ $SOURCE == local ]]; then
