@@ -18,7 +18,7 @@ Chemins absolus, à lire en place. Les dossiers `out/` ne sont pas versionnés e
 | `…/export-clients/out/prod/service_clientele.csv` | Archive des fils du formulaire de contact : **pas à importer**, à garder | — | idem | — |
 | `export-catalogue/taxonomie.json` → `urls` | Le schéma des nouvelles URL, dont `pages_compte` (chemins des pages de compte fr/en) | versionné | à la main | [export-catalogue/CLAUDE.md](export-catalogue/CLAUDE.md) |
 
-Pour les essais, les mêmes fichiers existent pour la base locale : `out/local/` (et `out/local_tout/`). Le catalogue s'importe déjà : `cargo run -- import-catalogue /home/sass/amimoucheur/export-catalogue/out/prod --images-root /home/sass/amimoucheur/site`. L'import de `clients.json` reste à écrire.
+Pour les essais, les mêmes fichiers existent pour la base locale : `out/local/` (et `out/local_tout/`). Le catalogue s'importe déjà : `cargo run -- import-catalogue /home/sass/amimoucheur/export-catalogue/out/prod --images-root /home/sass/amimoucheur/site`. Les clients s'importent ensuite : `cargo run -- import-clients /home/sass/amimoucheur/export-clients/out/prod/clients.json --catalogue /home/sass/amimoucheur/export-catalogue/out/prod` (branche `import-clients` de amimoucheur-rust, `admin/docs/clients-import.md`).
 
 **Secret à part.** La vérification des anciens mots de passe a besoin de `_COOKIE_KEY_` de la prod (`site/config/settings.inc.php` du serveur, non versionné). Il se remet comme secret de l'application. Il ne doit jamais être écrit dans un dépôt ni dans un JSON.
 
@@ -75,7 +75,7 @@ Le détail et les raisons sont dans les README. En bref :
    ./export-clients/run.sh --prod            # out/prod : comptes, commandes, paniers (relie les lignes à out/prod)
    ```
    `--tout` écrit dans `out/prod_tout/` et non dans `out/prod/`. Les deux extractions du catalogue sont donc nécessaires.
-4. **Imports, côté Rust** : `import-catalogue …/export-catalogue/out/prod`, puis l'import de `…/export-clients/out/prod/clients.json`, avec `_COOKIE_KEY_` comme secret.
+4. **Imports, côté Rust** : `import-catalogue …/export-catalogue/out/prod`, puis `import-clients …/export-clients/out/prod/clients.json --catalogue …/export-catalogue/out/prod` (rapprochement refait à l'import) ; `_COOKIE_KEY_` est donné au site public comme secret.
 5. **Bascule** : redirections et domaines, selon `out/prod_tout/recategorisation/caddy/LISEZMOI.md` et [deploy/README.md](deploy/README.md#jour-j-nouveau-site).
 6. **Après** : supprimer `export-clients/out/` (données personnelles). Vider ensuite `ps_ccofflinepayment` et les anciennes sauvegardes qui la contiennent.
 
